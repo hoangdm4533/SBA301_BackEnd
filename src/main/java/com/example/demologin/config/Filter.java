@@ -51,8 +51,8 @@ public class Filter extends OncePerRequestFilter {
             // OAuth2 endpoints
             "/api/oauth2/success",
             "/api/oauth2/failure",
-            "/oauth2/authorization/**",
-            "/login/oauth2/code/**",
+            "/oauth2/**",
+            "/login/oauth2/**",
 
             // Product endpoints
             "/api/product/**"
@@ -64,12 +64,16 @@ public class Filter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
-        // Đặc biệt xử lý GET /api/product/** nếu cần logic riêng
+        // Xử lý đặc biệt cho GET /api/product/**
         if (method.equals("GET") && pathMatcher.match("/api/product/**", uri)) {
             return true;
         }
 
-        // Kiểm tra trong danh sách PUBLIC_API
+        // Cho phép các request OAuth2 (thêm trường hợp fallback)
+        if (uri.startsWith("/oauth2/") || uri.startsWith("/login/oauth2/")) {
+            return true;
+        }
+
         return PUBLIC_API.stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern, uri));
     }
@@ -83,40 +87,41 @@ public class Filter extends OncePerRequestFilter {
         if (isPermitted(request)) {
             // Cho phép request public API đi qua
             filterChain.doFilter(request, response);
-        } else {
-            // Xử lý request cần authentication
-            String token = getToken(request);
+            return;
+        }
 
-            if (token == null) {
+        // Xử lý request cần authentication
+        String token = getToken(request);
+
+        if (token == null) {
+            resolver.resolveException(request, response, null,
+                    new AuthorizeException("Authentication token is missing!"));
+            return;
+        }
+
+        try {
+            User user = tokenService.getAccountByToken(token);
+            if (user == null) {
                 resolver.resolveException(request, response, null,
-                        new AuthorizeException("Authentication token is missing!"));
+                        new AuthorizeException("User not found for the provided token!"));
                 return;
             }
 
-            try {
-                User user = tokenService.getAccountByToken(token);
-                if (user == null) {
-                    resolver.resolveException(request, response, null,
-                            new AuthorizeException("User not found for the provided token!"));
-                    return;
-                }
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            filterChain.doFilter(request, response);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                filterChain.doFilter(request, response);
-
-            } catch (MalformedJwtException e) {
-                resolver.resolveException(request, response, null,
-                        new AuthorizeException("Authentication token is invalid!"));
-            } catch (ExpiredJwtException e) {
-                resolver.resolveException(request, response, null,
-                        new AuthorizeException("Authentication token is expired!"));
-            } catch (Exception e) {
-                resolver.resolveException(request, response, null,
-                        new AuthorizeException("Authentication token is invalid!"));
-            }
+        } catch (MalformedJwtException e) {
+            resolver.resolveException(request, response, null,
+                    new AuthorizeException("Authentication token is invalid!"));
+        } catch (ExpiredJwtException e) {
+            resolver.resolveException(request, response, null,
+                    new AuthorizeException("Authentication token is expired!"));
+        } catch (Exception e) {
+            resolver.resolveException(request, response, null,
+                    new AuthorizeException("Authentication token is invalid!"));
         }
     }
 

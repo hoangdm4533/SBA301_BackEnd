@@ -75,6 +75,10 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 10)
     private Gender gender;
 
+    @Column(name = "is_verify", nullable = false)
+    private boolean isVerify = false;
+
+
     @Column(name = "is_locked", nullable = false)
     private boolean locked = false;
 

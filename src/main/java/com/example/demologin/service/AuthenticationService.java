@@ -13,6 +13,7 @@ import com.example.demologin.enums.ActivityType;
 import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.Role;
 import com.example.demologin.enums.UserStatus;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.repository.PasswordResetTokenRepository;
 import com.example.demologin.repository.RefreshTokenRepository;
@@ -43,6 +44,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Map;
 
 import java.time.LocalDateTime;
@@ -546,5 +548,41 @@ public class AuthenticationService implements UserDetailsService {
             case "female": return Gender.FEMALE;
             default: return Gender.OTHER;
         }
+    }
+
+    public UserResponse getUserResponse(String email, String name) {
+        User user = userRepository.findByEmail(email).orElse(null);
+
+
+
+            user = User.builder()
+                    .username(email.substring(0, email.indexOf('@')))
+                    .fullName(name)
+                    .email(email)
+                    .password(passwordEncoder.encode(""))
+                    .status(UserStatus.ACTIVE)
+                    .createdAt(LocalDateTime.now())
+                    .phone("")
+                    .address("")
+                    .identityCard("")
+                    .dateOfBirth(LocalDateTime.now().toLocalDate())
+                    .gender(Gender.OTHER)
+                    .role(Role.MEMBER)
+                    .isVerify(true)
+                    .build();
+
+            // Thêm role cho user
+
+
+            user = userRepository.save(user);
+
+
+        // Create default loyalty data for the user
+
+
+        String token = tokenService.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return UserMapper.toResponse(user, token, refreshToken.getToken());
     }
 }
