@@ -139,3 +139,43 @@ Error example:
 
 - Built with Spring Boot, Lombok, Swagger, JPA, AOP, OAuth2, JWT
 - Designed for professional, scalable backend development 
+
+---
+
+# Deploy & Host Public với Docker Compose
+
+## 1. Build JAR
+```bash
+./mvnw clean package
+```
+
+## 2. Build & Run Docker Compose
+```bash
+docker-compose up --build
+```
+
+- App sẽ chạy ở http://localhost:8080/
+- MySQL sẽ chạy ở localhost:3306 (user: demo, pass: demo123, db: demo_login)
+
+## 3. Public lên Internet
+- Mở port 8080 (app) và 3306 (MySQL) trên modem/router nếu muốn truy cập từ ngoài.
+- Có thể dùng dịch vụ như [ngrok](https://ngrok.com/) để public nhanh:
+```bash
+ngrok http 8080
+```
+- Hoặc cấu hình NAT port trên router để truy cập qua IP public.
+
+## 4. Quản lý MySQL
+- Dùng DBeaver/MySQL Workbench kết nối:
+  - Host: localhost (hoặc IP public)
+  - Port: 3306
+  - User: demo
+  - Pass: demo123
+  - DB: demo_login
+
+## 5. Reset data
+```bash
+docker-compose down -v
+```
+
+--- 
