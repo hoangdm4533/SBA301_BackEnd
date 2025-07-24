@@ -103,6 +103,7 @@ public class AuthenticationController {
         }
     }
 
+    @SecurityRequirement(name = "api")
     @PostMapping("/refresh-token")
     public ResponseEntity<ResponseObject> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
         try {
@@ -161,8 +162,8 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/logout")
     @SecurityRequirement(name = "api")
+    @PostMapping("/logout")
     @Transactional
     public ResponseEntity<ResponseObject> logout() {
         try {
@@ -210,6 +211,7 @@ public class AuthenticationController {
         }
     }
 
+    @SecurityRequirement(name = "api")
     @GetMapping("/oauth2/success")
     public ResponseEntity<ResponseObject> oauth2LoginSuccess(Authentication authentication) {
         try {
@@ -241,6 +243,7 @@ public class AuthenticationController {
         }
     }
 
+    @SecurityRequirement(name = "api")
     @GetMapping("/oauth2/failure")
     public ResponseEntity<ResponseObject> oauth2LoginFailure() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

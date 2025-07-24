@@ -3,6 +3,8 @@ package com.example.demologin.config;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.AuthorizeException;
 import com.example.demologin.service.TokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.demologin.dto.response.ResponseObject;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +33,7 @@ public class Filter extends OncePerRequestFilter {
     HandlerExceptionResolver resolver;
 
     @Autowired
-    TokenService tokenService;
+    private TokenService tokenService;
 
     // Danh sách các API public
     List<String> PUBLIC_API = List.of(
@@ -94,16 +97,14 @@ public class Filter extends OncePerRequestFilter {
         String token = getToken(request);
 
         if (token == null) {
-            resolver.resolveException(request, response, null,
-                    new AuthorizeException("Authentication token is missing!"));
+            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is missing!");
             return;
         }
 
         try {
             User user = tokenService.getAccountByToken(token);
             if (user == null) {
-                resolver.resolveException(request, response, null,
-                        new AuthorizeException("User not found for the provided token!"));
+                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "User not found for the provided token!");
                 return;
             }
 
@@ -114,19 +115,23 @@ public class Filter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (MalformedJwtException e) {
-            resolver.resolveException(request, response, null,
-                    new AuthorizeException("Authentication token is invalid!"));
+            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
         } catch (ExpiredJwtException e) {
-            resolver.resolveException(request, response, null,
-                    new AuthorizeException("Authentication token is expired!"));
+            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is expired!");
         } catch (Exception e) {
-            resolver.resolveException(request, response, null,
-                    new AuthorizeException("Authentication token is invalid!"));
+            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
         }
     }
 
     private String getToken(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         return (token != null && token.startsWith("Bearer ")) ? token.substring(7) : null;
+    }
+
+    private void writeAuthError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        ResponseObject resp = new ResponseObject(status, message, null);
+        new ObjectMapper().writeValue(response.getWriter(), resp);
     }
 }

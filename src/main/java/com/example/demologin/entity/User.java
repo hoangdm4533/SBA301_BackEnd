@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.example.demologin.enums.Gender;
-import com.example.demologin.enums.Role;
 import com.example.demologin.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +17,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -38,9 +38,13 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 128)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     @Column(nullable = false, length = 100)
     private String fullName;
@@ -90,6 +94,21 @@ public class User implements UserDetails {
         this.locked = locked;
     }
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public Set<String> getPermissionCodes() {
+        return roles.stream()
+            .flatMap(r -> r.getPermissions().stream())
+            .map(Permission::getCode)
+            .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -125,7 +144,14 @@ public class User implements UserDetails {
     })
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(this.role.toString()));
+        for (Role role : this.roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+            if (role.getPermissions() != null) {
+                for (Permission perm : role.getPermissions()) {
+                    authorities.add(new SimpleGrantedAuthority(perm.getCode()));
+                }
+            }
+        }
         return authorities;
     }
 }

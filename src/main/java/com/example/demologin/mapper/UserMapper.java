@@ -4,13 +4,14 @@ import com.example.demologin.dto.request.UserRequest;
 import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
-import com.example.demologin.enums.Role;
 import com.example.demologin.enums.UserStatus;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
     public MemberResponse toUserResponse(User user) {
+        // Lấy role đầu tiên nếu có
+        String roleName = user.getRoles().stream().findFirst().map(r -> r.getName()).orElse("");
         return new MemberResponse(
                 user.getUserId(),
                 user.getUsername(),
@@ -21,7 +22,7 @@ public class UserMapper {
                 user.getAddress(),
                 user.getDateOfBirth(),
                 user.getStatus(),
-                user.getRole()
+                roleName
         );
     }
     public static User toEntity(UserRequest userRequest) {
@@ -33,7 +34,6 @@ public class UserMapper {
                 .address(userRequest.getAddress())
                 .dateOfBirth(userRequest.getDateOfBirth())
                 .identityCard(userRequest.getIdentity_Card())
-                .role(Role.MEMBER) // Default role
                 .status(UserStatus.ACTIVE) // Default status
                 .build();
     }

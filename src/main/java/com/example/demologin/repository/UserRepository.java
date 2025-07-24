@@ -1,7 +1,6 @@
 package com.example.demologin.repository;
 
 import com.example.demologin.entity.User;
-import com.example.demologin.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndUserIdNot(String email, Long userId);
 
 
-    Page<User> findByRole(Role role, Pageable pageable);
+    Page<User> findByRoles_Name(String roleName, Pageable pageable);
 }

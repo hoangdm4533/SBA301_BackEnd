@@ -1,6 +1,5 @@
 package com.example.demologin.dto.response;
 
-import com.example.demologin.enums.Role;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
