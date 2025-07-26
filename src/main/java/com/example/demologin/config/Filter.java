@@ -50,6 +50,12 @@ public class Filter extends OncePerRequestFilter {
             "/api/facebook-login",
             "/api/reset-password",
             "/api/forgot-password",
+            // Email OTP endpoints
+            "/api/email/send-verification",
+            "/api/email/verify",
+            "/api/email/forgot-password",
+            "/api/email/reset-password",
+            "/api/email/resend",
 
             // OAuth2 endpoints
             "/api/oauth2/success",

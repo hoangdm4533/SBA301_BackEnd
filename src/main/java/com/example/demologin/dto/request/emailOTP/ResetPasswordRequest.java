@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.emailOTP;
 
 import lombok.Data;
 

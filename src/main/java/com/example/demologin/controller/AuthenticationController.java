@@ -124,44 +124,6 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ResponseObject> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        try {
-            User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("Email không tồn tại"));
-
-            String token = UUID.randomUUID().toString();
-            authenticationService.createPasswordResetTokenForAccount(user, token);
-
-            String emailSubject = "Reset Password Token";
-            String emailText = "Your reset password token is: " + token;
-            emailService.sendEmail(request.getEmail(), emailSubject, emailText);
-
-            return ResponseEntity.ok()
-                    .body(new ResponseObject(HttpStatus.OK.value(), "Reset token has been sent to your email.", null));
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseObject(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
-        }
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<ResponseObject> resetPassword(
-            @RequestParam("token") String token,
-            @RequestBody ResetPasswordRequest request
-    ) {
-        try {
-            User user = authenticationService.validatePasswordResetToken(token);
-            authenticationService.changePassword(user, request.getNewPassword());
-            authenticationService.deleteResetToken(token);
-            return ResponseEntity.ok()
-                    .body(new ResponseObject(HttpStatus.OK.value(), "Đặt lại mật khẩu thành công", null));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseObject(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
-        }
-    }
-
     @SecurityRequirement(name = "api")
     @PostMapping("/logout")
     @Transactional

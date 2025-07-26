@@ -26,6 +26,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -148,8 +149,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse login(LoginRequest loginRequest) {
+        Authentication authentication;
         try {
-            authenticationManager.authenticate(
+            authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
                             loginRequest.getPassword()
@@ -162,12 +164,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (Exception e) {
             throw new RuntimeException("Login failed: " + e.getMessage());
         }
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
+
+        User user = (User) authentication.getPrincipal();
+
+        if (!user.isVerify()) {
+            throw new RuntimeException("Account has not been verified yet. Please verify your email.");
+        }
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new RuntimeException("Account is not active.");
+        }
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String token = tokenService.generateToken(user);
         return UserMapper.toResponse(user, token, refreshToken.getToken());
     }
+
 
     @Override
     public void createPasswordResetTokenForAccount(User user, String token) {
@@ -311,6 +323,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .phone("")
                         .address("")
                         .identityCard("")
+                        .isVerify(true)
                         .dateOfBirth(LocalDateTime.now().toLocalDate())
                         .gender(com.example.demologin.enums.Gender.OTHER)
                         .build();
@@ -414,6 +427,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .identityCard("")
                         .dateOfBirth(parseBirthday(birthday))
                         .gender(parseGender(gender))
+                        .isVerify(true)
                         .build();
                 user = userRepository.save(user);
             } else {
