@@ -1,16 +1,15 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.RequirePermission;
-import com.example.demologin.dto.request.PermissionRequestDTO;
+import com.example.demologin.dto.request.PermissionRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.entity.Permission;
 import com.example.demologin.service.PermissionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import java.util.List;
 
 @SecurityRequirement(name = "api")
 @RestController
@@ -26,7 +25,9 @@ public class PermissionController {
 
     @RequirePermission("PERMISSION_UPDATE")
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject> update(@PathVariable Long id, @RequestBody PermissionRequestDTO req) {
+    public ResponseEntity<ResponseObject> update(
+            @PathVariable Long id,
+            @RequestBody @Valid PermissionRequest req) {
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", permissionService.updatePermissionName(id, req)));
     }
 } 

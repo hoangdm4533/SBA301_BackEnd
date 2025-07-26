@@ -1,75 +1,59 @@
 package com.example.demologin.exception;
 
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.exception.exceptions.AuthorizeException;
-import com.example.demologin    .exception.exceptions.NotFoundException;
-import com.example.demologin.exception.exceptions.BadRequestException;
-import com.example.demologin.exception.exceptions.ConflictException;
-import com.example.demologin.exception.exceptions.FileStorageException;
-import com.example.demologin.exception.exceptions.ForbiddenException;
+import com.example.demologin.exception.exceptions.*;
 import com.example.demologin.exception.exceptions.IllegalArgumentException;
-import com.example.demologin.exception.exceptions.InsufficientStockException;
-import com.example.demologin.exception.exceptions.InternalServerErrorException;
-import com.example.demologin.exception.exceptions.ResourceNotFoundException;
-import com.example.demologin.exception.exceptions.UnauthorizedException;
-import com.example.demologin.exception.exceptions.ValidationException;
-import com.example.demologin.exception.exceptions.TokenRefreshException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class APIHandleException {
 
-    // mỗi khi có lỗi validation thì chạy xử lý này
-
-    //MethodArgumentNotValidException
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResponseObject> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // Tạo danh sách thông báo lỗi
-        List<String> errorMessages = new ArrayList<>();
+        // Lấy lỗi đầu tiên
+        FieldError firstError = ex.getBindingResult().getFieldErrors().get(0);
+        String message = firstError.getDefaultMessage();
 
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errorMessages.add(error.getField() + ": " + error.getDefaultMessage());
-        });
-
-        // Gộp tất cả lỗi thành 1 message duy nhất
-        String combinedMessage = String.join(", ", errorMessages);
-
-        return ResponseEntity.badRequest().body(
-                new ResponseObject(
-                        HttpStatus.BAD_REQUEST.value(),
-                        combinedMessage, // Gán tất cả lỗi vào message
-                        null // Đặt data là null
-                )
+        ResponseObject response = new ResponseObject(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                null
         );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ResponseObject> handleConstraintViolation(ConstraintViolationException ex) {
-        List<String> errorMessages = new ArrayList<>();
+    public ResponseEntity<ResponseObject> handleConstraintViolationException(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations()
+                .iterator()
+                .next()
+                .getMessage(); // lấy lỗi đầu tiên
 
-        ex.getConstraintViolations().forEach(violation -> {
-            String field = violation.getPropertyPath().toString();
-            errorMessages.add(field + ": " + violation.getMessage());
-        });
-
-        String combinedMessage = String.join(", ", errorMessages);
-
-        return ResponseEntity.badRequest().body(
-                new ResponseObject(
-                        HttpStatus.BAD_REQUEST.value(),
-                        combinedMessage,
-                        null
-                )
+        ResponseObject response = new ResponseObject(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                null
         );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ResponseObject> handleBusinessException(BusinessException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ResponseObject(400, ex.getMessage(), null));
     }
 
 

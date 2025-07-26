@@ -1,5 +1,6 @@
 package com.example.demologin;
 
+import com.example.demologin.config.DotenvLoader;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DemoLoginApplication {
 
     public static void main(String[] args) {
+        DotenvLoader.loadEnv();
         SpringApplication.run(DemoLoginApplication.class, args);
     }
 

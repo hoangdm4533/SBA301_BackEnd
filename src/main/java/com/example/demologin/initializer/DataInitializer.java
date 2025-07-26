@@ -41,7 +41,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createDefaultPermissionsAndRoles() {
-        Permission p2 = permissionRepository.save(Permission.builder().code("USER_UPDATE").name("Cập nhật người dùng").build());
+        Permission p1 = permissionRepository.save(Permission.builder().code("ADMIN_ACTION_LOG_VIEW").name("Xem admin action log").build());
         Permission p3 = permissionRepository.save(Permission.builder().code("ROLE_UPDATE").name("Cập nhật vai trò").build());
         Permission p4 = permissionRepository.save(Permission.builder().code("PERMISSION_VIEW").name("Xem quyền").build());
         Permission p6 = permissionRepository.save(Permission.builder().code("PERMISSION_UPDATE").name("Sửa quyền").build());
@@ -51,11 +51,16 @@ public class DataInitializer implements CommandLineRunner {
         Permission p11 = permissionRepository.save(Permission.builder().code("ROLE_UPDATE_PERMISSIONS").name("Gán quyền cho vai trò").build());
 
         Set<Permission> adminPerms = new HashSet<>();
-        adminPerms.add(p2); adminPerms.add(p3);
-        adminPerms.add(p4); adminPerms.add(p6);
-        adminPerms.add(p8); adminPerms.add(p9); adminPerms.add(p10); adminPerms.add(p11);
+        adminPerms.add(p1);
+        adminPerms.add(p3);
+        adminPerms.add(p4);
+        adminPerms.add(p6);
+        adminPerms.add(p8);
+        adminPerms.add(p9);
+        adminPerms.add(p10);
+        adminPerms.add(p11);
         Set<Permission> memberPerms = new HashSet<>();
-        // memberPerms.add(p1); // Không còn USER_VIEW
+
 
         roleRepository.save(com.example.demologin.entity.Role.builder().name("ADMIN").permissions(adminPerms).build());
         roleRepository.save(com.example.demologin.entity.Role.builder().name("MEMBER").permissions(memberPerms).build());
