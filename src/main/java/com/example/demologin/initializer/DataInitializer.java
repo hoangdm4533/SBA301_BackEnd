@@ -86,6 +86,7 @@ public class DataInitializer implements CommandLineRunner {
                 .status(UserStatus.ACTIVE)
                 .gender(Gender.OTHER)
                 .tokenVersion(0)
+                .isVerify(true)
                 .locked(false)
                 .build();
         userRepository.save(user);
