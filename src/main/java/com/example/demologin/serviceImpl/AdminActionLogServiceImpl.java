@@ -1,7 +1,6 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.response.AdminActionLogResponse;
-import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.entity.AdminActionLog;
 import com.example.demologin.exception.exceptions.NotFoundException;
@@ -11,9 +10,13 @@ import com.example.demologin.service.AdminActionLogService;
 import com.example.demologin.utils.PageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class AdminActionLogServiceImpl implements AdminActionLogService {
@@ -41,10 +44,15 @@ public class AdminActionLogServiceImpl implements AdminActionLogService {
         );
     }
 
-
-
-
-
-
-
+    @Override
+    public ResponseObject getAllLogs(int page, int size) {
+        List<AdminActionLogResponse> logs = adminActionLogRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "actionTime")))
+                .stream()
+                .map(adminActionLogMapper::toResponseDto)
+                .toList();
+        
+        String message = logs.isEmpty() ? "Empty list!" : "Get all admin action logs successfully";
+        
+        return new ResponseObject(200, message, logs);
+    }
 } 

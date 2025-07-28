@@ -7,6 +7,7 @@ import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.entity.EmailOtp;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.BadRequestException;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.EmailOtpRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.EmailOtpService;
@@ -45,7 +46,7 @@ public class EmailOtpServiceImpl implements EmailOtpService {
         if (!userRepository.existsByEmail(email)) {
             throw new BadRequestException("Email not found");
         }
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with email: " + email));
         if (user.isVerify()) {
             throw new BadRequestException("Email has already been verified");
         }

@@ -65,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @AdminAction(action = "UPDATE_PERMISSIONS", entity = "ROLE", reasonRequired = "true")
     public Role updatePermissions(Long id, RolePermissionsRequest req) {
-        Role r = roleRepository.findById(id).orElseThrow();
+        Role r = roleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
         roleMapper.fromPermissionDto(req, r);
         return roleRepository.save(r);
     }

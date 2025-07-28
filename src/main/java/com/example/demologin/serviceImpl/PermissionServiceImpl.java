@@ -2,6 +2,7 @@ package com.example.demologin.serviceImpl;
 
 import com.example.demologin.annotation.AdminAction;
 import com.example.demologin.entity.Permission;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.PermissionRepository;
 import com.example.demologin.dto.request.PermissionRequest;
 import com.example.demologin.mapper.PermissionMapper;
@@ -23,7 +24,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @AdminAction(action = "UPDATE", entity = "PERMISSION", reasonRequired = "true")
     public Permission updatePermissionName(Long id, PermissionRequest req) {
-        Permission p = permissionRepository.findById(id).orElseThrow();
+        Permission p = permissionRepository.findById(id).orElseThrow(() -> new NotFoundException("Permission with id " + id + " not found"));
         permissionMapper.updateEntityFromDto(req, p);
         return permissionRepository.save(p);
     }

@@ -6,6 +6,5 @@ import org.springframework.data.domain.Pageable;
 public interface AdminActionLogService {
     void save(com.example.demologin.entity.AdminActionLog log);
     ResponseObject getLogs(Pageable pageable);
-
-
+    ResponseObject getAllLogs(int page, int size);
 } 

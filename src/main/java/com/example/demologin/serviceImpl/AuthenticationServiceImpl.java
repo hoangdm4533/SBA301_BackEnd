@@ -12,7 +12,7 @@ import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.UserStatus;
-import com.example.demologin.exception.exceptions.NotFoundException;
+import com.example.demologin.exception.exceptions.*;
 import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.repository.PasswordResetTokenRepository;
 import com.example.demologin.repository.RefreshTokenRepository;
@@ -20,8 +20,8 @@ import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.service.AuthenticationService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -67,6 +66,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
 
     @Autowired
+    RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -95,16 +97,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UserActivityLog log = null;
         try {
             if (!request.getPassword().equals(request.getConfirmPassword())) {
-                throw new RuntimeException("Password and Confirm Password do not match");
+                throw new ValidationException("Password and Confirm Password do not match");
             }
             if (userRepository.existsByUsername(request.getUsername())) {
-                throw new RuntimeException("Username already exists");
+                throw new ConflictException("Username already exists");
             }
             if (userRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("Email already exists");
+                throw new ConflictException("Email already exists");
             }
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-            roles.add(roleRepository.findByName("MEMBER").orElseThrow());
+            roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
             User newUser = User.builder()
                     .username(request.getUsername())
                     .password(passwordEncoder.encode(request.getPassword()))
@@ -127,7 +129,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .details("New user registered: " + savedUser.getUsername())
                     .build();
             return savedUser;
-        } catch (RuntimeException e) {
+        } catch (ConflictException | ValidationException e) {
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
                     .timestamp(LocalDateTime.now())
@@ -135,6 +137,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .details("Registration failed: " + e.getMessage())
                     .build();
             throw e;
+        } catch (Exception e) {
+            log = UserActivityLog.builder()
+                    .activityType(ActivityType.REGISTRATION)
+                    .timestamp(LocalDateTime.now())
+                    .status("FAIL")
+                    .details("Registration failed: " + e.getMessage())
+                    .build();
+            throw new InternalServerErrorException("Registration failed: " + e.getMessage());
         } finally {
             if (log != null) {
                 userActivityLogRepository.save(log);
@@ -158,26 +168,39 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     )
             );
         } catch (BadCredentialsException e) {
-            throw new RuntimeException("Username/ password is invalid. Please try again!");
+            throw new UnauthorizedException("Username/ password is invalid. Please try again!");
         } catch (LockedException e) {
-            throw new RuntimeException("Account has been locked!");
+            throw new ForbiddenException("Account has been locked!");
         } catch (Exception e) {
-            throw new RuntimeException("Login failed: " + e.getMessage());
+            throw new InternalServerErrorException("Login failed: " + e.getMessage());
         }
 
         User user = (User) authentication.getPrincipal();
 
         if (!user.isVerify()) {
-            throw new RuntimeException("Account has not been verified yet. Please verify your email.");
+            throw new ForbiddenException("Account has not been verified yet. Please verify your email.");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new RuntimeException("Account is not active.");
+            throw new ForbiddenException("Account is not active.");
         }
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String token = tokenService.generateToken(user);
         return UserMapper.toResponse(user, token, refreshToken.getToken());
+    }
+
+    @Override
+    public void logout() {
+        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+        
+        User user = (User) authentication.getPrincipal();
+        user.incrementTokenVersion();
+        userRepository.save(user);
+        refreshTokenRepository.deleteByUser(user);
     }
 
 
@@ -200,7 +223,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public User validatePasswordResetToken(String token) {
         PasswordResetToken passToken = passwordResetTokenRepository.findByToken(token);
         if (passToken.getExpiryDate().before(new Date())) {
-            throw new IllegalArgumentException("Token expired");
+            throw new BadRequestException("Token expired");
         }
         return passToken.getUser();
     }
@@ -219,10 +242,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse authenticateWithGoogle(GoogleLoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body cannot be null");
+        }
+        
+        if (request.getIdToken() == null || request.getIdToken().trim().isEmpty()) {
+            throw new BadRequestException("Google ID token cannot be null or empty");
+        }
+        
         try {
-            if (request.getIdToken() == null || request.getIdToken().trim().isEmpty()) {
-                throw new IllegalArgumentException("Google ID token cannot be null or empty");
-            }
             log.debug("Attempting to verify Google token: {}", request.getIdToken().substring(0, Math.min(10, request.getIdToken().length())) + "...");
             if (request.getIdToken().startsWith("ya29.")) {
                 log.debug("Detected Google access token, using Google API to get user info");
@@ -236,11 +264,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 idToken = verifier.verify(request.getIdToken());
                 if (idToken == null) {
                     log.error("Google ID token verification failed");
-                    throw new RuntimeException("Invalid Google ID token");
+                    throw new UnauthorizedException("Invalid Google ID token");
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (java.lang.IllegalArgumentException e) {
                 log.error("Invalid token format: {}", e.getMessage());
-                throw new IllegalArgumentException("Invalid token format: " + e.getMessage());
+                throw new BadRequestException("Invalid token format: " + e.getMessage());
             }
             Payload payload = idToken.getPayload();
             String email = payload.getEmail();
@@ -249,7 +277,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow());
+                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                 user = User.builder()
                         .username(email.substring(0, email.indexOf('@')))
                         .fullName(name)
@@ -269,9 +297,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String token = tokenService.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             return UserMapper.toResponse(user, token, refreshToken.getToken());
+        } catch (BadRequestException | UnauthorizedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error authenticating with Google", e);
-            throw new RuntimeException("Google authentication failed: " + e.getMessage());
+            throw new InternalServerErrorException("Google authentication failed: " + e.getMessage());
         }
     }
 
@@ -281,37 +311,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(accessToken);
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<Map> response = restTemplate.exchange(
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     "https://www.googleapis.com/oauth2/v3/userinfo",
                     HttpMethod.GET,
                     entity,
-                    Map.class
+                    (Class<Map<String, Object>>) (Object) Map.class
             );
             Map<String, Object> userInfo = response.getBody();
             if (userInfo == null) {
-                throw new RuntimeException("Failed to get user info from Google API");
+                throw new UnauthorizedException("Failed to get user info from Google API");
             }
             log.debug("Retrieved user info from Google API: {}", userInfo);
             String email = (String) userInfo.get("email");
             String name = (String) userInfo.get("name");
             if (email == null) {
-                throw new RuntimeException("Email not provided by Google API");
+                throw new UnauthorizedException("Email not provided by Google API");
             }
             return authenticateWithOAuth2(email, name);
         } catch (Exception e) {
             log.error("Error authenticating with Google access token", e);
-            throw new RuntimeException("Google authentication failed: " + e.getMessage());
+            throw new InternalServerErrorException("Google authentication failed: " + e.getMessage());
         }
     }
 
     @Override
     public UserResponse authenticateWithOAuth2(String email, String name) {
+        if (email == null) {
+            throw new BadRequestException("Email not provided by OAuth2 provider");
+        }
+        
         try {
             User user = userRepository.findByEmail(email)
                     .orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow());
+                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                 user = User.builder()
                         .username(email.substring(0, email.indexOf('@')))
                         .fullName(name)
@@ -334,16 +369,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
             log.error("Error authenticating with OAuth2", e);
-            throw new RuntimeException("OAuth2 authentication failed: " + e.getMessage());
+            throw new InternalServerErrorException("OAuth2 authentication failed: " + e.getMessage());
         }
     }
 
     @Override
+    public UserResponse authenticateWithOAuth2FromAuthentication(org.springframework.security.core.Authentication authentication) {
+        if (!(authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken)) {
+            throw new BadRequestException("Not an OAuth2 authentication");
+        }
+        
+        org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken oauthToken = 
+            (org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) authentication;
+        org.springframework.security.oauth2.core.user.OAuth2User oAuth2User = oauthToken.getPrincipal();
+
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+
+        return authenticateWithOAuth2(email, name != null ? name : email);
+    }
+
+    @Override
+    public void handleOAuth2Failure() {
+        throw new UnauthorizedException("OAuth2 login failed");
+    }
+
+    @Override
     public UserResponse authenticateWithFacebook(FacebookLoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body cannot be null");
+        }
+        
+        if (request.getAccessToken() == null || request.getAccessToken().trim().isEmpty()) {
+            throw new BadRequestException("Facebook access token cannot be null or empty");
+        }
+        
         try {
-            if (request.getAccessToken() == null || request.getAccessToken().trim().isEmpty()) {
-                throw new IllegalArgumentException("Facebook access token cannot be null or empty");
-            }
             log.debug("Attempting to verify Facebook token: {}", request.getAccessToken().substring(0, Math.min(10, request.getAccessToken().length())) + "...");
             String fields = "id,name,email,first_name,last_name,picture,gender,birthday,location";
             String url = String.format(
@@ -352,15 +413,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     request.getAccessToken()
             );
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Map> response = restTemplate.exchange(
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     null,
-                    Map.class
+                    (Class<Map<String, Object>>) (Object) Map.class
             );
             Map<String, Object> userInfo = response.getBody();
             if (userInfo == null) {
-                throw new RuntimeException("Failed to get user info from Facebook API");
+                throw new UnauthorizedException("Failed to get user info from Facebook API");
             }
             log.debug("Retrieved user info from Facebook API: {}", userInfo);
             String email = (String) userInfo.get("email");
@@ -369,14 +431,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String lastName = (String) userInfo.get("last_name");
             String gender = (String) userInfo.get("gender");
             String birthday = (String) userInfo.get("birthday");
+            @SuppressWarnings("unchecked")
             Map<String, Object> picture = (Map<String, Object>) userInfo.get("picture");
             String pictureUrl = null;
             if (picture != null) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> data = (Map<String, Object>) picture.get("data");
                 if (data != null) {
                     pictureUrl = (String) data.get("url");
                 }
             }
+            @SuppressWarnings("unchecked")
             Map<String, Object> location = (Map<String, Object>) userInfo.get("location");
             String locationName = location != null ? (String) location.get("name") : null;
             if (email == null) {
@@ -393,9 +458,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     pictureUrl,
                     locationName
             );
+        } catch (BadRequestException | UnauthorizedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error authenticating with Facebook", e);
-            throw new RuntimeException("Facebook authentication failed: " + e.getMessage());
+            throw new InternalServerErrorException("Facebook authentication failed: " + e.getMessage());
         }
     }
 
@@ -413,7 +480,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow());
+                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                 user = User.builder()
                         .username(email.substring(0, email.indexOf('@')))
                         .fullName(name != null ? name : (firstName + " " + lastName))
@@ -441,7 +508,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     updated = true;
                 }
                 if (!user.getRoles().stream().anyMatch(r -> r.getName().equals("MEMBER"))) {
-                    user.addRole(roleRepository.findByName("MEMBER").orElseThrow());
+                    user.addRole(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                     updated = true;
                 }
                 if (user.getStatus() != UserStatus.ACTIVE) {
@@ -457,7 +524,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
             log.error("Error authenticating with Facebook OAuth2", e);
-            throw new RuntimeException("Facebook OAuth2 authentication failed: " + e.getMessage());
+            throw new InternalServerErrorException("Facebook OAuth2 authentication failed: " + e.getMessage());
         }
     }
 
@@ -497,7 +564,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-            roles.add(roleRepository.findByName("MEMBER").orElseThrow());
+            roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
             user = User.builder()
                     .username(email.substring(0, email.indexOf('@')))
                     .fullName(name)

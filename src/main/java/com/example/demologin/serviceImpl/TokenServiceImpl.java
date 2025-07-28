@@ -1,6 +1,7 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.entity.User;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.TokenService;
 import io.jsonwebtoken.Claims;
@@ -66,7 +67,7 @@ public class TokenServiceImpl implements TokenService {
                 .getPayload();
         String username = claims.getSubject();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Account not found with username: " + username));
+                .orElseThrow(() -> new NotFoundException("Account not found with username: " + username));
         int tokenVersion = (int) claims.get("tokenVersion");
         if (tokenVersion != user.getTokenVersion()) {
             throw new ExpiredJwtException(null, claims, "Token has been invalidated");
@@ -83,7 +84,7 @@ public class TokenServiceImpl implements TokenService {
                     .parseSignedClaims(authToken)
                     .getPayload();
             User user = userRepository.findByUsername(claims.getSubject())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             return (int) claims.get("tokenVersion") == user.getTokenVersion();
         } catch (Exception e) {
             return false;

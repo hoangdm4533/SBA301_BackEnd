@@ -1,10 +1,12 @@
 package com.example.demologin.serviceImpl;
 
+import com.example.demologin.dto.response.TokenRefreshResponse;
 import com.example.demologin.entity.RefreshToken;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.TokenRefreshException;
 import com.example.demologin.repository.RefreshTokenRepository;
 import com.example.demologin.service.RefreshTokenService;
+import com.example.demologin.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private TokenService tokenService;
 
     @Override
     public Optional<RefreshToken> findByToken(String token) {
@@ -52,5 +57,17 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public void deleteByAccount(User user) {
         refreshTokenRepository.deleteByUser(user);
+    }
+
+    @Override
+    public TokenRefreshResponse refreshToken(String requestRefreshToken) {
+        return findByToken(requestRefreshToken)
+                .map(this::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String token = tokenService.generateToken(user);
+                    return new TokenRefreshResponse(token, requestRefreshToken);
+                })
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
     }
 } 
