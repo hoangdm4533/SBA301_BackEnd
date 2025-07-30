@@ -1,10 +1,16 @@
 package com.example.demologin.dto.request.role;
 
-import com.example.demologin.dto.request.AdminActionRequest;
+import com.example.demologin.dto.request.BaseActionRequest;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
-public class CreateRoleRequest {
+@Getter
+@Setter
+public class CreateRoleRequest extends BaseActionRequest {
     @NotBlank(message = "Role name must not be blank")
     public String name;
-    public AdminActionRequest adminAction;
+    
+    // reason field inherited from BaseActionRequest
+    // Will be auto-populated when @UserAction(requiresReason = true)
 }

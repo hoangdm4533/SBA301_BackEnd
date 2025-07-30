@@ -1,10 +1,10 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.annotation.AdminActionLog;
+import com.example.demologin.annotation.UserAction;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.dto.request.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.entity.User;
-import com.example.demologin.enums.AdminActionType;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.mapper.UserMapper;
@@ -18,7 +18,8 @@ public class UserServiceImpl implements UserService {
     @Autowired private UserRepository userRepository;
     @Autowired private UserMapper userMapper;
 
-    @AdminActionLog(targetType = "USER", actionType = AdminActionType.UPDATE)
+    @UserAction(actionType = UserActionType.UPDATE, 
+               description = "Update user information")
     @Transactional
     @Override
     public MemberResponse updateUser(UpdateUserRequest req) {

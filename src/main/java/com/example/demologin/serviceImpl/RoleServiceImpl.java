@@ -1,7 +1,7 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.annotation.AdminAction;
-import com.example.demologin.dto.request.AdminActionRequest;
+import com.example.demologin.annotation.UserAction;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
@@ -29,7 +29,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @AdminAction(action = "CREATE", entity = "ROLE", reasonRequired = "true")
+    @UserAction(actionType = UserActionType.CREATE, requiresReason = true, 
+               description = "Create new role")
     public Role create(CreateRoleRequest req) {
         if (roleRepository.existsByName(req.name)) {
             throw new BusinessException("Role name already exists");
@@ -41,7 +42,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @AdminAction(action = "UPDATE", entity = "ROLE", reasonRequired = "true")
+    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true,
+               description = "Update role information")
     public Role update(Long id, UpdateRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
@@ -50,7 +52,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @AdminAction(action = "DELETE", entity = "ROLE", reasonRequired = "true")
+    @UserAction(actionType = UserActionType.DELETE, requiresReason = true,
+               description = "Delete role")
     public void delete(Long id, DeleteRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
@@ -63,7 +66,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @AdminAction(action = "UPDATE_PERMISSIONS", entity = "ROLE", reasonRequired = "true")
+    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true,
+               description = "Update role permissions")
     public Role updatePermissions(Long id, RolePermissionsRequest req) {
         Role r = roleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
         roleMapper.fromPermissionDto(req, r);

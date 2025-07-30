@@ -20,6 +20,8 @@ import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.service.AuthenticationService;
+import com.example.demologin.service.BruteForceProtectionService;
+import com.example.demologin.utils.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -92,6 +94,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private BruteForceProtectionService bruteForceProtectionService;
+
     @Override
     public User register(UserRegistrationRequest request) {
         UserActivityLog log = null;
@@ -107,19 +112,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
             roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-            User newUser = User.builder()
-                    .username(request.getUsername())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .fullName(request.getFullName())
-                    .dateOfBirth(request.getDateOfBirth())
-                    .gender(request.getGender())
-                    .email(request.getEmail())
-                    .identityCard(request.getIdentityCard())
-                    .phone(request.getPhone())
-                    .address(request.getAddress())
-                    .roles(roles)
-                    .status(UserStatus.ACTIVE)
-                    .build();
+            
+            User newUser = new User(
+                    request.getUsername(),
+                    passwordEncoder.encode(request.getPassword()),
+                    request.getFullName(),
+                    request.getEmail(),
+                    request.getPhone(),
+                    request.getAddress()
+            );
+            
+            newUser.setDateOfBirth(request.getDateOfBirth());
+            newUser.setGender(request.getGender());
+            newUser.setIdentityCard(request.getIdentityCard());
+            newUser.setRoles(roles);
+            newUser.setStatus(UserStatus.ACTIVE);
+            
             User savedUser = userRepository.save(newUser);
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
@@ -159,6 +167,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse login(LoginRequest loginRequest) {
+        String clientIp = IpUtils.getClientIpAddress();
+        String username = loginRequest.getUsername();
+        
+        // Check if account is locked due to brute force attempts
+        if (bruteForceProtectionService.isAccountLocked(username)) {
+            long remainingMinutes = bruteForceProtectionService.getRemainingLockoutMinutes(username);
+            
+            String message = String.format("Tài khoản của bạn đã bị tạm khóa. Vui lòng thử lại sau %d phút.", remainingMinutes);
+            
+            // Record the failed attempt due to account being locked
+            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account locked due to brute force protection");
+            
+            throw new AccountLockedException(message, remainingMinutes);
+        }
+        
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
@@ -168,22 +191,33 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     )
             );
         } catch (BadCredentialsException e) {
+            // Handle failed login attempt
+            bruteForceProtectionService.handleFailedLogin(username, clientIp, "Invalid credentials");
             throw new UnauthorizedException("Username/ password is invalid. Please try again!");
         } catch (LockedException e) {
+            // Handle account locked (not brute force related)
+            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account manually locked");
             throw new ForbiddenException("Account has been locked!");
         } catch (Exception e) {
+            // Handle other authentication errors
+            bruteForceProtectionService.handleFailedLogin(username, clientIp, "Authentication error: " + e.getMessage());
             throw new InternalServerErrorException("Login failed: " + e.getMessage());
         }
 
         User user = (User) authentication.getPrincipal();
 
         if (!user.isVerify()) {
+            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account not verified");
             throw new ForbiddenException("Account has not been verified yet. Please verify your email.");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
+            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account not active");
             throw new ForbiddenException("Account is not active.");
         }
+
+        // Login successful - handle successful login
+        bruteForceProtectionService.handleSuccessfulLogin(username, clientIp);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String token = tokenService.generateToken(user);
@@ -278,20 +312,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
                 roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-                user = User.builder()
-                        .username(email.substring(0, email.indexOf('@')))
-                        .fullName(name)
-                        .email(email)
-                        .password(passwordEncoder.encode(""))
-                        .roles(roles)
-                        .status(UserStatus.ACTIVE)
-                        .createdAt(LocalDateTime.now())
-                        .phone("")
-                        .address("")
-                        .identityCard("")
-                        .dateOfBirth(LocalDateTime.now().toLocalDate())
-                        .gender(com.example.demologin.enums.Gender.OTHER)
-                        .build();
+                
+                user = new User(
+                        email.substring(0, email.indexOf('@')),
+                        passwordEncoder.encode(""),
+                        name,
+                        email,
+                        "",
+                        ""
+                );
+                
+                user.setRoles(roles);
+                user.setStatus(UserStatus.ACTIVE);
+                user.setCreatedAt(LocalDateTime.now());
+                user.setIdentityCard("");
+                user.setDateOfBirth(LocalDateTime.now().toLocalDate());
+                user.setGender(com.example.demologin.enums.Gender.OTHER);
+                
                 user = userRepository.save(user);
             }
             String token = tokenService.generateToken(user);
@@ -347,21 +384,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
                 roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-                user = User.builder()
-                        .username(email.substring(0, email.indexOf('@')))
-                        .fullName(name)
-                        .email(email)
-                        .password(passwordEncoder.encode(""))
-                        .roles(roles)
-                        .status(UserStatus.ACTIVE)
-                        .createdAt(LocalDateTime.now())
-                        .phone("")
-                        .address("")
-                        .identityCard("")
-                        .isVerify(true)
-                        .dateOfBirth(LocalDateTime.now().toLocalDate())
-                        .gender(com.example.demologin.enums.Gender.OTHER)
-                        .build();
+                
+                user = new User(
+                        email.substring(0, email.indexOf('@')),
+                        passwordEncoder.encode(""),
+                        name,
+                        email,
+                        "",
+                        ""
+                );
+                
+                user.setRoles(roles);
+                user.setStatus(UserStatus.ACTIVE);
+                user.setCreatedAt(LocalDateTime.now());
+                user.setIdentityCard("");
+                user.setVerify(true);
+                user.setDateOfBirth(LocalDateTime.now().toLocalDate());
+                user.setGender(com.example.demologin.enums.Gender.OTHER);
+                
                 user = userRepository.save(user);
             }
             String token = tokenService.generateToken(user);
@@ -481,21 +521,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
                 roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-                user = User.builder()
-                        .username(email.substring(0, email.indexOf('@')))
-                        .fullName(name != null ? name : (firstName + " " + lastName))
-                        .email(email)
-                        .password(passwordEncoder.encode(""))
-                        .roles(roles)
-                        .status(UserStatus.ACTIVE)
-                        .createdAt(LocalDateTime.now())
-                        .phone("")
-                        .address(location != null ? location : "")
-                        .identityCard("")
-                        .dateOfBirth(parseBirthday(birthday))
-                        .gender(parseGender(gender))
-                        .isVerify(true)
-                        .build();
+                
+                user = new User(
+                        email.substring(0, email.indexOf('@')),
+                        passwordEncoder.encode(""),
+                        name != null ? name : (firstName + " " + lastName),
+                        email,
+                        "",
+                        location != null ? location : ""
+                );
+                
+                user.setRoles(roles);
+                user.setStatus(UserStatus.ACTIVE);
+                user.setCreatedAt(LocalDateTime.now());
+                user.setIdentityCard("");
+                user.setDateOfBirth(parseBirthday(birthday));
+                user.setGender(parseGender(gender));
+                user.setVerify(true);
+                
                 user = userRepository.save(user);
             } else {
                 boolean updated = false;
@@ -565,21 +608,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (user == null) {
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
             roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-            user = User.builder()
-                    .username(email.substring(0, email.indexOf('@')))
-                    .fullName(name)
-                    .email(email)
-                    .password(passwordEncoder.encode(""))
-                    .status(UserStatus.ACTIVE)
-                    .createdAt(LocalDateTime.now())
-                    .phone("")
-                    .address("")
-                    .identityCard("")
-                    .dateOfBirth(LocalDateTime.now().toLocalDate())
-                    .gender(Gender.OTHER)
-                    .roles(roles)
-                    .isVerify(true)
-                    .build();
+            
+            user = new User(
+                    email.substring(0, email.indexOf('@')),
+                    passwordEncoder.encode(""),
+                    name,
+                    email,
+                    "",
+                    ""
+            );
+            
+            user.setStatus(UserStatus.ACTIVE);
+            user.setCreatedAt(LocalDateTime.now());
+            user.setIdentityCard("");
+            user.setDateOfBirth(LocalDateTime.now().toLocalDate());
+            user.setGender(Gender.OTHER);
+            user.setRoles(roles);
+            user.setVerify(true);
+            
             user = userRepository.save(user);
         }
         String token = tokenService.generateToken(user);

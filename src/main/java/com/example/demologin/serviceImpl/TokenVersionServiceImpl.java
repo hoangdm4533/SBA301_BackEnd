@@ -1,0 +1,229 @@
+package com.example.demologin.serviceImpl;
+
+import com.example.demologin.annotation.UserAction;
+import com.example.demologin.dto.response.ResponseObject;
+import com.example.demologin.entity.User;
+import com.example.demologin.enums.UserActionType;
+import com.example.demologin.exception.exceptions.NotFoundException;
+import com.example.demologin.repository.UserRepository;
+import com.example.demologin.service.TokenVersionService;
+import com.example.demologin.utils.AccountUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * Implementation of TokenVersionService for managing user token versions
+ * Provides functionality to invalidate user tokens by incrementing version numbers
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional
+@Slf4j
+public class TokenVersionServiceImpl implements TokenVersionService {
+    
+    private final UserRepository userRepository;
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, description = "Increment user token version")
+    public User incrementTokenVersion(User user) {
+        log.info("Incrementing token version for user: {}", user.getUsername());
+        user.incrementTokenVersion();
+        User savedUser = userRepository.save(user);
+        log.info("Token version incremented to {} for user: {}", savedUser.getTokenVersion(), user.getUsername());
+        return savedUser;
+    }
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, description = "Increment token version by user ID")
+    public User incrementTokenVersionByUserId(Long userId) {
+        log.info("Incrementing token version for user ID: {}", userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        return incrementTokenVersion(user);
+    }
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, description = "Increment token version by username")
+    public User incrementTokenVersionByUsername(String username) {
+        log.info("Incrementing token version for username: {}", username);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
+        return incrementTokenVersion(user);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public int getCurrentTokenVersion(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        return user.getTokenVersion();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public int getCurrentTokenVersionByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
+        return user.getTokenVersion();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTokenVersionValid(Long userId, int tokenVersion) {
+        try {
+            int currentVersion = getCurrentTokenVersion(userId);
+            boolean isValid = currentVersion == tokenVersion;
+            log.debug("Token version validation for user {}: current={}, provided={}, valid={}", 
+                     userId, currentVersion, tokenVersion, isValid);
+            return isValid;
+        } catch (NotFoundException e) {
+            log.warn("User not found during token version validation: {}", userId);
+            return false;
+        }
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTokenVersionValidByUsername(String username, int tokenVersion) {
+        try {
+            int currentVersion = getCurrentTokenVersionByUsername(username);
+            boolean isValid = currentVersion == tokenVersion;
+            log.debug("Token version validation for username {}: current={}, provided={}, valid={}", 
+                     username, currentVersion, tokenVersion, isValid);
+            return isValid;
+        } catch (NotFoundException e) {
+            log.warn("User not found during token version validation: {}", username);
+            return false;
+        }
+    }
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
+               description = "Invalidate all user tokens")
+    public void invalidateAllTokens(Long userId) {
+        log.info("Invalidating all tokens for user ID: {}", userId);
+        incrementTokenVersionByUserId(userId);
+        log.info("All tokens invalidated for user ID: {}", userId);
+    }
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
+               description = "Invalidate all user tokens by username")
+    public void invalidateAllTokensByUsername(String username) {
+        log.info("Invalidating all tokens for username: {}", username);
+        incrementTokenVersionByUsername(username);
+        log.info("All tokens invalidated for username: {}", username);
+    }
+    
+    @Override
+    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
+               description = "Reset user token version")
+    public User resetTokenVersion(Long userId) {
+        log.info("Resetting token version for user ID: {}", userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        user.setTokenVersion(0);
+        User savedUser = userRepository.save(user);
+        log.info("Token version reset to 0 for user: {}", user.getUsername());
+        return savedUser;
+    }
+    
+    // Business logic methods for controllers
+    @Override
+    public ResponseObject incrementCurrentUserTokenVersion() {
+        User currentUser = AccountUtils.getCurrentUser();
+        User updatedUser = incrementTokenVersion(currentUser);
+        
+        Map<String, Object> data = Map.of(
+            "username", updatedUser.getUsername(),
+            "oldTokenVersion", currentUser.getTokenVersion(),
+            "newTokenVersion", updatedUser.getTokenVersion(),
+            "updatedAt", LocalDateTime.now(),
+            "message", "All existing tokens have been invalidated"
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "Token version incremented successfully", data);
+    }
+    
+    @Override
+    public ResponseObject incrementUserTokenVersionByUserId(Long userId) {
+        User adminUser = AccountUtils.getCurrentUser();
+        User updatedUser = incrementTokenVersionByUserId(userId);
+        
+        Map<String, Object> data = Map.of(
+            "targetUserId", userId,
+            "targetUsername", updatedUser.getUsername(),
+            "newTokenVersion", updatedUser.getTokenVersion(),
+            "updatedBy", adminUser.getUsername(),
+            "updatedAt", LocalDateTime.now(),
+            "message", "All existing tokens for target user have been invalidated"
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data);
+    }
+    
+    @Override
+    public ResponseObject incrementUserTokenVersionByUsername(String username) {
+        User adminUser = AccountUtils.getCurrentUser();
+        User updatedUser = incrementTokenVersionByUsername(username);
+        
+        Map<String, Object> data = Map.of(
+            "targetUsername", username,
+            "newTokenVersion", updatedUser.getTokenVersion(),
+            "updatedBy", adminUser.getUsername(),
+            "updatedAt", LocalDateTime.now(),
+            "message", "All existing tokens for target user have been invalidated"
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data);
+    }
+    
+    @Override
+    public ResponseObject getCurrentUserTokenVersion() {
+        User currentUser = AccountUtils.getCurrentUser();
+        
+        Map<String, Object> data = Map.of(
+            "username", currentUser.getUsername(),
+            "tokenVersion", currentUser.getTokenVersion(),
+            "checkedAt", LocalDateTime.now()
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "Token version retrieved successfully", data);
+    }
+    
+    @Override
+    public ResponseObject getUserTokenVersionByUserId(Long userId) {
+        int tokenVersion = getCurrentTokenVersion(userId);
+        User targetUser = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        Map<String, Object> data = Map.of(
+            "userId", userId,
+            "username", targetUser.getUsername(),
+            "tokenVersion", tokenVersion,
+            "checkedAt", LocalDateTime.now()
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data);
+    }
+    
+    @Override
+    public ResponseObject getUserTokenVersionByUsername(String username) {
+        int tokenVersion = getCurrentTokenVersionByUsername(username);
+        
+        Map<String, Object> data = Map.of(
+            "username", username,
+            "tokenVersion", tokenVersion,
+            "checkedAt", LocalDateTime.now()
+        );
+        
+        return new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data);
+    }
+}

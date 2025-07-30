@@ -32,4 +32,7 @@ public class UserActivityLog {
 
     @Column(length = 500)
     private String details;
+
+    @Column(length = 45)
+    private String ipAddress;
 }

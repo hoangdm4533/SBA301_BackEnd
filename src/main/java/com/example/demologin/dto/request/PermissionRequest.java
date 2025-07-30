@@ -2,10 +2,14 @@ package com.example.demologin.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class PermissionRequest {
+@Setter
+public class PermissionRequest extends BaseActionRequest {
     @NotBlank(message = "Permission name must not be blank")
     private String name;
-    public AdminActionRequest adminAction;
+    
+    // reason field inherited from BaseActionRequest
+    // Will be auto-populated when @UserAction(requiresReason = true)
 }

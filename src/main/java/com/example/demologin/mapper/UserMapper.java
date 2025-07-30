@@ -26,16 +26,20 @@ public class UserMapper {
         );
     }
     public static User toEntity(UserRequest userRequest) {
-        return User.builder()
-                .username(userRequest.getUsername())
-                .fullName(userRequest.getFullname())
-                .email(userRequest.getEmail())
-                .phone(userRequest.getPhone())
-                .address(userRequest.getAddress())
-                .dateOfBirth(userRequest.getDateOfBirth())
-                .identityCard(userRequest.getIdentity_Card())
-                .status(UserStatus.ACTIVE) // Default status
-                .build();
+        User user = new User(
+                userRequest.getUsername(),
+                null, // password will be set elsewhere
+                userRequest.getFullname(),
+                userRequest.getEmail(),
+                userRequest.getPhone(),
+                userRequest.getAddress()
+        );
+        
+        user.setDateOfBirth(userRequest.getDateOfBirth());
+        user.setIdentityCard(userRequest.getIdentity_Card());
+        user.setStatus(UserStatus.ACTIVE); // Default status
+        
+        return user;
     }
 
     // Convert User -> UserResponse (cho login)

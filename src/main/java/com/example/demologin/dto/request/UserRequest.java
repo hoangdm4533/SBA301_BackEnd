@@ -1,20 +1,23 @@
 package com.example.demologin.dto.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserRequest {
-    public String username;
-    public String email;
-    public String password;
-    public String fullname;
-    public String phone;
-    public String address;
-    public LocalDate dateOfBirth;
-    public String identity_Card;
-
+    private String username;
+    private String email;
+    private String password;
+    private String fullname;
+    private String phone;
+    private String address;
+    private LocalDate dateOfBirth;
+    private String identity_Card;
 }

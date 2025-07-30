@@ -1,6 +1,5 @@
 package com.example.demologin.service;
 
-import com.example.demologin.dto.request.AdminActionRequest;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
