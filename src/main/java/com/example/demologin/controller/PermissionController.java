@@ -1,15 +1,14 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserActivity;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.PermissionRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.enums.ActivityType;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.PermissionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @RestController
@@ -23,9 +22,10 @@ public class PermissionController {
         return permissionService.getAll();
     }
 
-    @SecuredEndpoint("PERMISSION_UPDATE")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "PERMISSION", 
+               description = "Update permission name", requiresReason = true)
     @PutMapping("/{id}")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Update permission name")
+    @SecuredEndpoint("PERMISSION_UPDATE")
     public ResponseEntity<ResponseObject> update(
             @PathVariable Long id,
             @RequestBody @Valid PermissionRequest req) {

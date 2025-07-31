@@ -1,10 +1,10 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserActivity;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.BaseActionRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.enums.ActivityType;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.TokenVersionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,9 +27,10 @@ public class TokenVersionController {
     
     private final TokenVersionService tokenVersionService;
     
+    @UserAction(actionType = UserActionType.DELETE, targetType = "TOKEN", 
+               description = "Invalidate all own tokens", requiresReason = true)
     @PostMapping("/invalidate-all")
     @SecuredEndpoint("TOKEN_INVALIDATE_OWN")
-    @UserActivity(activityType = ActivityType.TOKEN_REFRESH, details = "Invalidate all own tokens")
     @Operation(summary = "Invalidate all tokens for current user", 
                description = "Increment token version to invalidate all existing tokens for the current user")
     @ApiResponses(value = {
@@ -43,9 +44,10 @@ public class TokenVersionController {
         return tokenVersionService.incrementCurrentUserTokenVersion();
     }
     
+    @UserAction(actionType = UserActionType.DELETE, targetType = "TOKEN", 
+               description = "Admin invalidate user tokens", requiresReason = true)
     @PostMapping("/invalidate-user/{userId}")
     @SecuredEndpoint("TOKEN_INVALIDATE_USER")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Admin invalidate user tokens", logEditorId = true)
     @Operation(summary = "Admin invalidate all tokens for user by ID", 
                description = "Admin operation to increment token version and invalidate all tokens for specific user")
     @ApiResponses(value = {
@@ -61,17 +63,19 @@ public class TokenVersionController {
         return tokenVersionService.incrementUserTokenVersionByUserId(userId);
     }
     
+    @UserAction(actionType = UserActionType.DELETE, targetType = "TOKEN", 
+               description = "Admin invalidate user tokens by username", requiresReason = true)
     @PostMapping("/invalidate-user/username/{username}")
     @SecuredEndpoint("TOKEN_INVALIDATE_USER")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Admin invalidate user tokens by username", logEditorId = true)
-    @Operation(summary = "Admin invalidate all tokens for user by username", 
-               description = "Admin operation to increment token version and invalidate all tokens for specific user by username")
+    @Operation(summary = "[DEPRECATED] Admin invalidate all tokens for user by username", 
+               description = "⚠️ DEPRECATED: Use /invalidate-user/{userId} instead. Admin operation to increment token version and invalidate all tokens for specific user by username")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User tokens invalidated successfully"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @Deprecated
     public ResponseEntity<ResponseObject> invalidateUserTokensByUsername(
             @Parameter(description = "Username") @PathVariable String username,
             @Valid @RequestBody BaseActionRequest request) {
@@ -110,14 +114,15 @@ public class TokenVersionController {
     
     @GetMapping("/user/username/{username}")
     @SecuredEndpoint("TOKEN_VIEW_USER")
-    @Operation(summary = "Get user token version by username", 
-               description = "Admin operation to get token version for specific user by username")
+    @Operation(summary = "[DEPRECATED] Get user token version by username", 
+               description = "⚠️ DEPRECATED: Use /user/{userId} instead. Admin operation to get token version for specific user by username")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User token version retrieved successfully"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @Deprecated
     public ResponseEntity<ResponseObject> getUserTokenVersionByUsername(
             @Parameter(description = "Username") @PathVariable String username) {
         

@@ -1,10 +1,10 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserActivity;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.BaseActionRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.enums.ActivityType;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.enums.UserStatus;
 import com.example.demologin.service.SecurityManagementService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,9 +25,10 @@ public class SecurityManagementController {
 
     private final SecurityManagementService securityManagementService;
 
-    @PostMapping("/unlock-account/{username}")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "USER", 
+               description = "Admin unlock user account", requiresReason = true)
+    @PostMapping("/unlock-account/{userId}")
     @SecuredEndpoint("ADMIN_SECURITY_MANAGEMENT")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Admin unlock user account", logEditorId = true)
     @Operation(summary = "Unlock user account", description = "Admin operation to unlock a locked user account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Account unlocked successfully"),
@@ -36,14 +37,15 @@ public class SecurityManagementController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> unlockAccount(
-            @Parameter(description = "Username to unlock") @PathVariable String username) {
+            @Parameter(description = "User ID to unlock") @PathVariable Long userId) {
         
-        return securityManagementService.unlockAccount(username);
+        return securityManagementService.unlockAccountById(userId);
     }
 
-    @PostMapping("/lock-account/{username}")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "USER", 
+               description = "Admin lock user account", requiresReason = true)
+    @PostMapping("/lock-account/{userId}")
     @SecuredEndpoint("ADMIN_SECURITY_MANAGEMENT")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Admin lock user account", logEditorId = true)
     @Operation(summary = "Lock user account", description = "Admin operation to manually lock a user account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Account locked successfully"),
@@ -52,15 +54,16 @@ public class SecurityManagementController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> lockAccount(
-            @Parameter(description = "Username to lock") @PathVariable String username,
+            @Parameter(description = "User ID to lock") @PathVariable Long userId,
             @Valid @RequestBody BaseActionRequest request) {
         
-        return securityManagementService.lockAccount(username, request);
+        return securityManagementService.lockAccountById(userId, request);
     }
 
-    @PutMapping("/change-status/{username}")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "USER", 
+               description = "Admin change user status", requiresReason = true)
+    @PutMapping("/change-status/{userId}")
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Admin change user status", logEditorId = true)
     @Operation(summary = "Change user status", description = "Admin operation to change user account status")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User status changed successfully"),
@@ -69,11 +72,11 @@ public class SecurityManagementController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> changeUserStatus(
-            @Parameter(description = "Username") @PathVariable String username,
+            @Parameter(description = "User ID") @PathVariable Long userId,
             @Parameter(description = "New status") @RequestParam UserStatus status,
             @Valid @RequestBody BaseActionRequest request) {
         
-        return securityManagementService.changeUserStatus(username, status, request);
+        return securityManagementService.changeUserStatusById(userId, status, request);
     }
 
     @GetMapping("/lockouts")
@@ -92,7 +95,7 @@ public class SecurityManagementController {
         return securityManagementService.getAccountLockouts(page, size, activeOnly);
     }
 
-    @GetMapping("/login-attempts/{username}")
+    @GetMapping("/login-attempts/{userId}")
     @SecuredEndpoint("ADMIN_SECURITY_MANAGEMENT")
     @Operation(summary = "Get login attempts for user", description = "Get login attempts for specific user")
     @ApiResponses(value = {
@@ -101,15 +104,15 @@ public class SecurityManagementController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> getLoginAttempts(
-            @Parameter(description = "Username") @PathVariable String username,
+            @Parameter(description = "User ID") @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "24") int hoursBack) {
         
-        return securityManagementService.getLoginAttempts(username, page, size, hoursBack);
+        return securityManagementService.getLoginAttemptsByUserId(userId, page, size, hoursBack);
     }
 
-    @GetMapping("/lockout-status/{username}")
+    @GetMapping("/lockout-status/{userId}")
     @SecuredEndpoint("ADMIN_SECURITY_MANAGEMENT")
     @Operation(summary = "Check account lockout status", description = "Check if account is locked and get details")
     @ApiResponses(value = {
@@ -118,8 +121,8 @@ public class SecurityManagementController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> getLockoutStatus(
-            @Parameter(description = "Username") @PathVariable String username) {
+            @Parameter(description = "User ID") @PathVariable Long userId) {
         
-        return securityManagementService.getLockoutStatus(username);
+        return securityManagementService.getLockoutStatusByUserId(userId);
     }
 }

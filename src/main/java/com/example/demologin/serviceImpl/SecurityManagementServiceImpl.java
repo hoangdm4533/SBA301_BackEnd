@@ -310,4 +310,69 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
         
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Lockout status retrieved successfully", data));
     }
+    
+    // ================ NEW METHODS WITH USER ID ================
+    
+    @Override
+    @Transactional
+    public ResponseEntity<ResponseObject> unlockAccountById(Long userId) {
+        if (userId == null) {
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User ID cannot be null", null));
+        }
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        return unlockAccount(user.getUsername());
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<ResponseObject> lockAccountById(Long userId, BaseActionRequest request) {
+        if (userId == null) {
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User ID cannot be null", null));
+        }
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        return lockAccount(user.getUsername(), request);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<ResponseObject> changeUserStatusById(Long userId, UserStatus status, BaseActionRequest request) {
+        if (userId == null) {
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User ID cannot be null", null));
+        }
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        return changeUserStatus(user.getUsername(), status, request);
+    }
+
+    @Override
+    public ResponseEntity<ResponseObject> getLoginAttemptsByUserId(Long userId, int page, int size, int hoursBack) {
+        if (userId == null) {
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User ID cannot be null", null));
+        }
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        return getLoginAttempts(user.getUsername(), page, size, hoursBack);
+    }
+
+    @Override
+    public ResponseEntity<ResponseObject> getLockoutStatusByUserId(Long userId) {
+        if (userId == null) {
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User ID cannot be null", null));
+        }
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        return getLockoutStatus(user.getUsername());
+    }
 }

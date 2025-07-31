@@ -1,10 +1,12 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.annotation.UserActivity;
 import com.example.demologin.dto.request.BaseActionRequest;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.enums.ActivityType;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.SessionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,8 +29,8 @@ public class SessionManagementController {
     
     private final SessionManagementService sessionManagementService;
     
-    @PostMapping("/logout")
     @UserActivity(activityType = ActivityType.LOGOUT, details = "User logout from current device")
+    @PostMapping("/logout")
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from current device", 
                description = "Logout user from current device only")
@@ -40,8 +42,8 @@ public class SessionManagementController {
         return sessionManagementService.logoutCurrentDevice();
     }
     
-    @PostMapping("/logout-all")
     @UserActivity(activityType = ActivityType.LOGOUT, details = "User logout from all devices")
+    @PostMapping("/logout-all")
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from all devices", 
                description = "Logout user from all devices by invalidating all tokens")
@@ -55,8 +57,9 @@ public class SessionManagementController {
         return sessionManagementService.logoutFromAllDevices(request);
     }
     
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "USER", 
+               description = "Admin force logout user from all devices", requiresReason = true)
     @PostMapping("/force-logout/{userId}")
-    @UserActivity(activityType = ActivityType.LOGOUT, details = "Admin force logout user from all devices", logEditorId = true)
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
     @Operation(summary = "Admin force logout user from all devices", 
                description = "Admin operation to force logout a specific user from all devices")

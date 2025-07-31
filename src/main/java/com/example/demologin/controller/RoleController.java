@@ -1,13 +1,13 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserActivity;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.enums.ActivityType;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,30 +26,34 @@ public class RoleController {
         return roleService.getAll();
     }
 
-    @SecuredEndpoint("ROLE_CREATE")
+    @UserAction(actionType = UserActionType.CREATE, targetType = "ROLE", 
+               description = "Create new role", requiresReason = true)
     @PostMapping
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Create new role")
+    @SecuredEndpoint("ROLE_CREATE")
     public ResponseEntity<ResponseObject> create(@RequestBody @Valid CreateRoleRequest req) {
         return roleService.create(req);
     }
 
-    @SecuredEndpoint("ROLE_UPDATE")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "ROLE", 
+               description = "Update role information", requiresReason = true)
     @PutMapping("/{id}")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Update role information")
+    @SecuredEndpoint("ROLE_UPDATE")
     public ResponseEntity<ResponseObject> update(@PathVariable Long id, @RequestBody @Valid UpdateRoleRequest req) {
         return roleService.update(id, req);
     }
 
-    @SecuredEndpoint("ROLE_DELETE")
+    @UserAction(actionType = UserActionType.DELETE, targetType = "ROLE", 
+               description = "Delete role", requiresReason = true)
     @DeleteMapping("/{id}")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Delete role")
+    @SecuredEndpoint("ROLE_DELETE")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id, @RequestBody @Valid DeleteRoleRequest req) {
         return roleService.delete(id, req);
     }
 
-    @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
+    @UserAction(actionType = UserActionType.UPDATE, targetType = "ROLE", 
+               description = "Update role permissions", requiresReason = true)
     @PutMapping("/{id}/permissions")
-    @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Update role permissions")
+    @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
     public ResponseEntity<ResponseObject> updatePermissions(@PathVariable Long id, @RequestBody @Valid RolePermissionsRequest req) {
         return roleService.updatePermissions(id, req);
     }

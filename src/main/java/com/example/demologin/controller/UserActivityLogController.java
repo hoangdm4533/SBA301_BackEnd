@@ -1,10 +1,12 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.UserActivityLogExportRequest;
 import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserActivityLogResponse;
+import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.UserActivityLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -117,6 +119,8 @@ public class UserActivityLogController {
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs retrieved successfully", response));
     }
 
+    @UserAction(actionType = UserActionType.CREATE, targetType = "LOG", 
+               description = "Export activity logs", requiresReason = true)
     @PostMapping("/export")
     @SecuredEndpoint("ADMIN_ACTIVITY_LOG_EXPORT")
     @Operation(summary = "Export activity logs", description = "Export activity logs within date range with pagination")
@@ -134,6 +138,8 @@ public class UserActivityLogController {
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs exported successfully", response));
     }
 
+    @UserAction(actionType = UserActionType.DELETE, targetType = "LOG", 
+               description = "Delete activity log", requiresReason = true)
     @DeleteMapping("/{id}")
     @SecuredEndpoint("LOG_DELETE")
     @Operation(summary = "Delete activity log", description = "Delete a specific activity log by its ID")
