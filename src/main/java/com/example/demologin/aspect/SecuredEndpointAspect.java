@@ -1,7 +1,7 @@
 package com.example.demologin.aspect;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.exception.TokenValidationException;
+import com.example.demologin.exception.exceptions.TokenValidationException;
 import com.example.demologin.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -122,6 +122,9 @@ public class SecuredEndpointAspect {
                     log.warn("Token validation failed for endpoint: {} - {}", joinPoint.getSignature().getName(), e.getMessage());
                     throw new AccessDeniedException("Token validation failed");
             }
+        } catch (RuntimeException e) {
+            // Let all runtime exceptions (including business exceptions) pass through without wrapping
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected error during security check for endpoint: {} - {}", 
                 joinPoint.getSignature().getName(), e.getMessage(), e);

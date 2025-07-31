@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.userActivityLog;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

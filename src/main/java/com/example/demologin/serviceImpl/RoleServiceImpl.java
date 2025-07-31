@@ -1,7 +1,5 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.annotation.UserAction;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
@@ -14,27 +12,30 @@ import com.example.demologin.mapper.RoleMapper;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.RoleService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
-    @Autowired private RoleRepository roleRepository;
-    @Autowired private RoleMapper roleMapper;
-    @Autowired private UserRepository userRepository;
+    
+    private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
+    private final UserRepository userRepository;
 
     @Override
     public ResponseEntity<ResponseObject> getAll() {
         List<Role> roles = roleRepository.findAll();
+        if (roles.isEmpty()) {
+            throw new NotFoundException("No roles found");
+        }
         return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roles));
     }
 
     @Override
-    @UserAction(actionType = UserActionType.CREATE, requiresReason = true, 
-               description = "Create new role")
     public ResponseEntity<ResponseObject> create(CreateRoleRequest req) {
         if (roleRepository.existsByName(req.name)) {
             throw new BusinessException("Role name already exists");
@@ -47,8 +48,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true,
-               description = "Update role information")
     public ResponseEntity<ResponseObject> update(Long id, UpdateRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
@@ -58,8 +57,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @UserAction(actionType = UserActionType.DELETE, requiresReason = true,
-               description = "Delete role")
     public ResponseEntity<ResponseObject> delete(Long id, DeleteRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
@@ -73,8 +70,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true,
-               description = "Update role permissions")
     public ResponseEntity<ResponseObject> updatePermissions(Long id, RolePermissionsRequest req) {
         Role r = roleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
         roleMapper.fromPermissionDto(req, r);

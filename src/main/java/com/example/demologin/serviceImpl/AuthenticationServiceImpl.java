@@ -1,9 +1,9 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.dto.request.FacebookLoginRequest;
-import com.example.demologin.dto.request.GoogleLoginRequest;
-import com.example.demologin.dto.request.LoginRequest;
-import com.example.demologin.dto.request.UserRegistrationRequest;
+import com.example.demologin.dto.request.login.FacebookLoginRequest;
+import com.example.demologin.dto.request.login.GoogleLoginRequest;
+import com.example.demologin.dto.request.login.LoginRequest;
+import com.example.demologin.dto.request.user.UserRegistrationRequest;
 import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
@@ -104,6 +104,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity<ResponseObject> register(UserRegistrationRequest request) {
         UserActivityLog log = null;
         try {
+            // Business logic validation
             if (!request.getPassword().equals(request.getConfirmPassword())) {
                 throw new ValidationException("Password and Confirm Password do not match");
             }
@@ -113,8 +114,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new ConflictException("Email already exists");
             }
+            
+            // Role validation
+            com.example.demologin.entity.Role memberRole = roleRepository.findByName("MEMBER")
+                .orElseThrow(() -> new NotFoundException("Role MEMBER not found"));
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-            roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
+            roles.add(memberRole);
             
             User newUser = new User(
                     request.getUsername(),
@@ -125,6 +130,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     request.getAddress()
             );
             
+            // Set fields
             newUser.setDateOfBirth(request.getDateOfBirth());
             newUser.setGender(request.getGender());
             newUser.setIdentityCard(request.getIdentityCard());
@@ -132,6 +138,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             newUser.setStatus(UserStatus.ACTIVE);
             
             User savedUser = userRepository.save(newUser);
+            
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
                     .userId(savedUser.getUserId())
@@ -165,7 +172,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Account not found"));
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Account not found with username: " + username));
     }
 
     @Override
@@ -189,7 +197,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            username,
                             loginRequest.getPassword()
                     )
             );
@@ -260,6 +268,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public User validatePasswordResetToken(String token) {
         PasswordResetToken passToken = passwordResetTokenRepository.findByToken(token);
+        if (passToken == null) {
+            throw new NotFoundException("Invalid token");
+        }
         if (passToken.getExpiryDate().before(new Date())) {
             throw new BadRequestException("Token expired");
         }
@@ -275,19 +286,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void deleteResetToken(String token) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token);
-        passwordResetTokenRepository.delete(resetToken);
+        if (resetToken != null) {
+            passwordResetTokenRepository.delete(resetToken);
+        }
     }
 
     @Override
     public UserResponse authenticateWithGoogle(GoogleLoginRequest request) {
-        if (request == null) {
-            throw new BadRequestException("Request body cannot be null");
-        }
-        
-        if (request.getIdToken() == null || request.getIdToken().trim().isEmpty()) {
-            throw new BadRequestException("Google ID token cannot be null or empty");
-        }
-        
         try {
             log.debug("Attempting to verify Google token: {}", request.getIdToken().substring(0, Math.min(10, request.getIdToken().length())) + "...");
             if (request.getIdToken().startsWith("ya29.")) {
@@ -297,22 +302,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                     .setAudience(java.util.Collections.singletonList(GOOGLE_CLIENT_ID))
                     .build();
-            GoogleIdToken idToken;
-            try {
-                idToken = verifier.verify(request.getIdToken());
-                if (idToken == null) {
-                    log.error("Google ID token verification failed");
-                    throw new UnauthorizedException("Invalid Google ID token");
-                }
-            } catch (java.lang.IllegalArgumentException e) {
-                log.error("Invalid token format: {}", e.getMessage());
-                throw new BadRequestException("Invalid token format: " + e.getMessage());
+            GoogleIdToken idToken = verifier.verify(request.getIdToken());
+            if (idToken == null) {
+                log.error("Google ID token verification failed");
+                throw new UnauthorizedException("Invalid Google ID token");
             }
+            
             Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-            User user = userRepository.findByEmail(email)
-                    .orElse(null);
+            
+            User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
                 roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
@@ -320,7 +320,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user = new User(
                         email.substring(0, email.indexOf('@')),
                         passwordEncoder.encode(""),
-                        name,
+                        name != null ? name : "",
                         email,
                         "",
                         ""
@@ -335,8 +335,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 
                 user = userRepository.save(user);
             }
+            
             String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (BadRequestException | UnauthorizedException e) {
             throw e;
@@ -363,12 +365,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (userInfo == null) {
                 throw new UnauthorizedException("Failed to get user info from Google API");
             }
+            
             log.debug("Retrieved user info from Google API: {}", userInfo);
             String email = (String) userInfo.get("email");
             String name = (String) userInfo.get("name");
-            if (email == null) {
-                throw new UnauthorizedException("Email not provided by Google API");
-            }
+            
             return authenticateWithOAuth2(email, name);
         } catch (Exception e) {
             log.error("Error authenticating with Google access token", e);
@@ -378,13 +379,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse authenticateWithOAuth2(String email, String name) {
-        if (email == null) {
-            throw new BadRequestException("Email not provided by OAuth2 provider");
-        }
-        
         try {
-            User user = userRepository.findByEmail(email)
-                    .orElse(null);
+            User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
                 roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
@@ -392,7 +388,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user = new User(
                         email.substring(0, email.indexOf('@')),
                         passwordEncoder.encode(""),
-                        name,
+                        name != null ? name : "",
                         email,
                         "",
                         ""
@@ -408,8 +404,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 
                 user = userRepository.save(user);
             }
+            
             String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
             log.error("Error authenticating with OAuth2", e);
@@ -425,8 +423,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         
         org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken oauthToken = 
             (org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) authentication;
+        
         org.springframework.security.oauth2.core.user.OAuth2User oAuth2User = oauthToken.getPrincipal();
-
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
@@ -440,14 +438,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserResponse authenticateWithFacebook(FacebookLoginRequest request) {
-        if (request == null) {
-            throw new BadRequestException("Request body cannot be null");
-        }
-        
-        if (request.getAccessToken() == null || request.getAccessToken().trim().isEmpty()) {
-            throw new BadRequestException("Facebook access token cannot be null or empty");
-        }
-        
         try {
             log.debug("Attempting to verify Facebook token: {}", request.getAccessToken().substring(0, Math.min(10, request.getAccessToken().length())) + "...");
             String fields = "id,name,email,first_name,last_name,picture,gender,birthday,location";
@@ -468,6 +458,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (userInfo == null) {
                 throw new UnauthorizedException("Failed to get user info from Facebook API");
             }
+            
             log.debug("Retrieved user info from Facebook API: {}", userInfo);
             String email = (String) userInfo.get("email");
             String name = (String) userInfo.get("name");
@@ -475,6 +466,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String lastName = (String) userInfo.get("last_name");
             String gender = (String) userInfo.get("gender");
             String birthday = (String) userInfo.get("birthday");
+            
             @SuppressWarnings("unchecked")
             Map<String, Object> picture = (Map<String, Object>) userInfo.get("picture");
             String pictureUrl = null;
@@ -485,13 +477,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     pictureUrl = (String) data.get("url");
                 }
             }
+            
             @SuppressWarnings("unchecked")
             Map<String, Object> location = (Map<String, Object>) userInfo.get("location");
             String locationName = location != null ? (String) location.get("name") : null;
-            if (email == null) {
+            
+            if (email == null || email.trim().isEmpty()) {
                 String userId = (String) userInfo.get("id");
-                email = userId + "@facebook.com";
+                email = userId != null ? userId + "@facebook.com" : "unknown@facebook.com";
             }
+            
             return authenticateWithFacebookOAuth2(
                     email,
                     name,
@@ -502,8 +497,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     pictureUrl,
                     locationName
             );
-        } catch (BadRequestException | UnauthorizedException e) {
-            throw e;
         } catch (Exception e) {
             log.error("Error authenticating with Facebook", e);
             throw new InternalServerErrorException("Facebook authentication failed: " + e.getMessage());
@@ -566,8 +559,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user = userRepository.save(user);
                 }
             }
+            
             String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
             log.error("Error authenticating with Facebook OAuth2", e);
@@ -616,7 +611,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user = new User(
                     email.substring(0, email.indexOf('@')),
                     passwordEncoder.encode(""),
-                    name,
+                    name != null ? name : "",
                     email,
                     "",
                     ""
@@ -632,8 +627,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             
             user = userRepository.save(user);
         }
+        
         String token = tokenService.generateTokenForUser(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        
         return UserMapper.toResponse(user, token, refreshToken.getToken());
     }
 } 

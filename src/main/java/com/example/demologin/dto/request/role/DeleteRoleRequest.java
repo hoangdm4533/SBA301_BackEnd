@@ -1,4 +1,5 @@
 package com.example.demologin.dto.request.role;
+import com.example.demologin.dto.request.BaseActionRequest;
 
 import com.example.demologin.dto.request.BaseActionRequest;
 import lombok.Getter;

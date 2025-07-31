@@ -1,9 +1,7 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.entity.User;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.TokenVersionService;
@@ -31,7 +29,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     private final UserRepository userRepository;
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, description = "Increment user token version")
     public User incrementTokenVersion(User user) {
         log.info("Incrementing token version for user: {}", user.getUsername());
         user.incrementTokenVersion();
@@ -41,7 +38,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, description = "Increment token version by user ID")
     public User incrementTokenVersionByUserId(Long userId) {
         log.info("Incrementing token version for user ID: {}", userId);
         User user = userRepository.findById(userId)
@@ -50,7 +46,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, description = "Increment token version by username")
     public User incrementTokenVersionByUsername(String username) {
         log.info("Incrementing token version for username: {}", username);
         User user = userRepository.findByUsername(username)
@@ -105,8 +100,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
-               description = "Invalidate all user tokens")
     public void invalidateAllTokens(Long userId) {
         log.info("Invalidating all tokens for user ID: {}", userId);
         incrementTokenVersionByUserId(userId);
@@ -114,8 +107,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
-               description = "Invalidate all user tokens by username")
     public void invalidateAllTokensByUsername(String username) {
         log.info("Invalidating all tokens for username: {}", username);
         incrementTokenVersionByUsername(username);
@@ -123,8 +114,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    @UserAction(actionType = UserActionType.UPDATE, requiresReason = true, 
-               description = "Reset user token version")
     public User resetTokenVersion(Long userId) {
         log.info("Resetting token version for user ID: {}", userId);
         User user = userRepository.findById(userId)

@@ -1,8 +1,6 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.annotation.UserAction;
-import com.example.demologin.enums.UserActionType;
-import com.example.demologin.dto.request.UpdateUserRequest;
+import com.example.demologin.dto.request.user.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.NotFoundException;
@@ -17,9 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     @Autowired private UserRepository userRepository;
     @Autowired private UserMapper userMapper;
-
-    @UserAction(actionType = UserActionType.UPDATE, 
-               description = "Update user information")
     @Transactional
     @Override
     public MemberResponse updateUser(UpdateUserRequest req) {

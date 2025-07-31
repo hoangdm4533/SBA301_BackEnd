@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.user;
 
 import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.Gender;

@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.login;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

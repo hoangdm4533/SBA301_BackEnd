@@ -49,4 +49,17 @@ public class IpUtils {
         
         return remoteAddr;
     }
+    
+    public static String getUserAgent() {
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        if (attr != null) {
+            return getUserAgent(attr.getRequest());
+        }
+        return "unknown";
+    }
+    
+    public static String getUserAgent(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        return userAgent != null && !userAgent.isEmpty() ? userAgent : "unknown";
+    }
 }

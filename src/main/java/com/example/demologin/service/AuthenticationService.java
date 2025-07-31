@@ -1,13 +1,15 @@
 package com.example.demologin.service;
 
-import com.example.demologin.dto.request.FacebookLoginRequest;
-import com.example.demologin.dto.request.GoogleLoginRequest;
-import com.example.demologin.dto.request.LoginRequest;
-import com.example.demologin.dto.request.UserRegistrationRequest;
+import com.example.demologin.dto.request.login.FacebookLoginRequest;
+import com.example.demologin.dto.request.login.GoogleLoginRequest;
+import com.example.demologin.dto.request.login.LoginRequest;
+import com.example.demologin.dto.request.user.UserRegistrationRequest;
+import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AuthenticationService extends UserDetailsService {

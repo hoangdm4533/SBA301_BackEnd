@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.user;
 
 import lombok.Getter;
 import lombok.Setter;

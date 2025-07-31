@@ -2,14 +2,16 @@ package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserActivity;
-import com.example.demologin.dto.request.*;
+import com.example.demologin.dto.request.user.UserRegistrationRequest;
+import com.example.demologin.dto.request.login.LoginRequest;
+import com.example.demologin.dto.request.login.GoogleLoginRequest;
+import com.example.demologin.dto.request.login.FacebookLoginRequest;
+import com.example.demologin.dto.request.token.TokenRefreshRequest;
 import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.TokenRefreshResponse;
 import com.example.demologin.dto.response.UserResponse;
-import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;
-import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.service.AuthenticationService;
 import com.example.demologin.service.RefreshTokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,11 +33,6 @@ import org.springframework.web.bind.annotation.*;
 
     @Autowired
     RefreshTokenService refreshTokenService;
-
-    @Autowired
-    UserMapper userMapper;
-
-
 
     @PostMapping("/register")
     @UserActivity(activityType = ActivityType.REGISTRATION, details = "User registration")
@@ -60,7 +57,7 @@ import org.springframework.web.bind.annotation.*;
                description = "Get new access token using refresh token")
     public ResponseEntity<ResponseObject> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
         TokenRefreshResponse tokenRefreshResponse = refreshTokenService.refreshToken(request.getRefreshToken());
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Token refreshed successfully", tokenRefreshResponse));
+        return ResponseEntity.ok(new ResponseObject(200, "Token refreshed successfully", tokenRefreshResponse));
     }
 
     @PostMapping("/google-login")
@@ -69,7 +66,7 @@ import org.springframework.web.bind.annotation.*;
                description = "Authenticate user with Google OAuth token")
     public ResponseEntity<ResponseObject> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
         UserResponse userResponse = authenticationService.authenticateWithGoogle(request);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Google login successful", userResponse));
+        return ResponseEntity.ok(new ResponseObject(200, "Google login successful", userResponse));
     }
 
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
@@ -79,7 +76,7 @@ import org.springframework.web.bind.annotation.*;
                description = "Handle successful OAuth2 authentication callback")
     public ResponseEntity<ResponseObject> oauth2LoginSuccess(Authentication authentication) {
         UserResponse userResponse = authenticationService.authenticateWithOAuth2FromAuthentication(authentication);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "OAuth2 login successful", userResponse));
+        return ResponseEntity.ok(new ResponseObject(200, "OAuth2 login successful", userResponse));
     }
 
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
@@ -98,6 +95,6 @@ import org.springframework.web.bind.annotation.*;
                description = "Authenticate user with Facebook OAuth token")
     public ResponseEntity<ResponseObject> loginWithFacebook(@RequestBody FacebookLoginRequest request) {
         UserResponse userResponse = authenticationService.authenticateWithFacebook(request);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Facebook login successful", userResponse));
+        return ResponseEntity.ok(new ResponseObject(200, "Facebook login successful", userResponse));
     }
 }

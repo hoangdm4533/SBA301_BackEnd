@@ -90,6 +90,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ResponseObject> handleBadRequestException(BadRequestException ex) {
+        log.warn("Bad request exception: {}", ex.getMessage());
+        ResponseObject response = new ResponseObject(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                null
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ResponseObject> handleInternalServerErrorException(InternalServerErrorException ex) {
         log.error("Internal server error: {}", ex.getMessage(), ex);

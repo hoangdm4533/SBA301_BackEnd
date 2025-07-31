@@ -1,18 +1,13 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserAction;
-import com.example.demologin.dto.request.UserActivityLogExportRequest;
-import com.example.demologin.dto.response.PageResponse;
+import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
 import com.example.demologin.dto.response.ResponseObject;
-import com.example.demologin.dto.response.UserActivityLogResponse;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.UserActivityLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +30,7 @@ import java.time.LocalDateTime;
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        PageResponse<UserActivityLogResponse> response = userActivityLogService.getAllActivityLogs(page, size);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User activity logs retrieved successfully", response));
+        return userActivityLogService.getAllActivityLogs(page, size);
     }
 
     @GetMapping("/{id}")
@@ -45,8 +39,7 @@ import java.time.LocalDateTime;
     public ResponseEntity<ResponseObject> getActivityLogById(
             @Parameter(description = "Activity log ID") @PathVariable Long id) {
         
-        UserActivityLogResponse response = userActivityLogService.getActivityLogById(id);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity log retrieved successfully", response));
+        return userActivityLogService.getActivityLogById(id);
     }
 
     @GetMapping("/user/{userId}")
@@ -57,8 +50,7 @@ import java.time.LocalDateTime;
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        PageResponse<UserActivityLogResponse> response = userActivityLogService.getActivityLogsByUserId(userId, page, size);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs retrieved successfully", response));
+        return userActivityLogService.getActivityLogsByUserId(userId, page, size);
     }
 
     @GetMapping("/type/{actionType}")
@@ -69,8 +61,7 @@ import java.time.LocalDateTime;
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        PageResponse<UserActivityLogResponse> response = userActivityLogService.getActivityLogsByType(actionType, page, size);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs retrieved successfully", response));
+        return userActivityLogService.getActivityLogsByType(actionType, page, size);
     }
 
     @GetMapping("/date-range")
@@ -84,12 +75,9 @@ import java.time.LocalDateTime;
         
         LocalDateTime startDateTime = LocalDate.parse(startDate).atStartOfDay();
         LocalDateTime endDateTime = LocalDate.parse(endDate).atTime(23, 59, 59);
-        PageResponse<UserActivityLogResponse> response = userActivityLogService.getActivityLogsByDateRange(startDateTime, endDateTime, page, size);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs retrieved successfully", response));
+        return userActivityLogService.getActivityLogsByDateRange(startDateTime, endDateTime, page, size);
     }
 
-    @UserAction(actionType = UserActionType.CREATE, targetType = "LOG", 
-               description = "Export activity logs", requiresReason = true)
     @PostMapping("/export")
     @SecuredEndpoint("ADMIN_ACTIVITY_LOG_EXPORT")
     @Operation(summary = "Export activity logs", description = "Export activity logs within date range with pagination")
@@ -98,19 +86,15 @@ import java.time.LocalDateTime;
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        PageResponse<UserActivityLogResponse> response = userActivityLogService.exportActivityLogs(request, page, size);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity logs exported successfully", response));
+        return userActivityLogService.exportActivityLogs(request, page, size);
     }
 
-    @UserAction(actionType = UserActionType.DELETE, targetType = "LOG", 
-               description = "Delete activity log", requiresReason = true)
     @DeleteMapping("/{id}")
     @SecuredEndpoint("LOG_DELETE")
     @Operation(summary = "Delete activity log", description = "Delete a specific activity log by its ID")
     public ResponseEntity<ResponseObject> deleteActivityLog(
             @Parameter(description = "Activity log ID") @PathVariable Long id) {
         
-        userActivityLogService.deleteActivityLog(id);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Activity log deleted successfully", null));
+        return userActivityLogService.deleteActivityLog(id);
     }
 }

@@ -1,6 +1,6 @@
 package com.example.demologin.mapper;
 
-import com.example.demologin.dto.request.UserRequest;
+import com.example.demologin.dto.request.user.UserRequest;
 import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.dto.response.UserResponse;

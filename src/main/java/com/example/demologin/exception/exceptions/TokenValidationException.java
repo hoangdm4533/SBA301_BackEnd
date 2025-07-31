@@ -1,4 +1,4 @@
-package com.example.demologin.exception;
+package com.example.demologin.exception.exceptions;
 
 /**
  * Exception thrown when JWT token validation fails.

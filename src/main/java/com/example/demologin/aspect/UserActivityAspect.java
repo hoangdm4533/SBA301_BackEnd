@@ -35,22 +35,27 @@ public class UserActivityAspect {
             
             // Get client IP address
             String clientIp = "unknown";
+            String userAgent = "unknown";
             try {
                 clientIp = IpUtils.getClientIpAddress();
+                userAgent = IpUtils.getUserAgent();
             } catch (Exception e) {
-                log.debug("Could not get client IP address: {}", e.getMessage());
+                log.debug("Could not get client info: {}", e.getMessage());
             }
             
             UserActivityLog activityLog = UserActivityLog.builder()
                 .activityType(userActivity.activityType())
                 .userId(userActivity.logUserId() && currentUser != null ? currentUser.getUserId() : null)
+                .username(userActivity.logUserId() && currentUser != null ? currentUser.getUsername() : null)
                 .editorId(userActivity.logEditorId() && currentUser != null ? currentUser.getUserId() : null)
+                .editorUsername(userActivity.logEditorId() && currentUser != null ? currentUser.getUsername() : null)
                 .timestamp(LocalDateTime.now())
                 .status("SUCCESS")
                 .details(userActivity.details().isEmpty() ? 
                     String.format("%s - %s", userActivity.activityType(), joinPoint.getSignature().getName()) : 
                     userActivity.details())
                 .ipAddress(clientIp)
+                .userAgent(userAgent)
                 .build();
             
             userActivityLogRepository.save(activityLog);

@@ -1,13 +1,15 @@
 package com.example.demologin.service;
 
-import com.example.demologin.dto.request.UserActivityLogExportRequest;
-import com.example.demologin.dto.request.UserActivityLogFilterRequest;
+import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
+import com.example.demologin.dto.request.userActivityLog.UserActivityLogFilterRequest;
 import com.example.demologin.dto.response.PageResponse;
+import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.enums.ActivityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,15 +17,24 @@ import java.util.Map;
 
 public interface UserActivityLogService {
     
-    // Business logic methods (used by controllers)
-    PageResponse<UserActivityLogResponse> getAllActivityLogs(int page, int size);
-    UserActivityLogResponse getActivityLogById(Long id);
-    PageResponse<UserActivityLogResponse> getActivityLogsByUserId(Long userId, int page, int size);
-    PageResponse<UserActivityLogResponse> getActivityLogsByType(String activityType, int page, int size);
-    PageResponse<UserActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size);
+    // Controller endpoints - return ResponseEntity<ResponseObject>
+    ResponseEntity<ResponseObject> getAllActivityLogs(int page, int size);
+    ResponseEntity<ResponseObject> getActivityLogById(Long id);
+    ResponseEntity<ResponseObject> getActivityLogsByUserId(Long userId, int page, int size);
+    ResponseEntity<ResponseObject> getActivityLogsByType(String activityType, int page, int size);
+    ResponseEntity<ResponseObject> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size);
+    ResponseEntity<ResponseObject> exportActivityLogs(UserActivityLogExportRequest request, int page, int size);
+    ResponseEntity<ResponseObject> deleteActivityLog(Long id);
+    
+    // Business logic methods (used internally)
+    PageResponse<UserActivityLogResponse> getAllActivityLogsInternal(int page, int size);
+    UserActivityLogResponse getActivityLogByIdInternal(Long id);
+    PageResponse<UserActivityLogResponse> getActivityLogsByUserIdInternal(Long userId, int page, int size);
+    PageResponse<UserActivityLogResponse> getActivityLogsByTypeInternal(String activityType, int page, int size);
+    PageResponse<UserActivityLogResponse> getActivityLogsByDateRangeInternal(LocalDateTime startTime, LocalDateTime endTime, int page, int size);
     PageResponse<UserActivityLogResponse> searchActivityLogs(UserActivityLogFilterRequest request);
-    void deleteActivityLog(Long id);
-    PageResponse<UserActivityLogResponse> exportActivityLogs(UserActivityLogExportRequest request, int page, int size);
+    void deleteActivityLogInternal(Long id);
+    PageResponse<UserActivityLogResponse> exportActivityLogsInternal(UserActivityLogExportRequest request, int page, int size);
     Map<ActivityType, Long> getActivityStats(LocalDateTime startTime);
     
     // Raw data access methods (for internal service use)

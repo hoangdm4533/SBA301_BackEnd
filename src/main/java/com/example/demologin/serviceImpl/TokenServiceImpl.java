@@ -1,6 +1,8 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.entity.User;
+import com.example.demologin.exception.exceptions.NotFoundException;
+import com.example.demologin.exception.exceptions.ValidationException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.TokenService;
 import com.example.demologin.utils.JwtUtil;
@@ -32,15 +34,15 @@ public class TokenServiceImpl implements TokenService {
     public User getUserByToken(String token) {
         try {
             String username = jwtUtil.extractUsername(token);
-            if (username == null) {
-                log.warn("Username not found in token");
-                return null;
+            if (username == null || username.trim().isEmpty()) {
+                throw new ValidationException("Invalid token: username not found");
             }
             
-            return userRepository.findByUsername(username).orElse(null);
+            return userRepository.findByUsername(username)
+                    .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
         } catch (Exception e) {
             log.warn("Failed to extract user from token: {}", e.getMessage());
-            return null;
+            throw new ValidationException("Invalid token: " + e.getMessage());
         }
     }
 }

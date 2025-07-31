@@ -1,7 +1,7 @@
 package com.example.demologin.utils;
 
 import com.example.demologin.entity.User;
-import com.example.demologin.exception.TokenValidationException;
+import com.example.demologin.exception.exceptions.TokenValidationException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

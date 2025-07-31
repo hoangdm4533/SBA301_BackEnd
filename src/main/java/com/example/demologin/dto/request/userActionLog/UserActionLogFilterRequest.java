@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.userActionLog;
 
 import com.example.demologin.enums.UserActionType;
 import lombok.*;

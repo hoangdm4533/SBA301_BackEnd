@@ -1,5 +1,6 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.token;
 
+import com.example.demologin.dto.request.BaseActionRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

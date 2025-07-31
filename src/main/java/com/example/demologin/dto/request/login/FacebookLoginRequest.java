@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.login;
 
 public class FacebookLoginRequest {
     private String accessToken;
