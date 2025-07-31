@@ -16,6 +16,10 @@ public interface EmailOtpRepository extends JpaRepository<EmailOtp, Long> {
     List<EmailOtp> findByEmailAndTypeAndVerifiedFalse(String email, String type);
     void deleteByEmailAndType(String email, String type);
     
+    // Kiểm tra có OTP hết hạn không
+    @Query("SELECT COUNT(e) FROM EmailOtp e WHERE e.expiredAt < :currentTime")
+    long countExpiredOtps(LocalDateTime currentTime);
+    
     @Modifying
     @Query("DELETE FROM EmailOtp e WHERE e.expiredAt < :currentTime")
     int deleteExpiredOtps(LocalDateTime currentTime);

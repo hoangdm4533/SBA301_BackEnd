@@ -10,8 +10,6 @@ import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.SessionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +23,7 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Session Management", description = "APIs for managing user sessions and device logout")
-public class SessionManagementController {
+    public class SessionManagementController {
     
     private final SessionManagementService sessionManagementService;
     
@@ -34,10 +32,6 @@ public class SessionManagementController {
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from current device", 
                description = "Logout user from current device only")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Logged out successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     public ResponseEntity<ResponseObject> logoutCurrentDevice() {
         return sessionManagementService.logoutCurrentDevice();
     }
@@ -47,10 +41,6 @@ public class SessionManagementController {
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from all devices", 
                description = "Logout user from all devices by invalidating all tokens")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Logged out from all devices successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     public ResponseEntity<ResponseObject> logoutFromAllDevices(
             @Valid @RequestBody BaseActionRequest request) {
         
@@ -63,12 +53,6 @@ public class SessionManagementController {
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
     @Operation(summary = "Admin force logout user from all devices", 
                description = "Admin operation to force logout a specific user from all devices")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User logged out from all devices successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "User not found")
-    })
     public ResponseEntity<ResponseObject> forceLogoutUser(
             @Parameter(description = "User ID to force logout") @PathVariable Long userId,
             @Valid @RequestBody BaseActionRequest request) {
@@ -80,10 +64,6 @@ public class SessionManagementController {
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Get estimated active session count", 
                description = "Get estimated number of active sessions for current user")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Active session count retrieved"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
     public ResponseEntity<ResponseObject> getActiveSessionCount() {
         return sessionManagementService.getActiveSessionCount();
     }
@@ -92,12 +72,6 @@ public class SessionManagementController {
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
     @Operation(summary = "Get estimated active session count for user", 
                description = "Admin operation to get estimated active session count for specific user")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Active session count retrieved"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "User not found")
-    })
     public ResponseEntity<ResponseObject> getUserActiveSessionCount(
             @Parameter(description = "User ID") @PathVariable Long userId) {
         

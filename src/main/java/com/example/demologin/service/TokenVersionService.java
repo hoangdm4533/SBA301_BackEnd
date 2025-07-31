@@ -15,10 +15,8 @@ public interface TokenVersionService {
      */
     ResponseEntity<ResponseObject> incrementCurrentUserTokenVersion();
     ResponseEntity<ResponseObject> incrementUserTokenVersionByUserId(Long userId);
-    ResponseEntity<ResponseObject> incrementUserTokenVersionByUsername(String username);
     ResponseEntity<ResponseObject> getCurrentUserTokenVersion();
     ResponseEntity<ResponseObject> getUserTokenVersionByUserId(Long userId);
-    ResponseEntity<ResponseObject> getUserTokenVersionByUsername(String username);
     
     /**
      * Raw service methods (for internal use)

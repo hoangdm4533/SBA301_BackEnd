@@ -83,6 +83,7 @@ public class EmailOtpServiceImpl implements EmailOtpService {
         });
         // Xóa OTP sau khi dùng xong
         emailOtpRepo.deleteById(otpEntity.getId());
+        log.debug("OTP deleted after successful verification for email: {}", request.getEmail());
         return new com.example.demologin.dto.response.ResponseObject(200, "OTP verified successfully", null);
     }
 
@@ -120,6 +121,7 @@ public class EmailOtpServiceImpl implements EmailOtpService {
         user.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(req.getNewPassword()));
         userRepository.save(user);
         emailOtpRepo.deleteById(otpEntity.getId());
+        log.debug("OTP deleted after successful password reset for email: {}", req.getEmail());
         return new ResponseObject(200, "Password reset successfully", null);
     }
 
@@ -130,13 +132,20 @@ public class EmailOtpServiceImpl implements EmailOtpService {
         return sendVerificationOtp(request);
     }
 
-    // Gợi ý: Xóa OTP hết hạn định kỳ (có thể dùng @Scheduled thực tế)
+    // Xóa OTP hết hạn định kỳ
     @Scheduled(fixedRate = 5 * 60 * 1000) // mỗi 5 phút
     @Transactional
     public void deleteExpiredOtps() {
-        int deletedCount = emailOtpRepo.deleteExpiredOtps(LocalDateTime.now());
-        if (deletedCount > 0) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Kiểm tra trước xem có OTP hết hạn không
+        long expiredCount = emailOtpRepo.countExpiredOtps(now);
+        
+        if (expiredCount > 0) {
+            // Chỉ thực hiện delete khi có OTP cần xóa
+            int deletedCount = emailOtpRepo.deleteExpiredOtps(now);
             log.info("Deleted {} expired OTP records", deletedCount);
         }
+        // Không log gì khi không có OTP nào cần xóa
     }
 } 

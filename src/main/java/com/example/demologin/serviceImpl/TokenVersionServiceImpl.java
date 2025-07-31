@@ -171,22 +171,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     }
     
     @Override
-    public ResponseEntity<ResponseObject> incrementUserTokenVersionByUsername(String username) {
-        User adminUser = AccountUtils.getCurrentUser();
-        User updatedUser = incrementTokenVersionByUsername(username);
-        
-        Map<String, Object> data = Map.of(
-            "targetUsername", username,
-            "newTokenVersion", updatedUser.getTokenVersion(),
-            "updatedBy", adminUser.getUsername(),
-            "updatedAt", LocalDateTime.now(),
-            "message", "All existing tokens for target user have been invalidated"
-        );
-        
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data));
-    }
-    
-    @Override
     public ResponseEntity<ResponseObject> getCurrentUserTokenVersion() {
         User currentUser = AccountUtils.getCurrentUser();
         
@@ -208,19 +192,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
         Map<String, Object> data = Map.of(
             "userId", userId,
             "username", targetUser.getUsername(),
-            "tokenVersion", tokenVersion,
-            "checkedAt", LocalDateTime.now()
-        );
-        
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data));
-    }
-    
-    @Override
-    public ResponseEntity<ResponseObject> getUserTokenVersionByUsername(String username) {
-        int tokenVersion = getCurrentTokenVersionByUsername(username);
-        
-        Map<String, Object> data = Map.of(
-            "username", username,
             "tokenVersion", tokenVersion,
             "checkedAt", LocalDateTime.now()
         );

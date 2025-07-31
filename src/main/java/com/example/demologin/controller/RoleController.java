@@ -9,19 +9,24 @@ import com.example.demologin.dto.request.role.UpdateRoleRequest;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.RoleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/roles")
-public class RoleController {
+@Tag(name = "Role Management", description = "APIs for managing user roles and role permissions")
+    public class RoleController {
     @Autowired private RoleService roleService;
 
     @SecuredEndpoint("ROLE_VIEW")
     @GetMapping
+    @Operation(summary = "Get all roles", 
+               description = "Retrieve all roles in the system")
     public ResponseEntity<ResponseObject> getAll() {
         return roleService.getAll();
     }
@@ -30,6 +35,8 @@ public class RoleController {
                description = "Create new role", requiresReason = true)
     @PostMapping
     @SecuredEndpoint("ROLE_CREATE")
+    @Operation(summary = "Create new role", 
+               description = "Create a new role with specified name and description")
     public ResponseEntity<ResponseObject> create(@RequestBody @Valid CreateRoleRequest req) {
         return roleService.create(req);
     }
@@ -38,7 +45,11 @@ public class RoleController {
                description = "Update role information", requiresReason = true)
     @PutMapping("/{id}")
     @SecuredEndpoint("ROLE_UPDATE")
-    public ResponseEntity<ResponseObject> update(@PathVariable Long id, @RequestBody @Valid UpdateRoleRequest req) {
+    @Operation(summary = "Update role", 
+               description = "Update role name and description")
+    public ResponseEntity<ResponseObject> update(
+            @Parameter(description = "Role ID") @PathVariable Long id, 
+            @RequestBody @Valid UpdateRoleRequest req) {
         return roleService.update(id, req);
     }
 
@@ -46,7 +57,11 @@ public class RoleController {
                description = "Delete role", requiresReason = true)
     @DeleteMapping("/{id}")
     @SecuredEndpoint("ROLE_DELETE")
-    public ResponseEntity<ResponseObject> delete(@PathVariable Long id, @RequestBody @Valid DeleteRoleRequest req) {
+    @Operation(summary = "Delete role", 
+               description = "Delete a role from the system")
+    public ResponseEntity<ResponseObject> delete(
+            @Parameter(description = "Role ID") @PathVariable Long id, 
+            @RequestBody @Valid DeleteRoleRequest req) {
         return roleService.delete(id, req);
     }
 
@@ -54,7 +69,11 @@ public class RoleController {
                description = "Update role permissions", requiresReason = true)
     @PutMapping("/{id}/permissions")
     @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
-    public ResponseEntity<ResponseObject> updatePermissions(@PathVariable Long id, @RequestBody @Valid RolePermissionsRequest req) {
+    @Operation(summary = "Update role permissions", 
+               description = "Update permissions assigned to a role")
+    public ResponseEntity<ResponseObject> updatePermissions(
+            @Parameter(description = "Role ID") @PathVariable Long id, 
+            @RequestBody @Valid RolePermissionsRequest req) {
         return roleService.updatePermissions(id, req);
     }
 }
