@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,17 +39,17 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
     
     @Override
     @Transactional
-    public ResponseObject unlockAccount(String username) {
+    public ResponseEntity<ResponseObject> unlockAccount(String username) {
         // Validate input parameters
         if (username == null || username.trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null));
         }
         
         String trimmedUsername = username.trim();
         User adminUser = AccountUtils.getCurrentUser();
         
         if (adminUser == null) {
-            return new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null));
         }
         
         try {
@@ -62,7 +63,7 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
                     "unlockedBy", adminUser.getUsername()
                 );
                 
-                return new ResponseObject(HttpStatus.OK.value(), "Account unlocked successfully", data);
+                return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Account unlocked successfully", data));
             } else {
                 Map<String, Object> data = Map.of(
                     "username", trimmedUsername,
@@ -70,23 +71,23 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
                     "checkedBy", adminUser.getUsername()
                 );
                 
-                return new ResponseObject(HttpStatus.OK.value(), "Account is not locked", data);
+                return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Account is not locked", data));
             }
         } catch (Exception e) {
             log.error("Error unlocking account for user {}: {}", trimmedUsername, e.getMessage());
-            return new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error unlocking account: " + e.getMessage(), null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error unlocking account: " + e.getMessage(), null));
         }
     }
     
     @Override
     @Transactional
-    public ResponseObject lockAccount(String username, BaseActionRequest request) {
+    public ResponseEntity<ResponseObject> lockAccount(String username, BaseActionRequest request) {
         // Validate input parameters
         if (username == null || username.trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null));
         }
         if (request == null || request.getReason() == null || request.getReason().trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Lock reason cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Lock reason cannot be null or empty", null));
         }
         
         String trimmedUsername = username.trim();
@@ -98,7 +99,7 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
             
             User adminUser = AccountUtils.getCurrentUser();
             if (adminUser == null) {
-                return new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null);
+                return ResponseEntity.ok(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null));
             }
             
             // Create manual lockout
@@ -120,27 +121,27 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
                 "lockType", "MANUAL_ADMIN_LOCK"
             );
             
-            return new ResponseObject(HttpStatus.OK.value(), "Account locked successfully", data);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Account locked successfully", data));
         } catch (NotFoundException e) {
-            return new ResponseObject(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error locking account for user {}: {}", trimmedUsername, e.getMessage());
-            return new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error locking account: " + e.getMessage(), null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error locking account: " + e.getMessage(), null));
         }
     }
     
     @Override
     @Transactional
-    public ResponseObject changeUserStatus(String username, UserStatus status, BaseActionRequest request) {
+    public ResponseEntity<ResponseObject> changeUserStatus(String username, UserStatus status, BaseActionRequest request) {
         // Validate input parameters
         if (username == null || username.trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null));
         }
         if (status == null) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User status cannot be null", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "User status cannot be null", null));
         }
         if (request == null || request.getReason() == null || request.getReason().trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Change reason cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Change reason cannot be null or empty", null));
         }
         
         String trimmedUsername = username.trim();
@@ -151,7 +152,7 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
             
             User adminUser = AccountUtils.getCurrentUser();
             if (adminUser == null) {
-                return new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null);
+                return ResponseEntity.ok(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "Admin user not found", null));
             }
             
             UserStatus oldStatus = targetUser.getStatus();
@@ -174,18 +175,18 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
                 "reason", request.getReason().trim()
             );
             
-            return new ResponseObject(HttpStatus.OK.value(), "User status changed successfully", data);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User status changed successfully", data));
         } catch (NotFoundException e) {
-            return new ResponseObject(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error changing status for user {}: {}", trimmedUsername, e.getMessage());
-            return new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error changing user status: " + e.getMessage(), null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error changing user status: " + e.getMessage(), null));
         }
     }
     
     @Override
     @Transactional(readOnly = true)
-    public ResponseObject getAccountLockouts(int page, int size, boolean activeOnly) {
+    public ResponseEntity<ResponseObject> getAccountLockouts(int page, int size, boolean activeOnly) {
         // Validate input parameters
         if (page < 0) {
             page = 0;
@@ -208,7 +209,7 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
                 "last", true,
                 "activeOnly", activeOnly
             );
-            return new ResponseObject(HttpStatus.OK.value(), "No account lockouts found", emptyData);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "No account lockouts found", emptyData));
         }
         
         List<AccountLockout> content = lockouts.getContent();
@@ -226,15 +227,15 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
             "activeOnly", activeOnly
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Account lockouts retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Account lockouts retrieved successfully", data));
     }
     
     @Override
     @Transactional(readOnly = true)
-    public ResponseObject getLoginAttempts(String username, int page, int size, int hoursBack) {
+    public ResponseEntity<ResponseObject> getLoginAttempts(String username, int page, int size, int hoursBack) {
         // Validate input parameters
         if (username == null || username.trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null));
         }
         if (page < 0) {
             page = 0;
@@ -262,15 +263,15 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
             "queriedAt", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Login attempts retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Login attempts retrieved successfully", data));
     }
     
     @Override
     @Transactional(readOnly = true)
-    public ResponseObject getLockoutStatus(String username) {
+    public ResponseEntity<ResponseObject> getLockoutStatus(String username) {
         // Validate input parameters
         if (username == null || username.trim().isEmpty()) {
-            return new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null);
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.BAD_REQUEST.value(), "Username cannot be null or empty", null));
         }
         
         String trimmedUsername = username.trim();
@@ -307,6 +308,6 @@ public class SecurityManagementServiceImpl implements SecurityManagementService 
             }
         }
         
-        return new ResponseObject(HttpStatus.OK.value(), "Lockout status retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Lockout status retrieved successfully", data));
     }
 }

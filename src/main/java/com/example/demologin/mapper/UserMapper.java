@@ -1,6 +1,7 @@
 package com.example.demologin.mapper;
 
 import com.example.demologin.dto.request.UserRequest;
+import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
@@ -42,9 +43,17 @@ public class UserMapper {
         return user;
     }
 
-    // Convert User -> UserResponse (cho login)
-    public static  UserResponse toResponse(User user, String token, String refreshToken) {
+    // Convert User -> UserResponse (cho login) - chỉ trả về token và refreshToken  
+    public static UserResponse toResponse(User user, String token, String refreshToken) {
         return UserResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    // Convert User -> LoginResponse (cho login) - chỉ trả về token và refreshToken
+    public static LoginResponse toLoginResponse(User user, String token, String refreshToken) {
+        return LoginResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
                 .build();

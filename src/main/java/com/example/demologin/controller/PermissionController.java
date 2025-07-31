@@ -20,7 +20,7 @@ public class PermissionController {
     @SecuredEndpoint("PERMISSION_VIEW")
     @GetMapping
     public ResponseEntity<ResponseObject> getAll() {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", permissionService.getAll()));
+        return permissionService.getAll();
     }
 
     @SecuredEndpoint("PERMISSION_UPDATE")
@@ -29,6 +29,6 @@ public class PermissionController {
     public ResponseEntity<ResponseObject> update(
             @PathVariable Long id,
             @RequestBody @Valid PermissionRequest req) {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", permissionService.updatePermissionName(id, req)));
+        return permissionService.updatePermissionName(id, req);
     }
 } 

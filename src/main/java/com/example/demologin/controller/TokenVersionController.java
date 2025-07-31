@@ -40,8 +40,7 @@ public class TokenVersionController {
     public ResponseEntity<ResponseObject> invalidateAllCurrentUserTokens(
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = tokenVersionService.incrementCurrentUserTokenVersion();
-        return ResponseEntity.ok(response);
+        return tokenVersionService.incrementCurrentUserTokenVersion();
     }
     
     @PostMapping("/invalidate-user/{userId}")
@@ -59,8 +58,7 @@ public class TokenVersionController {
             @Parameter(description = "User ID") @PathVariable Long userId,
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = tokenVersionService.incrementUserTokenVersionByUserId(userId);
-        return ResponseEntity.ok(response);
+        return tokenVersionService.incrementUserTokenVersionByUserId(userId);
     }
     
     @PostMapping("/invalidate-user/username/{username}")
@@ -78,8 +76,7 @@ public class TokenVersionController {
             @Parameter(description = "Username") @PathVariable String username,
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = tokenVersionService.incrementUserTokenVersionByUsername(username);
-        return ResponseEntity.ok(response);
+        return tokenVersionService.incrementUserTokenVersionByUsername(username);
     }
     
     @GetMapping("/current")
@@ -92,8 +89,7 @@ public class TokenVersionController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<ResponseObject> getCurrentUserTokenVersion() {
-        ResponseObject response = tokenVersionService.getCurrentUserTokenVersion();
-        return ResponseEntity.ok(response);
+        return tokenVersionService.getCurrentUserTokenVersion();
     }
     
     @GetMapping("/user/{userId}")
@@ -109,8 +105,7 @@ public class TokenVersionController {
     public ResponseEntity<ResponseObject> getUserTokenVersionByUserId(
             @Parameter(description = "User ID") @PathVariable Long userId) {
         
-        ResponseObject response = tokenVersionService.getUserTokenVersionByUserId(userId);
-        return ResponseEntity.ok(response);
+        return tokenVersionService.getUserTokenVersionByUserId(userId);
     }
     
     @GetMapping("/user/username/{username}")
@@ -126,7 +121,6 @@ public class TokenVersionController {
     public ResponseEntity<ResponseObject> getUserTokenVersionByUsername(
             @Parameter(description = "Username") @PathVariable String username) {
         
-        ResponseObject response = tokenVersionService.getUserTokenVersionByUsername(username);
-        return ResponseEntity.ok(response);
+        return tokenVersionService.getUserTokenVersionByUsername(username);
     }
 }

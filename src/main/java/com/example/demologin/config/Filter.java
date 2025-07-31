@@ -3,6 +3,7 @@ package com.example.demologin.config;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.AuthorizeException;
 import com.example.demologin.service.TokenService;
+import com.example.demologin.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.demologin.dto.response.ResponseObject;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -34,6 +35,9 @@ public class Filter extends OncePerRequestFilter {
 
     @Autowired
     private TokenService tokenService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // Danh sách các API public
     List<String> PUBLIC_API = List.of(
@@ -108,9 +112,23 @@ public class Filter extends OncePerRequestFilter {
         }
 
         try {
-            User user = tokenService.getAccountByToken(token);
+            // Get username from token first
+            String username = jwtUtil.extractUsername(token);
+            if (username == null) {
+                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
+                return;
+            }
+            
+            // Get user from token using TokenService
+            User user = tokenService.getUserByToken(token);
             if (user == null) {
                 writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "User not found for the provided token!");
+                return;
+            }
+            
+            // Validate token with user
+            if (!jwtUtil.validateToken(token, user)) {
+                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
                 return;
             }
 

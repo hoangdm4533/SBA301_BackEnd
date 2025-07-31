@@ -11,6 +11,7 @@ import com.example.demologin.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     
     // Business logic methods for controllers
     @Override
-    public ResponseObject logoutCurrentDevice() {
+    public ResponseEntity<ResponseObject> logoutCurrentDevice() {
         User currentUser = AccountUtils.getCurrentUser();
         String message = logoutCurrentDevice(currentUser);
         
@@ -38,11 +39,11 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             "timestamp", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Logout successful", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Logout successful", data));
     }
-    
+
     @Override
-    public ResponseObject logoutFromAllDevices(BaseActionRequest request) {
+    public ResponseEntity<ResponseObject> logoutFromAllDevices(BaseActionRequest request) {
         User currentUser = AccountUtils.getCurrentUser();
         String message = logoutFromAllDevices(currentUser, request);
         
@@ -54,11 +55,11 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             "timestamp", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Logout from all devices successful", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Logout from all devices successful", data));
     }
     
     @Override
-    public ResponseObject forceLogoutUser(Long userId, BaseActionRequest request) {
+    public ResponseEntity<ResponseObject> forceLogoutUser(Long userId, BaseActionRequest request) {
         String message = forceLogoutFromAllDevices(userId, request);
         User adminUser = AccountUtils.getCurrentUser();
         
@@ -71,11 +72,11 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             "timestamp", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Force logout successful", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Force logout successful", data));
     }
     
     @Override
-    public ResponseObject getActiveSessionCount() {
+    public ResponseEntity<ResponseObject> getActiveSessionCount() {
         User currentUser = AccountUtils.getCurrentUser();
         int sessionCount = getEstimatedActiveSessionCount(currentUser.getUserId());
         boolean hasActiveSessions = hasActiveSessions(currentUser.getUserId());
@@ -88,11 +89,11 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             "note", "This is an estimation based on token version. For accurate session tracking, implement proper session store."
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Session count retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Session count retrieved successfully", data));
     }
     
     @Override
-    public ResponseObject getUserSessionStatus(Long userId) {
+    public ResponseEntity<ResponseObject> getUserSessionStatus(Long userId) {
         int sessionCount = getEstimatedActiveSessionCount(userId);
         boolean hasActiveSessions = hasActiveSessions(userId);
         
@@ -103,7 +104,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             "note", "This is an estimation based on token version. For accurate session tracking, implement proper session store."
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "User session count retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User session count retrieved successfully", data));
     }
     
     // Raw service methods for internal use

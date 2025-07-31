@@ -3,6 +3,7 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserActivity;
 import com.example.demologin.dto.request.*;
+import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.TokenRefreshResponse;
 import com.example.demologin.dto.response.UserResponse;
@@ -36,15 +37,13 @@ public class AuthenticationController {
     @PostMapping("/register")
     @UserActivity(activityType = ActivityType.REGISTRATION, details = "User registration")
     public ResponseEntity<ResponseObject> register(@Valid @RequestBody UserRegistrationRequest request) {
-        User user = authenticationService.register(request);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Registration successful", userMapper.toUserResponse(user)));
+        return authenticationService.register(request);
     }
 
     @PostMapping("/login")
     @UserActivity(activityType = ActivityType.LOGIN_ATTEMPT, details = "User login attempt")
     public ResponseEntity<ResponseObject> login(@RequestBody @Valid LoginRequest loginRequest) {
-        UserResponse userResponse = authenticationService.login(loginRequest);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Login successful", userResponse));
+        return authenticationService.login(loginRequest);
     }
 
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")

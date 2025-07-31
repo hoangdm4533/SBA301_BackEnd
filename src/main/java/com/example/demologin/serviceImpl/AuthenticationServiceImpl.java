@@ -4,6 +4,8 @@ import com.example.demologin.dto.request.FacebookLoginRequest;
 import com.example.demologin.dto.request.GoogleLoginRequest;
 import com.example.demologin.dto.request.LoginRequest;
 import com.example.demologin.dto.request.UserRegistrationRequest;
+import com.example.demologin.dto.response.LoginResponse;
+import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.PasswordResetToken;
 import com.example.demologin.entity.RefreshToken;
@@ -23,6 +25,7 @@ import com.example.demologin.service.AuthenticationService;
 import com.example.demologin.service.BruteForceProtectionService;
 import com.example.demologin.utils.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -98,7 +101,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private BruteForceProtectionService bruteForceProtectionService;
 
     @Override
-    public User register(UserRegistrationRequest request) {
+    public ResponseEntity<ResponseObject> register(UserRegistrationRequest request) {
         UserActivityLog log = null;
         try {
             if (!request.getPassword().equals(request.getConfirmPassword())) {
@@ -136,7 +139,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .status("SUCCESS")
                     .details("New user registered: " + savedUser.getUsername())
                     .build();
-            return savedUser;
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Registration successful", userMapper.toUserResponse(savedUser)));
         } catch (ConflictException | ValidationException e) {
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
@@ -166,7 +169,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse login(LoginRequest loginRequest) {
+    public ResponseEntity<ResponseObject> login(LoginRequest loginRequest) {
         String clientIp = IpUtils.getClientIpAddress();
         String username = loginRequest.getUsername();
         
@@ -220,8 +223,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         bruteForceProtectionService.handleSuccessfulLogin(username, clientIp);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-        String token = tokenService.generateToken(user);
-        return UserMapper.toResponse(user, token, refreshToken.getToken());
+        String token = tokenService.generateTokenForUser(user);
+        LoginResponse loginResponse = UserMapper.toLoginResponse(user, token, refreshToken.getToken());
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Login successful", loginResponse));
     }
 
     @Override
@@ -331,7 +335,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 
                 user = userRepository.save(user);
             }
-            String token = tokenService.generateToken(user);
+            String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (BadRequestException | UnauthorizedException e) {
@@ -404,7 +408,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 
                 user = userRepository.save(user);
             }
-            String token = tokenService.generateToken(user);
+            String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
@@ -562,7 +566,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user = userRepository.save(user);
                 }
             }
-            String token = tokenService.generateToken(user);
+            String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             return UserMapper.toResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
@@ -628,7 +632,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             
             user = userRepository.save(user);
         }
-        String token = tokenService.generateToken(user);
+        String token = tokenService.generateTokenForUser(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         return UserMapper.toResponse(user, token, refreshToken.getToken());
     }

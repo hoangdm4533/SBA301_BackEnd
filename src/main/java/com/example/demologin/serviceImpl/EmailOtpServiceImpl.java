@@ -12,6 +12,7 @@ import com.example.demologin.repository.EmailOtpRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.EmailOtpService;
 import com.example.demologin.service.EmailService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -22,6 +23,7 @@ import java.util.Random;
 
 @Service
 @EnableScheduling
+@Slf4j
 public class EmailOtpServiceImpl implements EmailOtpService {
     private static final int OTP_LENGTH = 6;
     private static final int OTP_EXPIRE_MINUTES = 5;
@@ -130,9 +132,11 @@ public class EmailOtpServiceImpl implements EmailOtpService {
 
     // Gợi ý: Xóa OTP hết hạn định kỳ (có thể dùng @Scheduled thực tế)
     @Scheduled(fixedRate = 5 * 60 * 1000) // mỗi 5 phút
+    @Transactional
     public void deleteExpiredOtps() {
-        emailOtpRepo.findAll().stream()
-            .filter(otp -> otp.getExpiredAt().isBefore(LocalDateTime.now()))
-            .forEach(otp -> emailOtpRepo.deleteById(otp.getId()));
+        int deletedCount = emailOtpRepo.deleteExpiredOtps(LocalDateTime.now());
+        if (deletedCount > 0) {
+            log.info("Deleted {} expired OTP records", deletedCount);
+        }
     }
 } 

@@ -37,8 +37,7 @@ public class SessionManagementController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<ResponseObject> logoutCurrentDevice() {
-        ResponseObject response = sessionManagementService.logoutCurrentDevice();
-        return ResponseEntity.ok(response);
+        return sessionManagementService.logoutCurrentDevice();
     }
     
     @PostMapping("/logout-all")
@@ -53,8 +52,7 @@ public class SessionManagementController {
     public ResponseEntity<ResponseObject> logoutFromAllDevices(
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = sessionManagementService.logoutFromAllDevices(request);
-        return ResponseEntity.ok(response);
+        return sessionManagementService.logoutFromAllDevices(request);
     }
     
     @PostMapping("/force-logout/{userId}")
@@ -72,8 +70,7 @@ public class SessionManagementController {
             @Parameter(description = "User ID to force logout") @PathVariable Long userId,
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = sessionManagementService.forceLogoutUser(userId, request);
-        return ResponseEntity.ok(response);
+        return sessionManagementService.forceLogoutUser(userId, request);
     }
     
     @GetMapping("/active-count")
@@ -85,8 +82,7 @@ public class SessionManagementController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<ResponseObject> getActiveSessionCount() {
-        ResponseObject response = sessionManagementService.getActiveSessionCount();
-        return ResponseEntity.ok(response);
+        return sessionManagementService.getActiveSessionCount();
     }
     
     @GetMapping("/active-count/{userId}")
@@ -102,7 +98,6 @@ public class SessionManagementController {
     public ResponseEntity<ResponseObject> getUserActiveSessionCount(
             @Parameter(description = "User ID") @PathVariable Long userId) {
         
-        ResponseObject response = sessionManagementService.getUserSessionStatus(userId);
-        return ResponseEntity.ok(response);
+        return sessionManagementService.getUserSessionStatus(userId);
     }
 }

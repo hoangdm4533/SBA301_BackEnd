@@ -38,8 +38,7 @@ public class SecurityManagementController {
     public ResponseEntity<ResponseObject> unlockAccount(
             @Parameter(description = "Username to unlock") @PathVariable String username) {
         
-        ResponseObject response = securityManagementService.unlockAccount(username);
-        return ResponseEntity.ok(response);
+        return securityManagementService.unlockAccount(username);
     }
 
     @PostMapping("/lock-account/{username}")
@@ -56,8 +55,7 @@ public class SecurityManagementController {
             @Parameter(description = "Username to lock") @PathVariable String username,
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = securityManagementService.lockAccount(username, request);
-        return ResponseEntity.ok(response);
+        return securityManagementService.lockAccount(username, request);
     }
 
     @PutMapping("/change-status/{username}")
@@ -75,8 +73,7 @@ public class SecurityManagementController {
             @Parameter(description = "New status") @RequestParam UserStatus status,
             @Valid @RequestBody BaseActionRequest request) {
         
-        ResponseObject response = securityManagementService.changeUserStatus(username, status, request);
-        return ResponseEntity.ok(response);
+        return securityManagementService.changeUserStatus(username, status, request);
     }
 
     @GetMapping("/lockouts")
@@ -92,8 +89,7 @@ public class SecurityManagementController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         
-        ResponseObject response = securityManagementService.getAccountLockouts(page, size, activeOnly);
-        return ResponseEntity.ok(response);
+        return securityManagementService.getAccountLockouts(page, size, activeOnly);
     }
 
     @GetMapping("/login-attempts/{username}")
@@ -110,8 +106,7 @@ public class SecurityManagementController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "24") int hoursBack) {
         
-        ResponseObject response = securityManagementService.getLoginAttempts(username, page, size, hoursBack);
-        return ResponseEntity.ok(response);
+        return securityManagementService.getLoginAttempts(username, page, size, hoursBack);
     }
 
     @GetMapping("/lockout-status/{username}")
@@ -125,7 +120,6 @@ public class SecurityManagementController {
     public ResponseEntity<ResponseObject> getLockoutStatus(
             @Parameter(description = "Username") @PathVariable String username) {
         
-        ResponseObject response = securityManagementService.getLockoutStatus(username);
-        return ResponseEntity.ok(response);
+        return securityManagementService.getLockoutStatus(username);
     }
 }

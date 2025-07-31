@@ -23,35 +23,34 @@ public class RoleController {
     @SecuredEndpoint("ROLE_VIEW")
     @GetMapping
     public ResponseEntity<ResponseObject> getAll() {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roleService.getAll()));
+        return roleService.getAll();
     }
 
     @SecuredEndpoint("ROLE_CREATE")
     @PostMapping
     @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Create new role")
     public ResponseEntity<ResponseObject> create(@RequestBody @Valid CreateRoleRequest req) {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roleService.create(req)));
+        return roleService.create(req);
     }
 
     @SecuredEndpoint("ROLE_UPDATE")
     @PutMapping("/{id}")
     @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Update role information")
     public ResponseEntity<ResponseObject> update(@PathVariable Long id, @RequestBody @Valid UpdateRoleRequest req) {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roleService.update(id, req)));
+        return roleService.update(id, req);
     }
 
     @SecuredEndpoint("ROLE_DELETE")
     @DeleteMapping("/{id}")
     @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Delete role")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id, @RequestBody @Valid DeleteRoleRequest req) {
-        roleService.delete(id, req);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Deleted", null));
+        return roleService.delete(id, req);
     }
 
     @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
     @PutMapping("/{id}/permissions")
     @UserActivity(activityType = ActivityType.ADMIN_ACTION, details = "Update role permissions")
     public ResponseEntity<ResponseObject> updatePermissions(@PathVariable Long id, @RequestBody @Valid RolePermissionsRequest req) {
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roleService.updatePermissions(id, req)));
+        return roleService.updatePermissions(id, req);
     }
 }

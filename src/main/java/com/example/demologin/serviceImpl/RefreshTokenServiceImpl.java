@@ -65,7 +65,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .map(this::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    String token = tokenService.generateToken(user);
+                    String token = tokenService.generateTokenForUser(user);
                     return new TokenRefreshResponse(token, requestRefreshToken);
                 })
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));

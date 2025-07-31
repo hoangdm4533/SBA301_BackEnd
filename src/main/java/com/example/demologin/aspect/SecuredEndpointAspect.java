@@ -2,7 +2,7 @@ package com.example.demologin.aspect;
 
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.exception.TokenValidationException;
-import com.example.demologin.service.TokenService;
+import com.example.demologin.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -39,7 +39,7 @@ public class SecuredEndpointAspect {
     private HttpServletRequest request;
     
     @Autowired
-    private TokenService tokenService;
+    private JwtUtil jwtUtil;
 
     /**
      * Advice that runs for methods or classes annotated with @SecuredEndpoint.
@@ -87,9 +87,9 @@ public class SecuredEndpointAspect {
         token = token.substring(7); // Remove "Bearer " prefix
         
         try {
-            // Use TokenService to extract permissions with detailed error handling
-            Set<String> permissionCodes = tokenService.extractPermissions(token);
-            String username = tokenService.extractUsernameWithValidation(token);
+            // Use JwtUtil to extract permissions with detailed error handling
+            Set<String> permissionCodes = jwtUtil.extractPermissions(token);
+            String username = jwtUtil.extractUsernameWithValidation(token);
             
             // Check if user has required permission
             if (!permissionCodes.contains(requiredPermission)) {

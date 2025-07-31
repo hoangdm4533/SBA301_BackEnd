@@ -2,6 +2,7 @@ package com.example.demologin.service;
 
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.entity.User;
+import org.springframework.http.ResponseEntity;
 
 /**
  * Service for managing token versions to invalidate user tokens
@@ -12,12 +13,12 @@ public interface TokenVersionService {
     /**
      * Business logic methods (for controllers)
      */
-    ResponseObject incrementCurrentUserTokenVersion();
-    ResponseObject incrementUserTokenVersionByUserId(Long userId);
-    ResponseObject incrementUserTokenVersionByUsername(String username);
-    ResponseObject getCurrentUserTokenVersion();
-    ResponseObject getUserTokenVersionByUserId(Long userId);
-    ResponseObject getUserTokenVersionByUsername(String username);
+    ResponseEntity<ResponseObject> incrementCurrentUserTokenVersion();
+    ResponseEntity<ResponseObject> incrementUserTokenVersionByUserId(Long userId);
+    ResponseEntity<ResponseObject> incrementUserTokenVersionByUsername(String username);
+    ResponseEntity<ResponseObject> getCurrentUserTokenVersion();
+    ResponseEntity<ResponseObject> getUserTokenVersionByUserId(Long userId);
+    ResponseEntity<ResponseObject> getUserTokenVersionByUsername(String username);
     
     /**
      * Raw service methods (for internal use)

@@ -3,6 +3,7 @@ package com.example.demologin.service;
 import com.example.demologin.dto.request.BaseActionRequest;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.entity.User;
+import org.springframework.http.ResponseEntity;
 
 /**
  * Service for handling user session management and device logout
@@ -12,11 +13,11 @@ public interface SessionManagementService {
     /**
      * Business logic methods (for controllers)
      */
-    ResponseObject logoutCurrentDevice();
-    ResponseObject logoutFromAllDevices(BaseActionRequest request);
-    ResponseObject forceLogoutUser(Long userId, BaseActionRequest request);
-    ResponseObject getActiveSessionCount();
-    ResponseObject getUserSessionStatus(Long userId);
+    ResponseEntity<ResponseObject> logoutCurrentDevice();
+    ResponseEntity<ResponseObject> logoutFromAllDevices(BaseActionRequest request);
+    ResponseEntity<ResponseObject> forceLogoutUser(Long userId, BaseActionRequest request);
+    ResponseEntity<ResponseObject> getActiveSessionCount();
+    ResponseEntity<ResponseObject> getUserSessionStatus(Long userId);
     
     /**
      * Raw service methods (for internal use)

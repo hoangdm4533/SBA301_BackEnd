@@ -11,6 +11,7 @@ import com.example.demologin.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -137,7 +138,7 @@ public class TokenVersionServiceImpl implements TokenVersionService {
     
     // Business logic methods for controllers
     @Override
-    public ResponseObject incrementCurrentUserTokenVersion() {
+    public ResponseEntity<ResponseObject> incrementCurrentUserTokenVersion() {
         User currentUser = AccountUtils.getCurrentUser();
         User updatedUser = incrementTokenVersion(currentUser);
         
@@ -149,11 +150,11 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "message", "All existing tokens have been invalidated"
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Token version incremented successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Token version incremented successfully", data));
     }
     
     @Override
-    public ResponseObject incrementUserTokenVersionByUserId(Long userId) {
+    public ResponseEntity<ResponseObject> incrementUserTokenVersionByUserId(Long userId) {
         User adminUser = AccountUtils.getCurrentUser();
         User updatedUser = incrementTokenVersionByUserId(userId);
         
@@ -166,11 +167,11 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "message", "All existing tokens for target user have been invalidated"
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data));
     }
     
     @Override
-    public ResponseObject incrementUserTokenVersionByUsername(String username) {
+    public ResponseEntity<ResponseObject> incrementUserTokenVersionByUsername(String username) {
         User adminUser = AccountUtils.getCurrentUser();
         User updatedUser = incrementTokenVersionByUsername(username);
         
@@ -182,11 +183,11 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "message", "All existing tokens for target user have been invalidated"
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version incremented successfully", data));
     }
     
     @Override
-    public ResponseObject getCurrentUserTokenVersion() {
+    public ResponseEntity<ResponseObject> getCurrentUserTokenVersion() {
         User currentUser = AccountUtils.getCurrentUser();
         
         Map<String, Object> data = Map.of(
@@ -195,11 +196,11 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "checkedAt", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "Token version retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Token version retrieved successfully", data));
     }
     
     @Override
-    public ResponseObject getUserTokenVersionByUserId(Long userId) {
+    public ResponseEntity<ResponseObject> getUserTokenVersionByUserId(Long userId) {
         int tokenVersion = getCurrentTokenVersion(userId);
         User targetUser = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
@@ -211,11 +212,11 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "checkedAt", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data));
     }
     
     @Override
-    public ResponseObject getUserTokenVersionByUsername(String username) {
+    public ResponseEntity<ResponseObject> getUserTokenVersionByUsername(String username) {
         int tokenVersion = getCurrentTokenVersionByUsername(username);
         
         Map<String, Object> data = Map.of(
@@ -224,6 +225,6 @@ public class TokenVersionServiceImpl implements TokenVersionService {
             "checkedAt", LocalDateTime.now()
         );
         
-        return new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "User token version retrieved successfully", data));
     }
 }
