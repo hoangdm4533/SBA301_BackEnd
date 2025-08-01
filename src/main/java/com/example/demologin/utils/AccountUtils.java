@@ -19,6 +19,11 @@ public class AccountUtils implements ApplicationContextAware {
 
     public static User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username).orElseThrow();
+        // Kiểm tra xem username có phải là email hợp lệ không
+        if (EmailUtils.isValidEmail(username)) {
+            return userRepository.findByEmail(username).orElseThrow();
+        } else {
+            return userRepository.findByUsername(username).orElseThrow();
+        }
     }
 }

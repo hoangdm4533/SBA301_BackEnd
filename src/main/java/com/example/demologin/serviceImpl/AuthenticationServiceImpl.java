@@ -24,6 +24,7 @@ import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.service.AuthenticationService;
 import com.example.demologin.service.BruteForceProtectionService;
 import com.example.demologin.utils.IpUtils;
+import com.example.demologin.utils.EmailUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -172,8 +173,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("Account not found with username: " + username));
+        // Kiểm tra xem input có phải là email hợp lệ không
+        if (EmailUtils.isValidEmail(username)) {
+            // Tìm user bằng email
+            return userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Account not found with email: " + username));
+        } else {
+            // Tìm user bằng username
+            return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Account not found with username: " + username));
+        }
     }
 
     @Override

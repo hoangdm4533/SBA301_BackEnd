@@ -9,6 +9,7 @@ import com.example.demologin.utils.AccountUtils;
 import com.example.demologin.utils.IpUtils;
 import com.example.demologin.utils.LocationUtil;
 import com.example.demologin.utils.UserAgentUtil;
+import com.example.demologin.utils.EmailUtils;
 import com.example.demologin.dto.request.login.LoginRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -149,9 +150,14 @@ public class UserActivityAspect {
                     LoginRequest loginRequest = (LoginRequest) arg;
                     String username = loginRequest.getUsername();
                     
-                    // Find user by username if login was successful
+                    // Find user by username or email if login was successful
                     if (isLoginSuccessful(result)) {
-                        return userRepository.findByUsername(username).orElse(null);
+                        // Kiểm tra xem input có phải là email hợp lệ không
+                        if (EmailUtils.isValidEmail(username)) {
+                            return userRepository.findByEmail(username).orElse(null);
+                        } else {
+                            return userRepository.findByUsername(username).orElse(null);
+                        }
                     }
                 }
             }

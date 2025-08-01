@@ -12,7 +12,7 @@ import lombok.Setter;
 public class LoginRequest {
 
     @NotBlank(message = "Username or email is required")
-    @Schema(example = "userName or email@example.com")
+    @Schema(example = "userName or email@example.com", description = "Username hoặc địa chỉ email để đăng nhập")
     private String username;
 
     @NotBlank(message = "Password is required")
