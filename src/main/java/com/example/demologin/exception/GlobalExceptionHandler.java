@@ -2,6 +2,8 @@ package com.example.demologin.exception;
 
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.exception.exceptions.*;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -122,6 +124,26 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
+        
+        ResponseObject response = new ResponseObject(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation failed",
+                errors
+        );
+        
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ResponseObject> handleConstraintViolationException(ConstraintViolationException ex) {
+        log.warn("Constraint violation error: {}", ex.getMessage());
+        
+        Map<String, String> errors = new HashMap<>();
+        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            String propertyPath = violation.getPropertyPath().toString();
+            String message = violation.getMessage();
+            errors.put(propertyPath, message);
+        }
         
         ResponseObject response = new ResponseObject(
                 HttpStatus.BAD_REQUEST.value(),

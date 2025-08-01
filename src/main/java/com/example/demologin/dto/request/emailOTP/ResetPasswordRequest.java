@@ -1,18 +1,17 @@
 package com.example.demologin.dto.request.emailOTP;
 
+import com.example.demologin.annotation.StrongPassword;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class ResetPasswordRequest {
+    
+    @NotBlank(message = "New password cannot be blank")
+    @StrongPassword
     private String newPassword;
 
-    // Bỏ trường token vì đã nhận qua parameter
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
+    @NotBlank(message = "Confirm password cannot be blank")
+    private String confirmPassword;
 }
 
