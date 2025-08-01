@@ -12,5 +12,4 @@ public @interface UserActivity {
     ActivityType activityType();
     String details() default "";
     boolean logUserId() default true; // true = log current user ID
-    boolean logEditorId() default false; // true = log who performed the action (for admin actions)
 }

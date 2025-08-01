@@ -24,14 +24,8 @@ public class UserActivityLogResponse {
     @JsonProperty("userId")
     private Long userId;
     
-    @JsonProperty("username")
-    private String username;
-
-    @JsonProperty("editorId")
-    private Long editorId;
-    
-    @JsonProperty("editorUsername")
-    private String editorUsername;
+    @JsonProperty("fullName")
+    private String fullName;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
@@ -47,4 +41,40 @@ public class UserActivityLogResponse {
     
     @JsonProperty("userAgent")
     private String userAgent;
+
+    // Device and browser information
+    @JsonProperty("browser")
+    private String browser;
+
+    @JsonProperty("browserVersion")
+    private String browserVersion;
+
+    @JsonProperty("operatingSystem")
+    private String operatingSystem;
+
+    @JsonProperty("device")
+    private String device;
+
+    @JsonProperty("deviceType")
+    private String deviceType;
+
+    // Location information
+    @JsonProperty("city")
+    private String city;
+
+    @JsonProperty("region")
+    private String region;
+
+    @JsonProperty("country")
+    private String country;
+
+    @JsonProperty("countryCode")
+    private String countryCode;
+
+    // Formatted information for display
+    @JsonProperty("deviceInfo")
+    private String deviceInfo;
+
+    @JsonProperty("location")
+    private String location;
 }

@@ -3,6 +3,8 @@ package com.example.demologin.mapper;
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.repository.UserRepository;
+import com.example.demologin.utils.LocationUtil;
+import com.example.demologin.utils.UserAgentUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,22 +22,54 @@ public class UserActivityLogMapper {
         response.setId(log.getId());
         response.setActivityType(log.getActivityType());
         response.setUserId(log.getUserId());
-        response.setEditorId(log.getEditorId());
         response.setTimestamp(log.getTimestamp());
         response.setStatus(log.getStatus());
         response.setDetails(log.getDetails());
         response.setIpAddress(log.getIpAddress());
+        response.setUserAgent(log.getUserAgent());
         
-        // Set username if userId exists
+        // Set user information if userId exists
         if (log.getUserId() != null) {
             userRepository.findById(log.getUserId())
-                .ifPresent(user -> response.setUsername(user.getUsername()));
+                .ifPresent(user -> response.setFullName(user.getFullName()));
+        } else {
+            response.setFullName(log.getFullName());
         }
         
-        // Set editor username if editorId exists
-        if (log.getEditorId() != null) {
-            userRepository.findById(log.getEditorId())
-                .ifPresent(editor -> response.setEditorUsername(editor.getUsername()));
+        // Set device and browser information
+        response.setBrowser(log.getBrowser());
+        response.setBrowserVersion(log.getBrowserVersion());
+        response.setOperatingSystem(log.getOperatingSystem());
+        response.setDevice(log.getDevice());
+        response.setDeviceType(log.getDeviceType());
+        
+        // Set location information
+        response.setCity(log.getCity());
+        response.setRegion(log.getRegion());
+        response.setCountry(log.getCountry());
+        response.setCountryCode(log.getCountryCode());
+        
+        // Format device info for display
+        if (log.getBrowser() != null && log.getOperatingSystem() != null) {
+            UserAgentUtil.DeviceInfo deviceInfo = new UserAgentUtil.DeviceInfo(
+                log.getBrowser(), 
+                log.getBrowserVersion(), 
+                log.getOperatingSystem(), 
+                log.getDevice(), 
+                log.getDeviceType()
+            );
+            response.setDeviceInfo(UserAgentUtil.formatDeviceInfo(deviceInfo));
+        }
+        
+        // Format location for display
+        if (log.getCity() != null && log.getCountry() != null) {
+            LocationUtil.LocationInfo locationInfo = new LocationUtil.LocationInfo(
+                log.getCity(), 
+                log.getRegion(), 
+                log.getCountry(), 
+                log.getCountryCode()
+            );
+            response.setLocation(LocationUtil.formatLocationInfo(locationInfo));
         }
         
         return response;

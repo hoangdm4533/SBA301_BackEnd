@@ -5,6 +5,7 @@ import com.example.demologin.dto.request.userActivityLog.UserActivityLogFilterRe
 import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserActivityLogResponse;
+import com.example.demologin.entity.User;
 import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.enums.ActivityType;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,10 @@ import java.util.Map;
 
 public interface UserActivityLogService {
     
+    // Manual activity logging
+    void logUserActivity(User user, ActivityType activityType, String details);
+    void logUserActivity(ActivityType activityType, String details);
+    
     // Controller endpoints - return ResponseEntity<ResponseObject>
     ResponseEntity<ResponseObject> getAllActivityLogs(int page, int size);
     ResponseEntity<ResponseObject> getActivityLogById(Long id);
@@ -25,6 +30,7 @@ public interface UserActivityLogService {
     ResponseEntity<ResponseObject> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size);
     ResponseEntity<ResponseObject> exportActivityLogs(UserActivityLogExportRequest request, int page, int size);
     ResponseEntity<ResponseObject> deleteActivityLog(Long id);
+    ResponseEntity<ResponseObject> getMyLoginHistory(int page, int size);
     
     // Business logic methods (used internally)
     PageResponse<UserActivityLogResponse> getAllActivityLogsInternal(int page, int size);

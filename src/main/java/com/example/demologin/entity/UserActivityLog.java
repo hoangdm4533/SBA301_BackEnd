@@ -22,13 +22,7 @@ public class UserActivityLog {
     private Long userId;
 
     @Column(length = 100)
-    private String username;
-
-    @Column
-    private Long editorId;
-
-    @Column(length = 100)
-    private String editorUsername;
+    private String fullName;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
@@ -44,4 +38,33 @@ public class UserActivityLog {
 
     @Column(length = 1000)
     private String userAgent;
+
+    // Device and browser information
+    @Column(length = 100)
+    private String browser;
+
+    @Column(length = 50)
+    private String browserVersion;
+
+    @Column(length = 100)
+    private String operatingSystem;
+
+    @Column(length = 100)
+    private String device;
+
+    @Column(length = 20)
+    private String deviceType;
+
+    // Location information
+    @Column(length = 100)
+    private String city;
+
+    @Column(length = 100)
+    private String region;
+
+    @Column(length = 100)
+    private String country;
+
+    @Column(length = 10)
+    private String countryCode;
 }

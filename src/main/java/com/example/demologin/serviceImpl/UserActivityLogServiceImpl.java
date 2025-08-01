@@ -6,6 +6,7 @@ import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.UserActivityLog;
+import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.exception.exceptions.NotFoundException;
@@ -13,6 +14,10 @@ import com.example.demologin.mapper.UserActivityLogMapper;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.service.UserActivityLogService;
 import com.example.demologin.utils.PageUtils;
+import com.example.demologin.utils.IpUtils;
+import com.example.demologin.utils.LocationUtil;
+import com.example.demologin.utils.UserAgentUtil;
+import com.example.demologin.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +40,61 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     private final UserActivityLogRepository userActivityLogRepository;
     private final UserActivityLogMapper userActivityLogMapper;
+
+    // Manual activity logging implementations
+    @Override
+    @Transactional
+    public void logUserActivity(User user, ActivityType activityType, String details) {
+        try {
+            // Get client IP address and user agent
+            String clientIp = IpUtils.getClientIpAddress();
+            String userAgent = IpUtils.getUserAgent();
+
+            // Parse device information from user agent
+            UserAgentUtil.DeviceInfo deviceInfo = UserAgentUtil.parseUserAgent(userAgent);
+
+            // Get location information from IP
+            LocationUtil.LocationInfo locationInfo = LocationUtil.getLocationFromIP(clientIp);
+
+            UserActivityLog activityLog = UserActivityLog.builder()
+                .activityType(activityType)
+                .userId(user != null ? user.getUserId() : null)
+                .fullName(user != null ? user.getFullName() : null)
+                .timestamp(LocalDateTime.now())
+                .status("SUCCESS")
+                .details(details)
+                .ipAddress(clientIp)
+                .userAgent(userAgent)
+                // Device information
+                .browser(deviceInfo.getBrowser())
+                .browserVersion(deviceInfo.getBrowserVersion())
+                .operatingSystem(deviceInfo.getOperatingSystem())
+                .device(deviceInfo.getDevice())
+                .deviceType(deviceInfo.getDeviceType())
+                // Location information
+                .city(locationInfo.getCity())
+                .region(locationInfo.getRegion())
+                .country(locationInfo.getCountry())
+                .countryCode(locationInfo.getCountryCode())
+                .build();
+
+            userActivityLogRepository.save(activityLog);
+            
+            log.debug("User activity logged: {} for user {} from {} using {}", 
+                activityType, 
+                user != null ? user.getFullName() : "unknown", 
+                LocationUtil.formatLocationInfo(locationInfo),
+                UserAgentUtil.formatDeviceInfo(deviceInfo));
+
+        } catch (Exception e) {
+            log.error("Failed to log user activity: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void logUserActivity(ActivityType activityType, String details) {
+        logUserActivity(null, activityType, details);
+    }
 
     // Controller endpoint implementations
     @Override
@@ -131,6 +191,39 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
         } catch (Exception e) {
             log.error("Error deleting activity log {}: ", id, e);
             throw e;
+        }
+    }
+
+    @Override
+    public ResponseEntity<ResponseObject> getMyLoginHistory(int page, int size) {
+        try {
+            // Get current user from security context
+            User currentUser = AccountUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), "User not authenticated", null));
+            }
+            
+            // Get login history for current user
+            Pageable pageable = PageUtils.createPageable(page, size);
+            Page<UserActivityLog> activityLogs = userActivityLogRepository.findByUserIdAndActivityTypeOrderByTimestampDesc(
+                currentUser.getUserId(), ActivityType.LOGIN_ATTEMPT, pageable);
+            
+            Page<UserActivityLogResponse> responsePage = activityLogs.map(userActivityLogMapper::toResponse);
+            PageResponse<UserActivityLogResponse> pageResponse = new PageResponse<>(
+                responsePage.getContent(),
+                responsePage.getNumber(),
+                responsePage.getSize(),
+                responsePage.getTotalElements(),
+                responsePage.getTotalPages(),
+                responsePage.isLast()
+            );
+            
+            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Login history retrieved successfully", pageResponse));
+        } catch (Exception e) {
+            log.error("Error retrieving login history: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseObject(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error retrieving login history", null));
         }
     }
 

@@ -89,6 +89,16 @@ import java.time.LocalDateTime;
         return userActivityLogService.exportActivityLogs(request, page, size);
     }
 
+    @GetMapping("/my-login-history")
+    @SecuredEndpoint("USER_VIEW_OWN_LOGIN_HISTORY")
+    @Operation(summary = "Get my login history", description = "Retrieve paginated login history for the current authenticated user")
+    public ResponseEntity<ResponseObject> getMyLoginHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        return userActivityLogService.getMyLoginHistory(page, size);
+    }
+
     @DeleteMapping("/{id}")
     @SecuredEndpoint("LOG_DELETE")
     @Operation(summary = "Delete activity log", description = "Delete a specific activity log by its ID")

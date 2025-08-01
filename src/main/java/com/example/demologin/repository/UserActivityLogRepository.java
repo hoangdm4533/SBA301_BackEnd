@@ -54,5 +54,13 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
     // Get user activity count
     @Query("SELECT COUNT(u) FROM UserActivityLog u WHERE u.userId = :userId AND u.timestamp >= :startTime")
     Long countUserActivitySince(@Param("userId") Long userId, @Param("startTime") LocalDateTime startTime);
+    
+    // Find existing log to update instead of creating duplicate
+    UserActivityLog findTopByUserIdAndActivityTypeAndIpAddressAndStatusAndUserAgentOrderByTimestampDesc(
+        Long userId, ActivityType activityType, String ipAddress, String status, String userAgent);
+    
+    // Find login history for a specific user
+    Page<UserActivityLog> findByUserIdAndActivityTypeOrderByTimestampDesc(
+        Long userId, ActivityType activityType, Pageable pageable);
 }
 
