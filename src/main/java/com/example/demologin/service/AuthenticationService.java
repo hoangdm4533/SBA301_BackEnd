@@ -5,16 +5,14 @@ import com.example.demologin.dto.request.login.GoogleLoginRequest;
 import com.example.demologin.dto.request.login.LoginRequest;
 import com.example.demologin.dto.request.user.UserRegistrationRequest;
 import com.example.demologin.dto.response.LoginResponse;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AuthenticationService extends UserDetailsService {
-    ResponseEntity<ResponseObject> register(UserRegistrationRequest request);
-    ResponseEntity<ResponseObject> login(LoginRequest loginRequest);
+    UserResponse register(UserRegistrationRequest request);
+    LoginResponse login(LoginRequest loginRequest);
     void logout();
     void createPasswordResetTokenForAccount(User user, String token);
     User validatePasswordResetToken(String token);

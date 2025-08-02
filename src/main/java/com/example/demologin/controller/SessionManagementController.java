@@ -1,10 +1,10 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserAction;
 import com.example.demologin.annotation.UserActivity;
 import com.example.demologin.dto.request.BaseActionRequest;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.SessionManagementService;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -32,7 +31,8 @@ import jakarta.validation.Valid;
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from current device", 
                description = "Logout user from current device only")
-    public ResponseEntity<ResponseObject> logoutCurrentDevice() {
+    @ApiResponse(message = "Logged out from current device successfully")
+    public Object logoutCurrentDevice() {
         return sessionManagementService.logoutCurrentDevice();
     }
     
@@ -41,7 +41,8 @@ import jakarta.validation.Valid;
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Logout from all devices", 
                description = "Logout user from all devices by invalidating all tokens")
-    public ResponseEntity<ResponseObject> logoutFromAllDevices(
+    @ApiResponse(message = "Logged out from all devices successfully")
+    public Object logoutFromAllDevices(
             @Valid @RequestBody BaseActionRequest request) {
         
         return sessionManagementService.logoutFromAllDevices(request);
@@ -53,7 +54,8 @@ import jakarta.validation.Valid;
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
     @Operation(summary = "Admin force logout user from all devices", 
                description = "Admin operation to force logout a specific user from all devices")
-    public ResponseEntity<ResponseObject> forceLogoutUser(
+    @ApiResponse(message = "User forced logout successfully")
+    public Object forceLogoutUser(
             @Parameter(description = "User ID to force logout") @PathVariable Long userId,
             @Valid @RequestBody BaseActionRequest request) {
         
@@ -64,7 +66,8 @@ import jakarta.validation.Valid;
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @Operation(summary = "Get estimated active session count", 
                description = "Get estimated number of active sessions for current user")
-    public ResponseEntity<ResponseObject> getActiveSessionCount() {
+    @ApiResponse(message = "Active session count retrieved successfully")
+    public Object getActiveSessionCount() {
         return sessionManagementService.getActiveSessionCount();
     }
     
@@ -72,7 +75,8 @@ import jakarta.validation.Valid;
     @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
     @Operation(summary = "Get estimated active session count for user", 
                description = "Admin operation to get estimated active session count for specific user")
-    public ResponseEntity<ResponseObject> getUserActiveSessionCount(
+    @ApiResponse(message = "User active session count retrieved successfully")
+    public Object getUserActiveSessionCount(
             @Parameter(description = "User ID") @PathVariable Long userId) {
         
         return sessionManagementService.getUserSessionStatus(userId);

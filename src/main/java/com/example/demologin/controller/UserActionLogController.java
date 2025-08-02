@@ -1,9 +1,9 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.userActionLog.*;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.UserActionLogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,7 +24,8 @@ public class UserActionLogController {
     @GetMapping
     @SecuredEndpoint("LOG_VIEW_ALL")
     @Operation(summary = "Get all user action logs", description = "Retrieve paginated list of all user action logs")
-    public ResponseEntity<ResponseObject> getAllActionLogs(
+    @ApiResponse(message = "Action logs retrieved successfully")
+    public Object getAllActionLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -35,7 +35,8 @@ public class UserActionLogController {
     @GetMapping("/{id}")
     @SecuredEndpoint("LOG_VIEW_ALL")
     @Operation(summary = "Get action log by ID", description = "Retrieve a specific action log by its ID")
-    public ResponseEntity<ResponseObject> getActionLogById(
+    @ApiResponse(message = "Action log retrieved successfully")
+    public Object getActionLogById(
             @Parameter(description = "Action log ID") @PathVariable Long id) {
         
         GetActionLogByIdRequest request = GetActionLogByIdRequest.builder()
@@ -48,7 +49,8 @@ public class UserActionLogController {
     @GetMapping("/user/{userId}")
     @SecuredEndpoint("LOG_VIEW_USER")
     @Operation(summary = "Get action logs by user ID", description = "Retrieve paginated action logs for a specific user")
-    public ResponseEntity<ResponseObject> getActionLogsByUserId(
+    @ApiResponse(message = "User action logs retrieved successfully")
+    public Object getActionLogsByUserId(
             @Parameter(description = "User ID") @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,7 +67,8 @@ public class UserActionLogController {
     @GetMapping("/type/{actionType}")
     @SecuredEndpoint("LOG_SEARCH")
     @Operation(summary = "Get action logs by action type", description = "Retrieve paginated action logs filtered by action type")
-    public ResponseEntity<ResponseObject> getActionLogsByActionType(
+    @ApiResponse(message = "Action logs by type retrieved successfully")
+    public Object getActionLogsByActionType(
             @Parameter(description = "Action type") @PathVariable String actionType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -82,7 +85,8 @@ public class UserActionLogController {
     @GetMapping("/target/{targetType}")
     @SecuredEndpoint("LOG_SEARCH")
     @Operation(summary = "Get action logs by target type", description = "Retrieve paginated action logs filtered by target type")
-    public ResponseEntity<ResponseObject> getActionLogsByTargetType(
+    @ApiResponse(message = "Action logs by target type retrieved successfully")
+    public Object getActionLogsByTargetType(
             @Parameter(description = "Target type") @PathVariable String targetType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -99,7 +103,8 @@ public class UserActionLogController {
     @PostMapping("/date-range")
     @SecuredEndpoint("LOG_SEARCH")
     @Operation(summary = "Get action logs by date range", description = "Retrieve paginated action logs within a date range")
-    public ResponseEntity<ResponseObject> getActionLogsByDateRange(
+    @ApiResponse(message = "Action logs by date range retrieved successfully")
+    public Object getActionLogsByDateRange(
             @Valid @RequestBody GetActionLogsByDateRangeRequest request) {
         
         return userActionLogService.getActionLogsByDateRange(request);
@@ -109,7 +114,8 @@ public class UserActionLogController {
     @SecuredEndpoint("LOG_DELETE")
     @UserAction(actionType = UserActionType.DELETE, targetType = "UserActionLog", description = "Delete user action log")
     @Operation(summary = "Delete action log", description = "Delete a specific action log by its ID")
-    public ResponseEntity<ResponseObject> deleteActionLog(
+    @ApiResponse(message = "Action log deleted successfully")
+    public Object deleteActionLog(
             @Parameter(description = "Action log ID") @PathVariable Long id) {
         
         DeleteActionLogRequest request = DeleteActionLogRequest.builder()

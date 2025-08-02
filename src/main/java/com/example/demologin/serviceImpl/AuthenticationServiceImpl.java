@@ -102,7 +102,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private BruteForceProtectionService bruteForceProtectionService;
 
     @Override
-    public ResponseEntity<ResponseObject> register(UserRegistrationRequest request) {
+    public UserResponse register(UserRegistrationRequest request) {
         UserActivityLog log = null;
         try {
             // Business logic validation
@@ -147,7 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .status("SUCCESS")
                     .details("New user registered: " + savedUser.getUsername())
                     .build();
-            return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Registration successful", userMapper.toUserResponse(savedUser)));
+            return UserMapper.toResponse(savedUser, "", "");
         } catch (ConflictException | ValidationException e) {
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
@@ -186,7 +186,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<ResponseObject> login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         String clientIp = IpUtils.getClientIpAddress();
         String username = loginRequest.getUsername();
         
@@ -242,7 +242,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String token = tokenService.generateTokenForUser(user);
         LoginResponse loginResponse = UserMapper.toLoginResponse(user, token, refreshToken.getToken());
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Login successful", loginResponse));
+        return loginResponse;
     }
 
     @Override

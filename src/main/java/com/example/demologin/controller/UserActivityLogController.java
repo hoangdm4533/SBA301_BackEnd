@@ -1,14 +1,14 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.service.UserActivityLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -24,9 +24,10 @@ import java.time.LocalDateTime;
     private final UserActivityLogService userActivityLogService;
 
     @GetMapping
+    @ApiResponse(message = "Activity logs retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get all user activity logs", description = "Retrieve paginated list of all user activity logs")
-    public ResponseEntity<ResponseObject> getAllActivityLogs(
+    public Object getAllActivityLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -34,18 +35,20 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/{id}")
+    @ApiResponse(message = "Activity log retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity log by ID", description = "Retrieve a specific activity log by its ID")
-    public ResponseEntity<ResponseObject> getActivityLogById(
+    public Object getActivityLogById(
             @Parameter(description = "Activity log ID") @PathVariable Long id) {
         
         return userActivityLogService.getActivityLogById(id);
     }
 
     @GetMapping("/user/{userId}")
+    @ApiResponse(message = "User activity logs retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by user ID", description = "Retrieve paginated activity logs for a specific user")
-    public ResponseEntity<ResponseObject> getActivityLogsByUserId(
+    public Object getActivityLogsByUserId(
             @Parameter(description = "User ID") @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,9 +57,10 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/type/{actionType}")
+    @ApiResponse(message = "Activity logs by type retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by action type", description = "Retrieve paginated activity logs filtered by action type")
-    public ResponseEntity<ResponseObject> getActivityLogsByActionType(
+    public Object getActivityLogsByActionType(
             @Parameter(description = "Action type") @PathVariable String actionType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,9 +69,10 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/date-range")
+    @ApiResponse(message = "Activity logs by date range retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by date range", description = "Retrieve paginated activity logs within a date range")
-    public ResponseEntity<ResponseObject> getActivityLogsByDateRange(
+    public Object getActivityLogsByDateRange(
             @Parameter(description = "Start date (YYYY-MM-DD)") @RequestParam String startDate,
             @Parameter(description = "End date (YYYY-MM-DD)") @RequestParam String endDate,
             @RequestParam(defaultValue = "0") int page,
@@ -79,9 +84,10 @@ import java.time.LocalDateTime;
     }
 
     @PostMapping("/export")
+    @ApiResponse(message = "Activity logs exported successfully")
     @SecuredEndpoint("ADMIN_ACTIVITY_LOG_EXPORT")
     @Operation(summary = "Export activity logs", description = "Export activity logs within date range with pagination")
-    public ResponseEntity<ResponseObject> exportActivityLogs(
+    public Object exportActivityLogs(
             @Valid @RequestBody UserActivityLogExportRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -90,9 +96,10 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/my-login-history")
+    @ApiResponse(message = "Login history retrieved successfully")
     @SecuredEndpoint("USER_VIEW_OWN_LOGIN_HISTORY")
     @Operation(summary = "Get my login history", description = "Retrieve paginated login history for the current authenticated user")
-    public ResponseEntity<ResponseObject> getMyLoginHistory(
+    public Object getMyLoginHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -100,9 +107,10 @@ import java.time.LocalDateTime;
     }
 
     @DeleteMapping("/{id}")
+    @ApiResponse(message = "Activity log deleted successfully")
     @SecuredEndpoint("LOG_DELETE")
     @Operation(summary = "Delete activity log", description = "Delete a specific activity log by its ID")
-    public ResponseEntity<ResponseObject> deleteActivityLog(
+    public Object deleteActivityLog(
             @Parameter(description = "Activity log ID") @PathVariable Long id) {
         
         return userActivityLogService.deleteActivityLog(id);

@@ -39,11 +39,11 @@ public class UserActivityAspect {
                 log.debug("Could not get current user from context: {}", e.getMessage());
             }
             
-            // For login endpoint, extract user info from request if context fails
+            // For login attempt, extract user info from request
             if (currentUser == null && "LOGIN_ATTEMPT".equals(userActivity.activityType().name())) {
                 currentUser = extractUserFromLoginRequest(joinPoint, result);
             }
-            
+
             // Get client IP address and user agent
             String clientIp = "unknown";
             String userAgent = "unknown";
@@ -66,6 +66,12 @@ public class UserActivityAspect {
             // Get location information from IP (use raw IP without localhost text)
             String ipForLocation = clientIp.contains("(localhost)") ? 
                 clientIp.substring(0, clientIp.indexOf(" (localhost)")) : clientIp;
+            
+            // For testing: use a real IP when localhost to see geolocation working
+            if (ipForLocation.equals("127.0.0.1") || ipForLocation.equals("::1")) {
+                ipForLocation = "8.8.8.8"; // Google DNS for testing
+            }
+            
             LocationUtil.LocationInfo locationInfo = LocationUtil.getLocationFromIP(ipForLocation);
             
             // Prepare activity log data
@@ -79,8 +85,8 @@ public class UserActivityAspect {
             // Check for existing log with same key parameters
             UserActivityLog existingLog = null;
             if (userId != null) {
-                existingLog = userActivityLogRepository.findTopByUserIdAndActivityTypeAndIpAddressAndStatusAndUserAgentOrderByTimestampDesc(
-                    userId, userActivity.activityType(), clientIp, status, userAgent);
+                existingLog = userActivityLogRepository.findTopByUserIdAndActivityTypeAndIpAddressAndUserAgentOrderByTimestampDesc(
+                    userId, userActivity.activityType(), clientIp, userAgent);
             }
             
             UserActivityLog activityLog;
@@ -143,21 +149,17 @@ public class UserActivityAspect {
     
     private User extractUserFromLoginRequest(JoinPoint joinPoint, Object result) {
         try {
-            // Extract username from login request arguments
             Object[] args = joinPoint.getArgs();
             for (Object arg : args) {
                 if (arg instanceof LoginRequest) {
                     LoginRequest loginRequest = (LoginRequest) arg;
                     String username = loginRequest.getUsername();
                     
-                    // Find user by username or email if login was successful
-                    if (isLoginSuccessful(result)) {
-                        // Kiểm tra xem input có phải là email hợp lệ không
-                        if (EmailUtils.isValidEmail(username)) {
-                            return userRepository.findByEmail(username).orElse(null);
-                        } else {
-                            return userRepository.findByUsername(username).orElse(null);
-                        }
+                    // Find user by username or email regardless of login success
+                    if (EmailUtils.isValidEmail(username)) {
+                        return userRepository.findByEmail(username).orElse(null);
+                    } else {
+                        return userRepository.findByUsername(username).orElse(null);
                     }
                 }
             }
