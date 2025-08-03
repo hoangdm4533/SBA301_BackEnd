@@ -1,7 +1,6 @@
 package com.example.demologin.mapper;
 
 import com.example.demologin.dto.request.role.CreateRoleRequest;
-import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
 import com.example.demologin.dto.response.PermissionResponse;
@@ -23,8 +22,6 @@ public class RoleMapper {
         entity.setName(dto.name);
     }
 
-    public void fromDeleteDto(DeleteRoleRequest dto) {
-    }
 
     public void fromUpdateDto(UpdateRoleRequest dto, Role entity) {
         entity.setName(dto.name);

@@ -53,11 +53,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return token;
     }
 
-    @Override
-    @Transactional
-    public void deleteByAccount(User user) {
-        refreshTokenRepository.deleteByUser(user);
-    }
 
     @Override
     public TokenRefreshResponse refreshToken(String requestRefreshToken) {

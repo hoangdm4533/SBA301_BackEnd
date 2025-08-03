@@ -2,12 +2,9 @@ package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
-import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,8 +29,6 @@ import org.springframework.web.bind.annotation.*;
         return roleService.getAll();
     }
 
-    @UserAction(actionType = UserActionType.CREATE, targetType = "ROLE", 
-               description = "Create new role", requiresReason = true)
     @PostMapping
     @ApiResponse(message = "Role created successfully", status = HttpStatus.CREATED)
     @SecuredEndpoint("ROLE_CREATE")
@@ -43,8 +38,6 @@ import org.springframework.web.bind.annotation.*;
         return roleService.create(req);
     }
 
-    @UserAction(actionType = UserActionType.UPDATE, targetType = "ROLE", 
-               description = "Update role information", requiresReason = true)
     @PutMapping("/{id}")
     @ApiResponse(message = "Role updated successfully")
     @SecuredEndpoint("ROLE_UPDATE")
@@ -56,21 +49,16 @@ import org.springframework.web.bind.annotation.*;
         return roleService.update(id, req);
     }
 
-    @UserAction(actionType = UserActionType.DELETE, targetType = "ROLE", 
-               description = "Delete role", requiresReason = true)
     @DeleteMapping("/{id}")
     @ApiResponse(message = "Role deleted successfully")
     @SecuredEndpoint("ROLE_DELETE")
     @Operation(summary = "Delete role", 
                description = "Delete a role from the system")
     public void delete(
-            @Parameter(description = "Role ID") @PathVariable Long id, 
-            @RequestBody @Valid DeleteRoleRequest req) {
-        roleService.delete(id, req);
+            @Parameter(description = "Role ID") @PathVariable Long id) {
+        roleService.delete(id);
     }
 
-    @UserAction(actionType = UserActionType.UPDATE, targetType = "ROLE", 
-               description = "Update role permissions", requiresReason = true)
     @PutMapping("/{id}/permissions")
     @ApiResponse(message = "Role permissions updated successfully")
     @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")

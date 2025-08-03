@@ -1,7 +1,6 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.request.role.CreateRoleRequest;
-import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
 import com.example.demologin.dto.response.RoleResponse;
@@ -55,7 +54,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public void delete(Long id, DeleteRoleRequest req) {
+    public void delete(Long id) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
 

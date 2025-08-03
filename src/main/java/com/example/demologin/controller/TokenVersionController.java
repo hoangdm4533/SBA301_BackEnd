@@ -2,9 +2,7 @@ package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.BaseActionRequest;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.TokenVersionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,8 +22,6 @@ import jakarta.validation.Valid;
     
     private final TokenVersionService tokenVersionService;
     
-    @UserAction(actionType = UserActionType.DELETE, targetType = "TOKEN", 
-               description = "Invalidate all own tokens", requiresReason = true)
     @PostMapping("/invalidate-all")
     @SecuredEndpoint("TOKEN_INVALIDATE_OWN")
     @Operation(summary = "Invalidate all tokens for current user", 
@@ -37,8 +33,6 @@ import jakarta.validation.Valid;
         return tokenVersionService.incrementCurrentUserTokenVersion();
     }
     
-    @UserAction(actionType = UserActionType.DELETE, targetType = "TOKEN", 
-               description = "Admin invalidate user tokens", requiresReason = true)
     @PostMapping("/invalidate-user/{userId}")
     @SecuredEndpoint("TOKEN_INVALIDATE_USER")
     @Operation(summary = "Admin invalidate all tokens for user by ID", 

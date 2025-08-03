@@ -2,9 +2,7 @@ package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
-import com.example.demologin.annotation.UserAction;
 import com.example.demologin.dto.request.PermissionRequest;
-import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.PermissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,8 +26,6 @@ import org.springframework.web.bind.annotation.*;
         return permissionService.getAll();
     }
 
-    @UserAction(actionType = UserActionType.UPDATE, targetType = "PERMISSION",
-               description = "Update permission name", requiresReason = true)
     @PutMapping("/{id}")
     @ApiResponse(message = "Permission updated successfully")
     @SecuredEndpoint("PERMISSION_UPDATE")
