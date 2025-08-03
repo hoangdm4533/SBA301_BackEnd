@@ -103,6 +103,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ResponseObject> handleBusinessException(BusinessException ex) {
+        log.warn("Business exception: {}", ex.getMessage());
+        ResponseObject response = new ResponseObject(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                null
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ResponseObject> handleInternalServerErrorException(InternalServerErrorException ex) {
         log.error("Internal server error: {}", ex.getMessage(), ex);

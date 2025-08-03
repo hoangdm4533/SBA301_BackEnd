@@ -63,10 +63,10 @@ import org.springframework.web.bind.annotation.*;
     @SecuredEndpoint("ROLE_DELETE")
     @Operation(summary = "Delete role", 
                description = "Delete a role from the system")
-    public Object delete(
+    public void delete(
             @Parameter(description = "Role ID") @PathVariable Long id, 
             @RequestBody @Valid DeleteRoleRequest req) {
-        return roleService.delete(id, req);
+        roleService.delete(id, req);
     }
 
     @UserAction(actionType = UserActionType.UPDATE, targetType = "ROLE", 

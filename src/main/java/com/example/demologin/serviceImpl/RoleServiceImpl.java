@@ -4,7 +4,7 @@ import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.DeleteRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
-import com.example.demologin.dto.response.ResponseObject;
+import com.example.demologin.dto.response.RoleResponse;
 import com.example.demologin.entity.Role;
 import com.example.demologin.exception.exceptions.BusinessException;
 import com.example.demologin.exception.exceptions.NotFoundException;
@@ -13,8 +13,6 @@ import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.RoleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -27,16 +25,16 @@ public class RoleServiceImpl implements RoleService {
     private final UserRepository userRepository;
 
     @Override
-    public ResponseEntity<ResponseObject> getAll() {
+    public List<RoleResponse> getAll() {
         List<Role> roles = roleRepository.findAll();
         if (roles.isEmpty()) {
             throw new NotFoundException("No roles found");
         }
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", roles));
+        return roleMapper.toResponseList(roles);
     }
 
     @Override
-    public ResponseEntity<ResponseObject> create(CreateRoleRequest req) {
+    public RoleResponse create(CreateRoleRequest req) {
         if (roleRepository.existsByName(req.name)) {
             throw new BusinessException("Role name already exists");
         }
@@ -44,20 +42,20 @@ public class RoleServiceImpl implements RoleService {
         Role role = new Role();
         roleMapper.fromCreateDto(req, role);
         Role savedRole = roleRepository.save(role);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", savedRole));
+        return roleMapper.toResponse(savedRole);
     }
 
     @Override
-    public ResponseEntity<ResponseObject> update(Long id, UpdateRoleRequest req) {
+    public RoleResponse update(Long id, UpdateRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
         roleMapper.fromUpdateDto(req, r);
         Role updatedRole = roleRepository.save(r);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", updatedRole));
+        return roleMapper.toResponse(updatedRole);
     }
 
     @Override
-    public ResponseEntity<ResponseObject> delete(Long id, DeleteRoleRequest req) {
+    public void delete(Long id, DeleteRoleRequest req) {
         Role r = roleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
 
@@ -66,14 +64,13 @@ public class RoleServiceImpl implements RoleService {
         }
 
         roleRepository.delete(r);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Deleted", null));
     }
 
     @Override
-    public ResponseEntity<ResponseObject> updatePermissions(Long id, RolePermissionsRequest req) {
+    public RoleResponse updatePermissions(Long id, RolePermissionsRequest req) {
         Role r = roleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
         roleMapper.fromPermissionDto(req, r);
         Role updatedRole = roleRepository.save(r);
-        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Success", updatedRole));
+        return roleMapper.toResponse(updatedRole);
     }
 }

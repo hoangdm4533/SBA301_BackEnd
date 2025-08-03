@@ -5,9 +5,7 @@ import com.example.demologin.dto.request.login.GoogleLoginRequest;
 import com.example.demologin.dto.request.login.LoginRequest;
 import com.example.demologin.dto.request.user.UserRegistrationRequest;
 import com.example.demologin.dto.response.LoginResponse;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
-import com.example.demologin.entity.PasswordResetToken;
 import com.example.demologin.entity.RefreshToken;
 import com.example.demologin.entity.User;
 import com.example.demologin.entity.UserActivityLog;
@@ -16,7 +14,6 @@ import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.UserStatus;
 import com.example.demologin.exception.exceptions.*;
 import com.example.demologin.mapper.UserMapper;
-import com.example.demologin.repository.PasswordResetTokenRepository;
 import com.example.demologin.repository.RefreshTokenRepository;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
@@ -26,8 +23,6 @@ import com.example.demologin.service.BruteForceProtectionService;
 import com.example.demologin.utils.IpUtils;
 import com.example.demologin.utils.EmailUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -41,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -52,8 +48,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Set;
 
 @Service
@@ -88,9 +82,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     UserMapper userMapper;
-
-    @Autowired
-    PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
     UserActivityLogRepository userActivityLogRepository;
@@ -246,61 +237,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout() {
-        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
-            throw new UnauthorizedException("User not authenticated");
-        }
-        
-        User user = (User) authentication.getPrincipal();
-        user.incrementTokenVersion();
-        userRepository.save(user);
-        refreshTokenRepository.deleteByUser(user);
-    }
-
-
-    @Override
-    public void createPasswordResetTokenForAccount(User user, String token) {
-        PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
-        resetToken.setUser(user);
-        resetToken.setExpiryDate(calculateExpiryDate(60 * 60));
-        passwordResetTokenRepository.save(resetToken);
-    }
-
-    private Date calculateExpiryDate(int expiryTimeInSeconds) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.SECOND, expiryTimeInSeconds);
-        return new Date(cal.getTime().getTime());
-    }
-
-    @Override
-    public User validatePasswordResetToken(String token) {
-        PasswordResetToken passToken = passwordResetTokenRepository.findByToken(token);
-        if (passToken == null) {
-            throw new NotFoundException("Invalid token");
-        }
-        if (passToken.getExpiryDate().before(new Date())) {
-            throw new BadRequestException("Token expired");
-        }
-        return passToken.getUser();
-    }
-
-    @Override
-    public void changePassword(User user, String newPassword) {
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-    }
-
-    @Override
-    public void deleteResetToken(String token) {
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token);
-        if (resetToken != null) {
-            passwordResetTokenRepository.delete(resetToken);
-        }
-    }
-
-    @Override
     public UserResponse authenticateWithGoogle(GoogleLoginRequest request) {
         try {
             log.debug("Attempting to verify Google token: {}", request.getIdToken().substring(0, Math.min(10, request.getIdToken().length())) + "...");
@@ -379,48 +315,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String email = (String) userInfo.get("email");
             String name = (String) userInfo.get("name");
             
-            return authenticateWithOAuth2(email, name);
+            return getUserResponse(email, name);
         } catch (Exception e) {
             log.error("Error authenticating with Google access token", e);
             throw new InternalServerErrorException("Google authentication failed: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public UserResponse authenticateWithOAuth2(String email, String name) {
-        try {
-            User user = userRepository.findByEmail(email).orElse(null);
-            if (user == null) {
-                Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
-                
-                user = new User(
-                        email.substring(0, email.indexOf('@')),
-                        passwordEncoder.encode(""),
-                        name != null ? name : "",
-                        email,
-                        "",
-                        ""
-                );
-                
-                user.setRoles(roles);
-                user.setStatus(UserStatus.ACTIVE);
-                user.setCreatedAt(LocalDateTime.now());
-                user.setIdentityCard("");
-                user.setVerify(true);
-                user.setDateOfBirth(LocalDateTime.now().toLocalDate());
-                user.setGender(com.example.demologin.enums.Gender.OTHER);
-                
-                user = userRepository.save(user);
-            }
-            
-            String token = tokenService.generateTokenForUser(user);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-            
-            return UserMapper.toResponse(user, token, refreshToken.getToken());
-        } catch (Exception e) {
-            log.error("Error authenticating with OAuth2", e);
-            throw new InternalServerErrorException("OAuth2 authentication failed: " + e.getMessage());
         }
     }
 
@@ -437,7 +335,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
-        return authenticateWithOAuth2(email, name != null ? name : email);
+        return getUserResponse(email, name != null ? name : email);
     }
 
     @Override
