@@ -1,191 +1,154 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.dto.request.userActionLog.*;
 import com.example.demologin.dto.response.PageResponse;
-import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserActionLogResponse;
 import com.example.demologin.entity.UserActionLog;
 import com.example.demologin.enums.UserActionType;
 import com.example.demologin.exception.exceptions.NotFoundException;
-import com.example.demologin.exception.exceptions.ValidationException;
 import com.example.demologin.repository.UserActionLogRepository;
 import com.example.demologin.service.UserActionLogService;
 import com.example.demologin.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
+@Slf4j
 public class UserActionLogServiceImpl implements UserActionLogService {
     
     private final UserActionLogRepository userActionLogRepository;
     
     @Override
+    @Transactional
     public UserActionLog save(UserActionLog userActionLog) {
         return userActionLogRepository.save(userActionLog);
     }
     
     @Override
+    @Transactional
     public void deleteOldLogs(LocalDateTime beforeDate) {
         List<UserActionLog> oldLogs = userActionLogRepository.findByActionTimeBetween(
             LocalDateTime.of(2000, 1, 1, 0, 0), beforeDate);
         userActionLogRepository.deleteAll(oldLogs);
     }
 
-    // Controller methods implementation - return ResponseEntity<ResponseObject>
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getAllActionLogs(int page, int size) {
-        page = PageUtils.normalizePageNumber(page);
-        size = PageUtils.normalizePageSize(size);
-        
-        Pageable pageable = PageUtils.createPageable(page, size);
+    public PageResponse<UserActionLogResponse> getAllActionLogs(int page, int size) {
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
         Page<UserActionLog> actionLogs = userActionLogRepository.findAll(pageable);
+        Page<UserActionLogResponse> mappedLogs = actionLogs.map(this::convertToResponse);
+        PageResponse<UserActionLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        if (actionLogs.isEmpty()) {
+        if (response.getContent().isEmpty()) {
             throw new NotFoundException("No action logs found");
         }
-        
-        PageResponse<UserActionLogResponse> pageResponse = PageUtils.toPageResponse(actionLogs.map(this::convertToResponse));
-        ResponseObject response = new ResponseObject(HttpStatus.OK.value(), "User action logs retrieved successfully", pageResponse);
-        return ResponseEntity.ok(response);
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getActionLogById(GetActionLogByIdRequest request) {
-        UserActionLog actionLog = userActionLogRepository.findById(request.getId())
-                .orElseThrow(() -> new NotFoundException("Action log not found with id: " + request.getId()));
-        
-        UserActionLogResponse response = convertToResponse(actionLog);
-        ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action log retrieved successfully", response);
-        return ResponseEntity.ok(responseObject);
+    public UserActionLogResponse getActionLogById(Long id) {
+        UserActionLog actionLog = userActionLogRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Action log not found with id: " + id));
+        return convertToResponse(actionLog);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getActionLogsByUserId(GetActionLogsByUserIdRequest request) {
-        int page = PageUtils.normalizePageNumber(request.getPage());
-        int size = PageUtils.normalizePageSize(request.getSize());
+    public PageResponse<UserActionLogResponse> getActionLogsByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        Page<UserActionLog> actionLogs = userActionLogRepository.findByUserIdOrderByActionTimeDesc(userId, pageable);
+        Page<UserActionLogResponse> mappedLogs = actionLogs.map(this::convertToResponse);
+        PageResponse<UserActionLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        Pageable pageable = PageUtils.createPageable(page, size);
-        Page<UserActionLog> actionLogs = userActionLogRepository.findByUserIdOrderByActionTimeDesc(request.getUserId(), pageable);
-        
-        if (actionLogs.isEmpty()) {
-            throw new NotFoundException("No action logs found for user ID: " + request.getUserId());
+        if (response.getContent().isEmpty()) {
+            throw new NotFoundException("No action logs found for user ID: " + userId);
         }
-        
-        PageResponse<UserActionLogResponse> pageResponse = PageUtils.toPageResponse(actionLogs.map(this::convertToResponse));
-        ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action logs retrieved successfully", pageResponse);
-        return ResponseEntity.ok(responseObject);
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getActionLogsByActionType(GetActionLogsByTypeRequest request) {
+    public PageResponse<UserActionLogResponse> getActionLogsByActionType(String actionType, int page, int size) {
         try {
-            int page = PageUtils.normalizePageNumber(request.getPage());
-            int size = PageUtils.normalizePageSize(request.getSize());
+            UserActionType type = UserActionType.valueOf(actionType.toUpperCase());
+            Pageable pageable = PageUtils.createPageable(
+                PageUtils.normalizePageNumber(page), 
+                PageUtils.normalizePageSize(size)
+            );
+            Page<UserActionLog> actionLogs = userActionLogRepository.findByActionTypeOrderByActionTimeDesc(type, pageable);
+            Page<UserActionLogResponse> mappedLogs = actionLogs.map(this::convertToResponse);
+            PageResponse<UserActionLogResponse> response = PageUtils.toPageResponse(mappedLogs);
             
-            Pageable pageable = PageUtils.createPageable(page, size);
-            UserActionType actionTypeEnum = UserActionType.valueOf(request.getActionType().toUpperCase());
-            Page<UserActionLog> actionLogs = userActionLogRepository.findByActionTypeOrderByActionTimeDesc(actionTypeEnum, pageable);
-            
-            if (actionLogs.isEmpty()) {
-                throw new NotFoundException("No action logs found for action type: " + request.getActionType());
+            if (response.getContent().isEmpty()) {
+                throw new NotFoundException("No action logs found for action type: " + actionType);
             }
-            
-            PageResponse<UserActionLogResponse> pageResponse = PageUtils.toPageResponse(actionLogs.map(this::convertToResponse));
-            ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action logs retrieved successfully", pageResponse);
-            return ResponseEntity.ok(responseObject);
+            return response;
         } catch (IllegalArgumentException e) {
-            throw new ValidationException("Invalid action type: " + request.getActionType());
+            throw new NotFoundException("Invalid action type: " + actionType);
         }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getActionLogsByTargetType(GetActionLogsByTargetTypeRequest request) {
-        int page = PageUtils.normalizePageNumber(request.getPage());
-        int size = PageUtils.normalizePageSize(request.getSize());
+    public PageResponse<UserActionLogResponse> getActionLogsByTargetType(String targetType, int page, int size) {
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        Page<UserActionLog> actionLogs = userActionLogRepository.findByTargetTypeOrderByActionTimeDesc(targetType, pageable);
+        Page<UserActionLogResponse> mappedLogs = actionLogs.map(this::convertToResponse);
+        PageResponse<UserActionLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        Pageable pageable = PageUtils.createPageable(page, size);
-        Page<UserActionLog> actionLogs = userActionLogRepository.findByTargetTypeOrderByActionTimeDesc(request.getTargetType(), pageable);
-        
-        if (actionLogs.isEmpty()) {
-            throw new NotFoundException("No action logs found for target type: " + request.getTargetType());
+        if (response.getContent().isEmpty()) {
+            throw new NotFoundException("No action logs found for target type: " + targetType);
         }
-        
-        PageResponse<UserActionLogResponse> pageResponse = PageUtils.toPageResponse(actionLogs.map(this::convertToResponse));
-        ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action logs retrieved successfully", pageResponse);
-        return ResponseEntity.ok(responseObject);
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseObject> getActionLogsByDateRange(GetActionLogsByDateRangeRequest request) {
+    public PageResponse<UserActionLogResponse> getActionLogsByDateRange(String startDate, String endDate, int page, int size) {
         try {
-            LocalDateTime startDateTime = LocalDate.parse(request.getStartDate()).atStartOfDay();
-            LocalDateTime endDateTime = LocalDate.parse(request.getEndDate()).atTime(23, 59, 59);
+            LocalDateTime startDateTime = LocalDate.parse(startDate).atStartOfDay();
+            LocalDateTime endDateTime = LocalDate.parse(endDate).atTime(23, 59, 59);
             
-            if (startDateTime.isAfter(endDateTime)) {
-                throw new ValidationException("Start date must be before or equal to end date");
-            }
+            Pageable pageable = PageUtils.createPageable(
+                PageUtils.normalizePageNumber(page), 
+                PageUtils.normalizePageSize(size)
+            );
+            Page<UserActionLog> actionLogs = userActionLogRepository.findByActionTimeBetween(startDateTime, endDateTime, pageable);
+            Page<UserActionLogResponse> mappedLogs = actionLogs.map(this::convertToResponse);
+            PageResponse<UserActionLogResponse> response = PageUtils.toPageResponse(mappedLogs);
             
-            int page = PageUtils.normalizePageNumber(request.getPage());
-            int size = PageUtils.normalizePageSize(request.getSize());
-            
-            List<UserActionLog> actionLogs = userActionLogRepository.findByActionTimeBetween(startDateTime, endDateTime);
-            
-            if (actionLogs.isEmpty()) {
+            if (response.getContent().isEmpty()) {
                 throw new NotFoundException("No action logs found for the specified date range");
             }
-            
-            // Manual pagination for list
-            int start = page * size;
-            int end = Math.min(start + size, actionLogs.size());
-            List<UserActionLog> paginatedLogs = actionLogs.subList(start, end);
-            
-            List<UserActionLogResponse> responseList = paginatedLogs.stream()
-                    .map(this::convertToResponse)
-                    .toList();
-            
-            PageResponse<UserActionLogResponse> pageResponse = new PageResponse<>(
-                    responseList,
-                    page,
-                    size,
-                    (long) actionLogs.size(),
-                    (int) Math.ceil((double) actionLogs.size() / size),
-                    end >= actionLogs.size()
-            );
-            
-            ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action logs retrieved successfully", pageResponse);
-            return ResponseEntity.ok(responseObject);
-        } catch (DateTimeParseException e) {
-            throw new ValidationException("Invalid date format. Use YYYY-MM-DD");
+            return response;
+        } catch (Exception e) {
+            throw new NotFoundException("Invalid date format. Use YYYY-MM-DD format.");
         }
     }
 
     @Override
-    public ResponseEntity<ResponseObject> deleteActionLog(DeleteActionLogRequest request) {
-        if (!userActionLogRepository.existsById(request.getId())) {
-            throw new NotFoundException("Action log not found with id: " + request.getId());
+    @Transactional
+    public String deleteActionLog(Long id) {
+        if (!userActionLogRepository.existsById(id)) {
+            throw new NotFoundException("Action log not found with ID: " + id);
         }
-        
-        userActionLogRepository.deleteById(request.getId());
-        ResponseObject responseObject = new ResponseObject(HttpStatus.OK.value(), "Action log deleted successfully", null);
-        return ResponseEntity.ok(responseObject);
+        userActionLogRepository.deleteById(id);
+        log.info("User action log deleted: {}", id);
+        return "Action log deleted successfully";
     }
 
     private UserActionLogResponse convertToResponse(UserActionLog actionLog) {

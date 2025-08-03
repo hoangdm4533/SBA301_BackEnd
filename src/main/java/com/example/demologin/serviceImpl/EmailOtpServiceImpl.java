@@ -144,14 +144,12 @@ public class EmailOtpServiceImpl implements EmailOtpService {
     public void deleteExpiredOtps() {
         LocalDateTime now = LocalDateTime.now();
         
-        // Kiểm tra trước xem có OTP hết hạn không
-        long expiredCount = emailOtpRepo.countExpiredOtps(now);
+        // Thực hiện DELETE trực tiếp và chỉ log khi có OTP bị xóa
+        int deletedCount = emailOtpRepo.deleteExpiredOtps(now);
         
-        if (expiredCount > 0) {
-            // Chỉ thực hiện delete khi có OTP cần xóa
-            int deletedCount = emailOtpRepo.deleteExpiredOtps(now);
+        if (deletedCount > 0) {
             log.info("Deleted {} expired OTP records", deletedCount);
         }
-        // Không log gì khi không có OTP nào cần xóa
+        // Khi deletedCount = 0, không log gì và chỉ có 1 DELETE query duy nhất
     }
 } 

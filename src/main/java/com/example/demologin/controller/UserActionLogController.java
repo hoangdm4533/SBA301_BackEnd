@@ -3,13 +3,11 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserAction;
-import com.example.demologin.dto.request.userActionLog.*;
 import com.example.demologin.enums.UserActionType;
 import com.example.demologin.service.UserActionLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,11 +37,7 @@ public class UserActionLogController {
     public Object getActionLogById(
             @Parameter(description = "Action log ID") @PathVariable Long id) {
         
-        GetActionLogByIdRequest request = GetActionLogByIdRequest.builder()
-                .id(id)
-                .build();
-                
-        return userActionLogService.getActionLogById(request);
+        return userActionLogService.getActionLogById(id);
     }
 
     @GetMapping("/user/{userId}")
@@ -55,13 +49,7 @@ public class UserActionLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        GetActionLogsByUserIdRequest request = GetActionLogsByUserIdRequest.builder()
-                .userId(userId)
-                .page(page)
-                .size(size)
-                .build();
-                
-        return userActionLogService.getActionLogsByUserId(request);
+        return userActionLogService.getActionLogsByUserId(userId, page, size);
     }
 
     @GetMapping("/type/{actionType}")
@@ -73,13 +61,7 @@ public class UserActionLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        GetActionLogsByTypeRequest request = GetActionLogsByTypeRequest.builder()
-                .actionType(actionType)
-                .page(page)
-                .size(size)
-                .build();
-                
-        return userActionLogService.getActionLogsByActionType(request);
+        return userActionLogService.getActionLogsByActionType(actionType, page, size);
     }
 
     @GetMapping("/target/{targetType}")
@@ -91,23 +73,20 @@ public class UserActionLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        GetActionLogsByTargetTypeRequest request = GetActionLogsByTargetTypeRequest.builder()
-                .targetType(targetType)
-                .page(page)
-                .size(size)
-                .build();
-                
-        return userActionLogService.getActionLogsByTargetType(request);
+        return userActionLogService.getActionLogsByTargetType(targetType, page, size);
     }
 
-    @PostMapping("/date-range")
+    @GetMapping("/date-range")
     @SecuredEndpoint("LOG_SEARCH")
     @Operation(summary = "Get action logs by date range", description = "Retrieve paginated action logs within a date range")
     @ApiResponse(message = "Action logs by date range retrieved successfully")
     public Object getActionLogsByDateRange(
-            @Valid @RequestBody GetActionLogsByDateRangeRequest request) {
+            @Parameter(description = "Start date (YYYY-MM-DD)") @RequestParam String startDate,
+            @Parameter(description = "End date (YYYY-MM-DD)") @RequestParam String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         
-        return userActionLogService.getActionLogsByDateRange(request);
+        return userActionLogService.getActionLogsByDateRange(startDate, endDate, page, size);
     }
 
     @DeleteMapping("/{id}")
@@ -118,10 +97,6 @@ public class UserActionLogController {
     public Object deleteActionLog(
             @Parameter(description = "Action log ID") @PathVariable Long id) {
         
-        DeleteActionLogRequest request = DeleteActionLogRequest.builder()
-                .id(id)
-                .build();
-                
-        return userActionLogService.deleteActionLog(request);
+        return userActionLogService.deleteActionLog(id);
     }
 }

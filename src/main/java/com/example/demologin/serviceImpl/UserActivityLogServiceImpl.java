@@ -93,15 +93,15 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
     }
 
     @Override
-    public void logUserActivity(ActivityType activityType, String details) {
-        User currentUser = AccountUtils.getCurrentUser();
-        logUserActivity(currentUser, activityType, details);
-    }
-
-    // Controller endpoints - return data only
-    @Override
     public PageResponse<UserActivityLogResponse> getAllActivityLogs(int page, int size) {
-        PageResponse<UserActivityLogResponse> response = getAllActivityLogsInternal(page, size);
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        Page<UserActivityLog> logs = userActivityLogRepository.findAll(pageable);
+        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
+        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
+        
         if (response.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found");
         }
@@ -110,12 +110,21 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     @Override
     public UserActivityLogResponse getActivityLogById(Long id) {
-        return getActivityLogByIdInternal(id);
+        UserActivityLog log = userActivityLogRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("UserActivityLog not found with id: " + id));
+        return userActivityLogMapper.toResponse(log);
     }
 
     @Override
     public PageResponse<UserActivityLogResponse> getActivityLogsByUserId(Long userId, int page, int size) {
-        PageResponse<UserActivityLogResponse> response = getActivityLogsByUserIdInternal(userId, page, size);
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        Page<UserActivityLog> logs = userActivityLogRepository.findByUserIdOrderByTimestampDesc(userId, pageable);
+        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
+        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
+        
         if (response.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found for user ID: " + userId);
         }
@@ -124,16 +133,35 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     @Override
     public PageResponse<UserActivityLogResponse> getActivityLogsByType(String activityType, int page, int size) {
-        PageResponse<UserActivityLogResponse> response = getActivityLogsByTypeInternal(activityType, page, size);
-        if (response.getContent().isEmpty()) {
-            throw new NotFoundException("No activity logs found for activity type: " + activityType);
+        try {
+            ActivityType type = ActivityType.valueOf(activityType.toUpperCase());
+            Pageable pageable = PageUtils.createPageable(
+                PageUtils.normalizePageNumber(page), 
+                PageUtils.normalizePageSize(size)
+            );
+            Page<UserActivityLog> logs = userActivityLogRepository.findByActivityTypeOrderByTimestampDesc(type, pageable);
+            Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
+            PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
+            
+            if (response.getContent().isEmpty()) {
+                throw new NotFoundException("No activity logs found for activity type: " + activityType);
+            }
+            return response;
+        } catch (IllegalArgumentException e) {
+            throw new NotFoundException("Invalid activity type: " + activityType);
         }
-        return response;
     }
 
     @Override
     public PageResponse<UserActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
-        PageResponse<UserActivityLogResponse> response = getActivityLogsByDateRangeInternal(startTime, endTime, page, size);
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
+        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
+        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
+        
         if (response.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found for the specified date range");
         }
@@ -142,7 +170,18 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     @Override
     public PageResponse<UserActivityLogResponse> exportActivityLogs(UserActivityLogExportRequest request, int page, int size) {
-        PageResponse<UserActivityLogResponse> response = exportActivityLogsInternal(request, page, size);
+        LocalDateTime startTime = request.getStartDate().atStartOfDay();
+        LocalDateTime endTime = request.getEndDate().atTime(23, 59, 59);
+        
+        Pageable pageable = PageUtils.createPageable(
+            PageUtils.normalizePageNumber(page), 
+            PageUtils.normalizePageSize(size)
+        );
+        
+        Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
+        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
+        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
+        
         if (response.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found for export in the specified date range");
         }
@@ -152,10 +191,11 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
     @Override
     @Transactional
     public String deleteActivityLog(Long id) {
-        userActivityLogRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Activity log not found with ID: " + id));
-        
-        deleteActivityLogInternal(id);
+        if (!userActivityLogRepository.existsById(id)) {
+            throw new NotFoundException("Activity log not found with ID: " + id);
+        }
+        userActivityLogRepository.deleteById(id);
+        log.info("User activity log deleted: {}", id);
         return "Activity log deleted successfully";
     }
 
@@ -187,126 +227,4 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
         return pageResponse;
     }
 
-    // Internal business logic implementations
-    @Override
-    public PageResponse<UserActivityLogResponse> getAllActivityLogsInternal(int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
-        Page<UserActivityLog> logs = userActivityLogRepository.findAll(pageable);
-        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        return PageUtils.toPageResponse(mappedLogs);
-    }
-
-    @Override
-    public UserActivityLogResponse getActivityLogByIdInternal(Long id) {
-        UserActivityLog log = findById(id);
-        return userActivityLogMapper.toResponse(log);
-    }
-
-    @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByUserIdInternal(Long userId, int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
-        Page<UserActivityLog> logs = userActivityLogRepository.findByUserIdOrderByTimestampDesc(userId, pageable);
-        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        return PageUtils.toPageResponse(mappedLogs);
-    }
-
-    @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByTypeInternal(String activityType, int page, int size) {
-        try {
-            ActivityType type = ActivityType.valueOf(activityType.toUpperCase());
-            Pageable pageable = PageUtils.createPageable(
-                PageUtils.normalizePageNumber(page), 
-                PageUtils.normalizePageSize(size)
-            );
-            Page<UserActivityLog> logs = userActivityLogRepository.findByActivityTypeOrderByTimestampDesc(type, pageable);
-            Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-            return PageUtils.toPageResponse(mappedLogs);
-        } catch (IllegalArgumentException e) {
-            throw new NotFoundException("Invalid activity type: " + activityType);
-        }
-    }
-
-    @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByDateRangeInternal(LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
-        Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
-        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        return PageUtils.toPageResponse(mappedLogs);
-    }
-
-    @Override
-    public PageResponse<UserActivityLogResponse> searchActivityLogs(UserActivityLogFilterRequest request) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(request.getPage()), 
-            PageUtils.normalizePageSize(request.getSize())
-        );
-        Page<UserActivityLog> logs = userActivityLogRepository.findWithFilters(
-                request.getUserId(),
-                request.getActivityType(),
-                request.getStatus(),
-                request.getStartTime(),
-                request.getEndTime(),
-                pageable
-        );
-        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        return PageUtils.toPageResponse(mappedLogs);
-    }
-
-    @Override
-    @Transactional
-    public void deleteActivityLogInternal(Long id) {
-        deleteById(id);
-    }
-
-    @Override
-    public Page<UserActivityLog> findAll(Pageable pageable) {
-        return userActivityLogRepository.findAll(pageable);
-    }
-
-    @Override
-    public UserActivityLog findById(Long id) {
-        return userActivityLogRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserActivityLog not found with id: " + id));
-    }
-
-    @Override
-    @Transactional
-    public void deleteById(Long id) {
-        if (!userActivityLogRepository.existsById(id)) {
-            throw new NotFoundException("UserActivityLog not found with id: " + id);
-        }
-        userActivityLogRepository.deleteById(id);
-        log.info("User activity log deleted: {}", id);
-    }
-
-    @Override
-    public PageResponse<UserActivityLogResponse> exportActivityLogsInternal(UserActivityLogExportRequest request, int page, int size) {
-        LocalDateTime startTime = request.getStartDate().atStartOfDay();
-        LocalDateTime endTime = request.getEndDate().atTime(23, 59, 59);
-        
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
-        
-        Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
-        Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        
-        return PageUtils.toPageResponse(mappedLogs);
-    }
-
-    @Override
-    @Transactional
-    public void cleanupOldLogs(LocalDateTime cutoffDate) {
-        log.info("Cleanup old user activity logs before: {}", cutoffDate);
-    }
 }
