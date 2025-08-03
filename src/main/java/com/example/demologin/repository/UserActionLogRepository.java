@@ -20,4 +20,6 @@ public interface UserActionLogRepository extends JpaRepository<UserActionLog, Lo
     Page<UserActionLog> findByTargetTypeOrderByActionTimeDesc(String targetType, Pageable pageable);
     
     List<UserActionLog> findByActionTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
+    
+    Page<UserActionLog> findByActionTimeBetween(LocalDateTime startTime, LocalDateTime endTime, Pageable pageable);
 }
