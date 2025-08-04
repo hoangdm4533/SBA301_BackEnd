@@ -5,6 +5,7 @@ import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
+import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
     }
 
     @PostMapping
-    @ApiResponse(message = "Role created successfully", status = HttpStatus.CREATED)
+    @ApiResponse(message = "Role created successfully")
     @SecuredEndpoint("ROLE_CREATE")
     @Operation(summary = "Create new role", 
                description = "Create a new role with specified name and description")
@@ -50,13 +51,13 @@ import org.springframework.web.bind.annotation.*;
     }
 
     @DeleteMapping("/{id}")
-    @ApiResponse(message = "Role deleted successfully")
+//    @ApiResponse(message = "Role deleted successfully")
     @SecuredEndpoint("ROLE_DELETE")
     @Operation(summary = "Delete role", 
                description = "Delete a role from the system")
-    public void delete(
-            @Parameter(description = "Role ID") @PathVariable Long id) {
+    public ResponseObject delete(@PathVariable Long id) {
         roleService.delete(id);
+        return new ResponseObject(HttpStatus.OK.value(), "Role deleted successfully", null);
     }
 
     @PutMapping("/{id}/permissions")

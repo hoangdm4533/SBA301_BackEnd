@@ -5,9 +5,12 @@ import com.example.demologin.dto.response.ResponseObject;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.*;
+
+import java.lang.reflect.Method;
 
 @Aspect
 @Component
@@ -15,21 +18,39 @@ public class ApiResponseAspect {
 
     @Around("@annotation(apiResponse)")
     public Object handleApiResponse(ProceedingJoinPoint joinPoint, ApiResponse apiResponse) throws Throwable {
-        // Gọi method gốc để lấy data thuần (DTO)
-        Object data = joinPoint.proceed();
-        
-        // Lấy message và status từ annotation
-        String message = apiResponse.message();
-        HttpStatus status = apiResponse.status();
-        
-        // Tạo ResponseObject với data từ service
-        ResponseObject responseObject = new ResponseObject(
-            status.value(),
-            message,
-            data
+        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+        Object result = joinPoint.proceed();
+
+        HttpStatus status = detectStatus(method);
+
+        // Nếu method trả void hoặc null -> tự wrap luôn
+        Object data = (method.getReturnType().equals(Void.TYPE) || result == null) ? null : result;
+
+        return new ResponseObject(
+                status.value(),
+                apiResponse.message(),
+                data
         );
-        
-        // Trả về ResponseEntity với ResponseObject
-        return ResponseEntity.status(status).body(responseObject);
+    }
+
+    private HttpStatus detectStatus(Method method) {
+        if (method.isAnnotationPresent(PostMapping.class)) return HttpStatus.CREATED;
+        if (method.isAnnotationPresent(DeleteMapping.class)) return HttpStatus.OK;
+        if (method.isAnnotationPresent(PutMapping.class)) return HttpStatus.OK;
+        if (method.isAnnotationPresent(PatchMapping.class)) return HttpStatus.OK;
+        if (method.isAnnotationPresent(GetMapping.class)) return HttpStatus.OK;
+
+        if (method.isAnnotationPresent(RequestMapping.class)) {
+            RequestMapping rm = method.getAnnotation(RequestMapping.class);
+            if (rm.method().length > 0) {
+                return switch (rm.method()[0]) {
+                    case POST -> HttpStatus.CREATED;
+                    case DELETE, GET, PUT, PATCH -> HttpStatus.OK;
+                    default -> HttpStatus.OK;
+                };
+            }
+        }
+
+        return HttpStatus.OK; // fallback
     }
 }

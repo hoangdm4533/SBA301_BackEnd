@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
     @PublicEndpoint
     @PostMapping("/register")
-    @ApiResponse(message = "User registered successfully", status = HttpStatus.CREATED)
+    @ApiResponse(message = "User registered successfully")
     @UserActivity(activityType = ActivityType.REGISTRATION, details = "User registration")
     @Operation(summary = "User registration", 
                description = "Register a new user account with email verification")
@@ -85,7 +85,7 @@ import org.springframework.web.bind.annotation.*;
 
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @GetMapping("/oauth2/failure")
-    @ApiResponse(message = "OAuth2 login failed", status = HttpStatus.UNAUTHORIZED)
+    @ApiResponse(message = "OAuth2 login failed")
     @UserActivity(activityType = ActivityType.LOGIN_FAILED, details = "OAuth2 login failed")
     @Operation(summary = "OAuth2 login failure callback", 
                description = "Handle failed OAuth2 authentication callback")
