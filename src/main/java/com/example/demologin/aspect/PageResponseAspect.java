@@ -1,4 +1,4 @@
-package com.example.demologin.advice;
+package com.example.demologin.aspect;
 
 import com.example.demologin.annotation.PageResponse;
 import org.springframework.core.MethodParameter;
@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
- * Controller advice to automatically convert Page<T> to PageResponse<T>
+ * Aspect to automatically convert Page<T> to PageResponse<T>
  * when method is annotated with @PageResponse
+ * 
+ * This aspect intercepts responses from controller methods that return Page objects
+ * and automatically wraps them in our custom PageResponse format for consistent API responses.
  */
 @RestControllerAdvice
-public class PageResponseAdvice implements ResponseBodyAdvice<Object> {
+public class PageResponseAspect implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
