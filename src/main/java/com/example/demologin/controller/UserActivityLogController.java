@@ -1,6 +1,7 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
+import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
 import com.example.demologin.service.UserActivityLogService;
@@ -8,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
     private final UserActivityLogService userActivityLogService;
 
     @GetMapping
+    @PageResponse
     @ApiResponse(message = "Activity logs retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get all user activity logs", description = "Retrieve paginated list of all user activity logs")
@@ -45,6 +46,7 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/user/{userId}")
+    @PageResponse
     @ApiResponse(message = "User activity logs retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by user ID", description = "Retrieve paginated activity logs for a specific user")
@@ -57,6 +59,7 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/type/{actionType}")
+    @PageResponse
     @ApiResponse(message = "Activity logs by type retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by action type", description = "Retrieve paginated activity logs filtered by action type")
@@ -69,6 +72,7 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/date-range")
+    @PageResponse
     @ApiResponse(message = "Activity logs by date range retrieved successfully")
     @SecuredEndpoint("LOG_VIEW_ACTIVITY")
     @Operation(summary = "Get activity logs by date range", description = "Retrieve paginated activity logs within a date range")
@@ -84,6 +88,7 @@ import java.time.LocalDateTime;
     }
 
     @PostMapping("/export")
+    @PageResponse
     @ApiResponse(message = "Activity logs exported successfully")
     @SecuredEndpoint("ADMIN_ACTIVITY_LOG_EXPORT")
     @Operation(summary = "Export activity logs", description = "Export activity logs within date range with pagination")
@@ -96,6 +101,7 @@ import java.time.LocalDateTime;
     }
 
     @GetMapping("/my-login-history")
+    @PageResponse
     @ApiResponse(message = "Login history retrieved successfully")
     @SecuredEndpoint("USER_VIEW_OWN_LOGIN_HISTORY")
     @Operation(summary = "Get my login history", description = "Retrieve paginated login history for the current authenticated user")

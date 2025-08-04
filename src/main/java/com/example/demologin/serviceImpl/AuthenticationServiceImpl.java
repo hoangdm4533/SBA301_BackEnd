@@ -19,8 +19,8 @@ import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.service.AuthenticationService;
-import com.example.demologin.service.BruteForceProtectionService;
-import com.example.demologin.utils.IpUtils;
+
+
 import com.example.demologin.utils.EmailUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -88,9 +88,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     private RoleRepository roleRepository;
-
-    @Autowired
-    private BruteForceProtectionService bruteForceProtectionService;
 
     @Override
     public UserResponse register(UserRegistrationRequest request) {
@@ -178,20 +175,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        String clientIp = IpUtils.getClientIpAddress();
         String username = loginRequest.getUsername();
-        
-        // Check if account is locked due to brute force attempts
-        if (bruteForceProtectionService.isAccountLocked(username)) {
-            long remainingMinutes = bruteForceProtectionService.getRemainingLockoutMinutes(username);
-            
-            String message = String.format("Tài khoản của bạn đã bị tạm khóa. Vui lòng thử lại sau %d phút.", remainingMinutes);
-            
-            // Record the failed attempt due to account being locked
-            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account locked due to brute force protection");
-            
-            throw new AccountLockedException(message, remainingMinutes);
-        }
         
         Authentication authentication;
         try {
@@ -202,33 +186,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     )
             );
         } catch (BadCredentialsException e) {
-            // Handle failed login attempt
-            bruteForceProtectionService.handleFailedLogin(username, clientIp, "Invalid credentials");
             throw new UnauthorizedException("Username/ password is invalid. Please try again!");
         } catch (LockedException e) {
-            // Handle account locked (not brute force related)
-            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account manually locked");
             throw new ForbiddenException("Account has been locked!");
         } catch (Exception e) {
-            // Handle other authentication errors
-            bruteForceProtectionService.handleFailedLogin(username, clientIp, "Authentication error: " + e.getMessage());
             throw new InternalServerErrorException("Login failed: " + e.getMessage());
         }
 
         User user = (User) authentication.getPrincipal();
 
         if (!user.isVerify()) {
-            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account not verified");
             throw new ForbiddenException("Account has not been verified yet. Please verify your email.");
         }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            bruteForceProtectionService.recordLoginAttempt(username, clientIp, false, "Account not active");
             throw new ForbiddenException("Account is not active.");
         }
-
-        // Login successful - handle successful login
-        bruteForceProtectionService.handleSuccessfulLogin(username, clientIp);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String token = tokenService.generateTokenForUser(user);

@@ -1,8 +1,6 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
-import com.example.demologin.dto.request.userActivityLog.UserActivityLogFilterRequest;
-import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.entity.User;
@@ -11,14 +9,11 @@ import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.UserActivityLogMapper;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.service.UserActivityLogService;
-import com.example.demologin.utils.PageUtils;
-import com.example.demologin.utils.IpUtils;
-import com.example.demologin.utils.LocationUtil;
-import com.example.demologin.utils.UserAgentUtil;
 import com.example.demologin.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +23,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     private final UserActivityLogRepository userActivityLogRepository;
@@ -38,193 +32,121 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
     @Transactional
     public void logUserActivity(User user, ActivityType activityType, String details) {
         try {
-            if (user == null) {
-                log.warn("Cannot log activity - user is null");
-                return;
-            }
-            
-            String clientIp = IpUtils.getClientIpAddress();
-            String userAgent = IpUtils.getUserAgent();
-            UserAgentUtil.DeviceInfo deviceInfo = UserAgentUtil.parseUserAgent(userAgent);
-            LocationUtil.LocationInfo locationInfo = LocationUtil.getLocationFromIP(clientIp);
-
-            // Check if there's an existing log with same user, activity type, IP and device
-            UserActivityLog existingLog = userActivityLogRepository
-                .findTopByUserIdAndActivityTypeAndIpAddressAndUserAgentOrderByTimestampDesc(
-                    user.getUserId(), activityType, clientIp, userAgent);
-
-            if (existingLog != null) {
-                // Update existing log timestamp if found within last 24 hours
-                LocalDateTime dayAgo = LocalDateTime.now().minusDays(1);
-                if (existingLog.getTimestamp().isAfter(dayAgo)) {
-                    existingLog.setTimestamp(LocalDateTime.now());
-                    existingLog.setDetails(details);
-                    userActivityLogRepository.save(existingLog);
-                    return;
-                }
-            }
-
-            // Create new log entry
             UserActivityLog activityLog = UserActivityLog.builder()
-                .activityType(activityType)
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
-                .timestamp(LocalDateTime.now())
-                .status("SUCCESS")
+                .activityType(activityType)
                 .details(details)
-                .ipAddress(clientIp)
-                .userAgent(userAgent)
-                .browser(deviceInfo.getBrowser())
-                .browserVersion(deviceInfo.getBrowserVersion())
-                .operatingSystem(deviceInfo.getOperatingSystem())
-                .device(deviceInfo.getDevice())
-                .deviceType(deviceInfo.getDeviceType())
-                .city(locationInfo.getCity())
-                .region(locationInfo.getRegion())
-                .country(locationInfo.getCountry())
-                .countryCode(locationInfo.getCountryCode())
+                .timestamp(LocalDateTime.now())
                 .build();
 
             userActivityLogRepository.save(activityLog);
-
+            log.info("Logged activity for user {}: {} - {}", 
+                user.getUsername(), activityType, details);
         } catch (Exception e) {
             log.error("Failed to log user activity: {}", e.getMessage());
         }
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> getAllActivityLogs(int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
+    public Page<UserActivityLogResponse> getAllActivityLogs(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Page<UserActivityLog> logs = userActivityLogRepository.findAll(pageable);
         Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        if (response.getContent().isEmpty()) {
+        if (mappedLogs.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found");
         }
-        return response;
+        return mappedLogs;
     }
 
     @Override
     public UserActivityLogResponse getActivityLogById(Long id) {
         UserActivityLog log = userActivityLogRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("UserActivityLog not found with id: " + id));
+            .orElseThrow(() -> new NotFoundException("Activity log not found with ID: " + id));
         return userActivityLogMapper.toResponse(log);
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByUserId(Long userId, int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
+    public Page<UserActivityLogResponse> getActivityLogsByUserId(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Page<UserActivityLog> logs = userActivityLogRepository.findByUserIdOrderByTimestampDesc(userId, pageable);
         Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        if (response.getContent().isEmpty()) {
+        if (mappedLogs.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found for user ID: " + userId);
         }
-        return response;
+        return mappedLogs;
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByType(String activityType, int page, int size) {
+    public Page<UserActivityLogResponse> getActivityLogsByType(String activityType, int page, int size) {
         try {
             ActivityType type = ActivityType.valueOf(activityType.toUpperCase());
-            Pageable pageable = PageUtils.createPageable(
-                PageUtils.normalizePageNumber(page), 
-                PageUtils.normalizePageSize(size)
-            );
+            Pageable pageable = PageRequest.of(page, size);
             Page<UserActivityLog> logs = userActivityLogRepository.findByActivityTypeOrderByTimestampDesc(type, pageable);
             Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-            PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
             
-            if (response.getContent().isEmpty()) {
+            if (mappedLogs.getContent().isEmpty()) {
                 throw new NotFoundException("No activity logs found for activity type: " + activityType);
             }
-            return response;
+            return mappedLogs;
         } catch (IllegalArgumentException e) {
             throw new NotFoundException("Invalid activity type: " + activityType);
         }
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
+    public Page<UserActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startTime, LocalDateTime endTime, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
         Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        if (response.getContent().isEmpty()) {
+        if (mappedLogs.getContent().isEmpty()) {
             throw new NotFoundException("No activity logs found for the specified date range");
         }
-        return response;
+        return mappedLogs;
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> exportActivityLogs(UserActivityLogExportRequest request, int page, int size) {
-        LocalDateTime startTime = request.getStartDate().atStartOfDay();
-        LocalDateTime endTime = request.getEndDate().atTime(23, 59, 59);
+    public Page<UserActivityLogResponse> exportActivityLogs(UserActivityLogExportRequest request, int page, int size) {
+        // Build dynamic query based on request filters
+        Pageable pageable = PageRequest.of(page, size);
         
-        Pageable pageable = PageUtils.createPageable(
-            PageUtils.normalizePageNumber(page), 
-            PageUtils.normalizePageSize(size)
-        );
-        
-        Page<UserActivityLog> logs = userActivityLogRepository.findByTimestampBetween(startTime, endTime, pageable);
+        // For now, export all - you can add filtering logic based on request
+        Page<UserActivityLog> logs = userActivityLogRepository.findAll(pageable);
         Page<UserActivityLogResponse> mappedLogs = logs.map(userActivityLogMapper::toResponse);
-        PageResponse<UserActivityLogResponse> response = PageUtils.toPageResponse(mappedLogs);
         
-        if (response.getContent().isEmpty()) {
-            throw new NotFoundException("No activity logs found for export in the specified date range");
+        if (mappedLogs.getContent().isEmpty()) {
+            throw new NotFoundException("No activity logs found for export");
         }
-        return response;
+        return mappedLogs;
     }
 
     @Override
-    @Transactional
     public String deleteActivityLog(Long id) {
-        if (!userActivityLogRepository.existsById(id)) {
-            throw new NotFoundException("Activity log not found with ID: " + id);
-        }
-        userActivityLogRepository.deleteById(id);
-        log.info("User activity log deleted: {}", id);
+        UserActivityLog log = userActivityLogRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Activity log not found with ID: " + id));
+        
+        userActivityLogRepository.delete(log);
         return "Activity log deleted successfully";
     }
 
     @Override
-    public PageResponse<UserActivityLogResponse> getMyLoginHistory(int page, int size) {
+    public Page<UserActivityLogResponse> getMyLoginHistory(int page, int size) {
         User currentUser = AccountUtils.getCurrentUser();
+        
         if (currentUser == null) {
-            throw new NotFoundException("User not authenticated");
+            throw new NotFoundException("Current user not found");
         }
         
-        Pageable pageable = PageUtils.createPageable(page, size);
-        Page<UserActivityLog> activityLogs = userActivityLogRepository.findByUserIdAndActivityTypeOrderByTimestampDesc(
-            currentUser.getUserId(), ActivityType.LOGIN_ATTEMPT, pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserActivityLog> loginLogs = userActivityLogRepository
+            .findByUserIdAndActivityTypeOrderByTimestampDesc(
+                currentUser.getUserId(), 
+                ActivityType.LOGIN_SUCCESS, 
+                pageable
+            );
         
-        Page<UserActivityLogResponse> responsePage = activityLogs.map(userActivityLogMapper::toResponse);
-        PageResponse<UserActivityLogResponse> pageResponse = new PageResponse<>(
-            responsePage.getContent(),
-            responsePage.getNumber(),
-            responsePage.getSize(),
-            responsePage.getTotalElements(),
-            responsePage.getTotalPages(),
-            responsePage.isLast()
-        );
-        
-        if (pageResponse.getContent().isEmpty()) {
-            throw new NotFoundException("No login history found for current user");
-        }
-        
-        return pageResponse;
+        return loginLogs.map(userActivityLogMapper::toResponse);
     }
-
 }

@@ -11,7 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,23 +19,6 @@ import java.util.Map;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ResponseObject> handleAccountLockedException(AccountLockedException ex, WebRequest request) {
-        log.warn("Account locked exception: {}", ex.getMessage());
-        
-        Map<String, Object> data = new HashMap<>();
-        data.put("remainingMinutes", ex.getRemainingMinutes());
-        data.put("lockedUntil", java.time.LocalDateTime.now().plusMinutes(ex.getRemainingMinutes()));
-        
-        ResponseObject response = new ResponseObject(
-                HttpStatus.LOCKED.value(),
-                ex.getMessage(),
-                data
-        );
-        
-        return new ResponseEntity<>(response, HttpStatus.LOCKED);
-    }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ResponseObject> handleUnauthorizedException(UnauthorizedException ex) {

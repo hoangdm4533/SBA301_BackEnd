@@ -192,7 +192,6 @@ java -jar target/demo-login-*.jar
 src/main/java/com/example/demologin/
 ├── 🎮 controller/              # REST API Controllers
 │   ├── AuthenticationController.java      # Login, register, OAuth2
-│   ├── SecurityManagementController.java  # Account lockouts, security
 │   ├── UserActionLogController.java       # Activity log management
 │   ├── SessionManagementController.java   # Session control
 │   ├── TokenVersionController.java        # Token invalidation
