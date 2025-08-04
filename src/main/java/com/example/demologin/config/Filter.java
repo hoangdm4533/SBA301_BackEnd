@@ -1,7 +1,6 @@
 package com.example.demologin.config;
 
 import com.example.demologin.entity.User;
-import com.example.demologin.exception.exceptions.AuthorizeException;
 import com.example.demologin.service.TokenService;
 import com.example.demologin.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,56 +38,42 @@ public class Filter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Danh sách các API public
-    List<String> PUBLIC_API = List.of(
-            // Swagger endpoints
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-
-            // Authentication endpoints
-            "/api/login",
-            "/api/register",
-            "/api/refresh-token",
-            "/api/google-login",
-            "/api/facebook-login",
-            "/api/reset-password",
-            "/api/forgot-password",
-            // Email OTP endpoints
-            "/api/email/send-verification",
-            "/api/email/verify",
-            "/api/email/forgot-password",
-            "/api/email/reset-password",
-            "/api/email/resend",
-
-            // OAuth2 endpoints
-            "/api/oauth2/success",
-            "/api/oauth2/failure",
-            "/oauth2/**",
-            "/login/oauth2/**",
-
-            // Product endpoints
-            "/api/product/**"
-    );
+    @Autowired
+    private PublicEndpointHandlerMapping publicEndpointHandlerMapping;
 
     // Kiểm tra request có phải là public API không
     boolean isPermitted(HttpServletRequest request) {
         AntPathMatcher pathMatcher = new AntPathMatcher();
         String uri = request.getRequestURI();
-        String method = request.getMethod();
 
-        // Xử lý đặc biệt cho GET /api/product/**
-        if (method.equals("GET") && pathMatcher.match("/api/product/**", uri)) {
-            return true;
-        }
-
-        // Cho phép các request OAuth2 (thêm trường hợp fallback)
-        if (uri.startsWith("/oauth2/") || uri.startsWith("/login/oauth2/")) {
-            return true;
-        }
-
-        return PUBLIC_API.stream()
+        // Lấy danh sách các public endpoints từ annotation @PublicEndpoint
+        List<String> annotatedPublicEndpoints = publicEndpointHandlerMapping.getPublicEndpoints();
+        
+        // Kiểm tra các endpoint được đánh dấu @PublicEndpoint
+        boolean isAnnotatedPublic = annotatedPublicEndpoints.stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern, uri));
+        
+        if (isAnnotatedPublic) {
+            return true;
+        }
+
+        // Các endpoint hệ thống cần permit all (giống như trong SecurityConfig)
+        List<String> systemPublicEndpoints = List.of(
+            // Swagger/OpenAPI documentation
+            "/swagger-ui/**",
+            "/v3/api-docs/**", 
+            "/swagger-resources/**",
+            "/webjars/**",
+            // OAuth2 system endpoints (Spring Security tự động tạo)
+            "/login/oauth2/code/**",
+            "/oauth2/authorization/**"
+        );
+
+        // Kiểm tra các endpoint hệ thống
+        boolean isSystemPublic = systemPublicEndpoints.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, uri));
+
+        return isSystemPublic;
     }
 
     @Override

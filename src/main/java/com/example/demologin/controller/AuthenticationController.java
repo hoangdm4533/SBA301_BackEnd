@@ -1,6 +1,7 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
+import com.example.demologin.annotation.PublicEndpoint;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.UserActivity;
 import com.example.demologin.dto.request.user.UserRegistrationRequest;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
     @Autowired
     RefreshTokenService refreshTokenService;
 
+    @PublicEndpoint
     @PostMapping("/register")
     @ApiResponse(message = "User registered successfully", status = HttpStatus.CREATED)
     @UserActivity(activityType = ActivityType.REGISTRATION, details = "User registration")
@@ -41,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
         return authenticationService.register(request);
     }
 
+    @PublicEndpoint
     @PostMapping("/login")
     @ApiResponse(message = "Login successful")
     @UserActivity(activityType = ActivityType.LOGIN_ATTEMPT, details = "User login attempt")
@@ -60,6 +63,7 @@ import org.springframework.web.bind.annotation.*;
         return refreshTokenService.refreshToken(request.getRefreshToken());
     }
 
+    @PublicEndpoint
     @PostMapping("/google-login")
     @ApiResponse(message = "Google login successful")
     @UserActivity(activityType = ActivityType.LOGIN_ATTEMPT, details = "Google OAuth login attempt")
@@ -90,6 +94,7 @@ import org.springframework.web.bind.annotation.*;
         return null; // This will never be reached due to exception
     }
 
+    @PublicEndpoint
     @PostMapping("/facebook-login")
     @ApiResponse(message = "Facebook login successful")
     @UserActivity(activityType = ActivityType.LOGIN_ATTEMPT, details = "Facebook OAuth login attempt")

@@ -1,6 +1,7 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
+import com.example.demologin.annotation.PublicEndpoint;
 import com.example.demologin.annotation.UserActivity;
 import com.example.demologin.dto.request.emailOTP.EmailRequest;
 import com.example.demologin.dto.request.emailOTP.OtpRequest;
@@ -21,6 +22,7 @@ public class EmailOtpController {
     
     private final EmailOtpService emailOtpService;
 
+    @PublicEndpoint
     @PostMapping("/send-verification")
     @ApiResponse(message = "Verification OTP sent successfully")
     @UserActivity(activityType = ActivityType.EMAIL_VERIFICATION, details = "Email verification OTP sent")
@@ -30,6 +32,7 @@ public class EmailOtpController {
         return emailOtpService.sendVerificationOtp(request);
     }
 
+    @PublicEndpoint
     @PostMapping("/verify")
     @ApiResponse(message = "Email verified successfully")
     @UserActivity(activityType = ActivityType.OTP_VERIFICATION, details = "Email OTP verification attempt")
@@ -39,6 +42,7 @@ public class EmailOtpController {
         return emailOtpService.verifyEmailOtp(request);
     }
 
+    @PublicEndpoint
     @PostMapping("/forgot-password")
     @ApiResponse(message = "Password reset OTP sent successfully")
     @UserActivity(activityType = ActivityType.EMAIL_VERIFICATION, details = "Forgot password OTP sent")
@@ -48,6 +52,7 @@ public class EmailOtpController {
         return emailOtpService.sendForgotPasswordOtp(request);
     }
 
+    @PublicEndpoint
     @PostMapping("/reset-password")
     @ApiResponse(message = "Password reset successfully")
     @UserActivity(activityType = ActivityType.PASSWORD_CHANGE, details = "Password reset with OTP")
@@ -57,6 +62,7 @@ public class EmailOtpController {
         return emailOtpService.resetPasswordWithOtp(request);
     }
 
+    @PublicEndpoint
     @PostMapping("/resend")
     @ApiResponse(message = "OTP resent successfully")
     @UserActivity(activityType = ActivityType.EMAIL_VERIFICATION, details = "OTP resend request")

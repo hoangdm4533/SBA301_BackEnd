@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -28,6 +29,9 @@ public class SecurityConfig {
 
     @Autowired
     private Filter filter;
+
+    @Autowired
+    private PublicEndpointHandlerMapping publicEndpointHandlerMapping;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -57,33 +61,38 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http , CustomOAuth2SuccessHandler customOAuth2SuccessHandler, CustomOAuth2FailureHandler customOAuth2FailureHandler) throws Exception {
+        // Lấy danh sách các public endpoints từ annotation @PublicEndpoint
+        List<String> annotatedPublicEndpoints = publicEndpointHandlerMapping.getPublicEndpoints();
+        
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                        // API endpoints - completely public, no redirects
-                        .requestMatchers(
-                                "/api/login",
-                                "/api/register", 
-                                "/api/forgot-password",
-                                "/api/reset-password",
-                                "/api/verify-email",
-                                "/api/refresh-token",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**"
-                        ).permitAll()
-                        // OAuth2 endpoints
-                        .requestMatchers(
-                                "/login/oauth2/code/**",
-                                "/oauth2/authorization/**",
-                                "/api/oauth2/**"
-                        ).permitAll()
-                        // All other API endpoints require authentication but no redirects
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    // Cho phép preflight requests
+                    auth.requestMatchers(CorsUtils::isPreFlightRequest).permitAll();
+                    
+                    // Tự động permit all các endpoints được đánh dấu @PublicEndpoint
+                    if (!annotatedPublicEndpoints.isEmpty()) {
+                        auth.requestMatchers(annotatedPublicEndpoints.toArray(new String[0])).permitAll();
+                    }
+                    
+                    // Các endpoint hệ thống cần permit all (không thể dùng annotation)
+                    auth.requestMatchers(
+                            // Swagger/OpenAPI documentation
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**", 
+                            "/swagger-resources/**",
+                            "/webjars/**",
+                            // OAuth2 system endpoints (Spring Security tự động tạo)
+                            "/login/oauth2/code/**",
+                            "/oauth2/authorization/**"
+                    ).permitAll();
+                    
+                    // Tất cả các API endpoints khác cần authentication
+                    // Filter sẽ handle JWT validation + dynamic permission với @SecuredEndpoint
+                    auth.requestMatchers("/api/**").authenticated();
+                    auth.anyRequest().authenticated();
+                })
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/oauth2/authorization/google")
                         .defaultSuccessUrl("/api/oauth2/success")
