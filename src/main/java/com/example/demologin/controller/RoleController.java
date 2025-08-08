@@ -11,15 +11,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/admin/roles")
 @Tag(name = "Role Management", description = "APIs for managing user roles and role permissions")
     public class RoleController {
-    @Autowired private RoleService roleService;
+    private final RoleService roleService;
 
     @SecuredEndpoint("ROLE_VIEW")
     @GetMapping

@@ -21,8 +21,12 @@ import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.service.AuthenticationService;
 
 
+import com.example.demologin.service.RefreshTokenService;
+import com.example.demologin.service.TokenService;
 import com.example.demologin.utils.EmailUtils;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -56,38 +60,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String GOOGLE_CLIENT_ID;
 
-    @Value("${spring.security.oauth2.client.registration.facebook.client-id}")
-    private String FACEBOOK_CLIENT_ID;
+    private final UserRepository userRepository;
 
-    @Value("${spring.security.oauth2.client.registration.facebook.client-secret}")
-    private String FACEBOOK_CLIENT_SECRET;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    RefreshTokenRepository refreshTokenRepository;
+    private final TokenService tokenService;
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
-    @Autowired
-    AuthenticationManager authenticationManager;
 
-    @Autowired
-    com.example.demologin.service.TokenService tokenService;
+    private final UserActivityLogRepository userActivityLogRepository;
 
-    @Autowired
-    com.example.demologin.service.RefreshTokenService refreshTokenService;
+    private final RoleRepository roleRepository;
 
-    @Autowired
-    UserMapper userMapper;
-
-    @Autowired
-    UserActivityLogRepository userActivityLogRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
+    public AuthenticationServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, @Lazy AuthenticationManager authenticationManager, TokenService tokenService, RefreshTokenService refreshTokenService, UserActivityLogRepository userActivityLogRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.tokenService = tokenService;
+        this.refreshTokenService = refreshTokenService;
+        this.userActivityLogRepository = userActivityLogRepository;
+        this.roleRepository = roleRepository;
+    }
 
     @Override
     public UserResponse register(UserRegistrationRequest request) {

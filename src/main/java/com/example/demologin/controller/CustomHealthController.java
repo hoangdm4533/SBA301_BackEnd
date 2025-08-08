@@ -3,6 +3,8 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.PublicEndpoint;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthComponent;
+import org.springframework.boot.actuate.health.HealthContributorRegistry;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +18,34 @@ import java.util.Map;
 public class CustomHealthController {
 
     private final HealthEndpoint healthEndpoint;
+    private final HealthContributorRegistry registry;
 
-    public CustomHealthController(HealthEndpoint healthEndpoint) {
+    public CustomHealthController(HealthEndpoint healthEndpoint, HealthContributorRegistry registry) {
         this.healthEndpoint = healthEndpoint;
+        this.registry = registry;
     }
 
     @PublicEndpoint
     @GetMapping("/v1/health")
     public ResponseEntity<HealthResponse> health() {
+        // Lấy health tổng quát
         HealthComponent healthComponent = healthEndpoint.health();
         Status status = healthComponent.getStatus();
 
-        Map<String, Object> details = healthComponent instanceof Health ?
-                ((Health) healthComponent).getDetails() :
-                Collections.emptyMap();
+        // Lấy health indicator db (nếu có)
+        HealthIndicator dbIndicator = (HealthIndicator) registry.getContributor("db");
+        Map<String, Object> dbDetails = Collections.emptyMap();
+        if (dbIndicator != null) {
+            Health dbHealth = dbIndicator.health();
+            dbDetails = dbHealth.getDetails();
+        }
+
+        // Tạo map details có thể kết hợp toàn bộ hoặc riêng db
+        Map<String, Object> details = dbDetails;
+
+        System.out.println("HealthComponent class: " + healthComponent.getClass().getName());
+        System.out.println("Health status: " + status.getCode());
+        System.out.println("DB health details: " + dbDetails);
 
         HealthResponse response = new HealthResponse(
                 status.getCode(),
@@ -37,9 +53,7 @@ public class CustomHealthController {
                 details
         );
 
-        return ResponseEntity
-                .status(status.equals(Status.UP) ? 200 : 503)
-                .body(response);
+        return ResponseEntity.status(status.equals(Status.UP) ? 200 : 503).body(response);
     }
 
     public static class HealthResponse {
@@ -53,7 +67,6 @@ public class CustomHealthController {
             this.details = details;
         }
 
-        // Getters
         public String getStatus() {
             return status;
         }

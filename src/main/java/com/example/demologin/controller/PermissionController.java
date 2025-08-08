@@ -8,14 +8,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/admin/permissions")
 @Tag(name = "Permission Management", description = "APIs for managing system permissions")
     public class PermissionController {
-    @Autowired private PermissionService permissionService;
+    private final PermissionService permissionService;
 
     @SecuredEndpoint("PERMISSION_VIEW")
     @GetMapping

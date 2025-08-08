@@ -1,9 +1,11 @@
 package com.example.demologin.config;
 
 import com.example.demologin.service.AuthenticationService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,15 +22,18 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    private AuthenticationService authenticationService;
 
-    @Autowired
-    private Filter filter;
+    private final AuthenticationService authenticationService;
 
-    @Autowired
-    private PublicEndpointHandlerMapping publicEndpointHandlerMapping;
+    private final Filter filter;
 
+    private final PublicEndpointHandlerMapping publicEndpointHandlerMapping;
+
+    public SecurityConfig(@Lazy AuthenticationService authenticationService, Filter filter, PublicEndpointHandlerMapping publicEndpointHandlerMapping) {
+        this.authenticationService = authenticationService;
+        this.filter = filter;
+        this.publicEndpointHandlerMapping = publicEndpointHandlerMapping;
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

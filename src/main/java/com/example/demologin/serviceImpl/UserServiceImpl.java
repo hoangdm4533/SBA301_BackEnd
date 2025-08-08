@@ -7,14 +7,16 @@ import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.service.UserService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
-    @Autowired private UserRepository userRepository;
-    @Autowired private UserMapper userMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
     @Transactional
     @Override
     public MemberResponse updateUser(UpdateUserRequest req) {

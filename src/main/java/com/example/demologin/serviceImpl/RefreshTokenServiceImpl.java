@@ -7,6 +7,7 @@ import com.example.demologin.exception.exceptions.TokenRefreshException;
 import com.example.demologin.repository.RefreshTokenRepository;
 import com.example.demologin.service.RefreshTokenService;
 import com.example.demologin.service.TokenService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,15 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${jwt.refresh.expiration.ms}")
     private Long refreshTokenDurationMs;
 
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
 
-    @Autowired
-    private TokenService tokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    private final TokenService tokenService;
+
+    public RefreshTokenServiceImpl(RefreshTokenRepository refreshTokenRepository, TokenService tokenService) {
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.tokenService = tokenService;
+    }
 
     @Override
     public Optional<RefreshToken> findByToken(String token) {
