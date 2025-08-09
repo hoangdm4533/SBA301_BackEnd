@@ -27,8 +27,10 @@ public class UserActivityLog {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+
     @Column(nullable = false, length = 20)
-    private String status;
+    @Builder.Default
+    private String status = "SUCCESS";
 
     @Column(length = 500)
     private String details;
@@ -67,4 +69,15 @@ public class UserActivityLog {
 
     @Column(length = 10)
     private String countryCode;
+
+    // Add pre-persist method to ensure required fields are set
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = "SUCCESS";
+        }
+    }
 }

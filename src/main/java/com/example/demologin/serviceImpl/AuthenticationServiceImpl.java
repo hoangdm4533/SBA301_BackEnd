@@ -246,7 +246,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.setIdentityCard("");
                 user.setDateOfBirth(LocalDateTime.now().toLocalDate());
                 user.setGender(com.example.demologin.enums.Gender.OTHER);
-                
+                user.setVerify(true);
+                user.setStatus(UserStatus.ACTIVE);
                 user = userRepository.save(user);
             }
             

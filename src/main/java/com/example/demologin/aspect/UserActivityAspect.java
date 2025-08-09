@@ -115,6 +115,7 @@ public class UserActivityAspect {
                     .activityType(userActivity.activityType())
                     .userId(userId)
                     .fullName(fullName)
+                        .status(status)
                     .timestamp(LocalDateTime.now())
                     .status(status)
                     .details(details)
@@ -168,16 +169,5 @@ public class UserActivityAspect {
         }
         return null;
     }
-    
-    private boolean isLoginSuccessful(Object result) {
-        try {
-            if (result instanceof org.springframework.http.ResponseEntity) {
-                org.springframework.http.ResponseEntity<?> responseEntity = (org.springframework.http.ResponseEntity<?>) result;
-                return responseEntity.getStatusCode().is2xxSuccessful();
-            }
-        } catch (Exception e) {
-            log.debug("Could not determine login success: {}", e.getMessage());
-        }
-        return false;
-    }
+
 }
