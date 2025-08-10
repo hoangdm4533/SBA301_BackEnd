@@ -1,10 +1,14 @@
-HELP.md
+# Maven target folder
 target/
+
+# Maven Wrapper jar (nặng, thường không cần đẩy)
 .mvn/wrapper/maven-wrapper.jar
+
+# Giữ lại target trong các thư mục source (nếu có build riêng)
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# STS (Spring Tool Suite)
 .apt_generated
 .classpath
 .factorypath
@@ -13,13 +17,13 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,8 +33,23 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
-# Environment variables
+
+# Environment variables files
 .env
 .env.*
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Others
+HELP.md
+.copilot-rules.md
+
+# Ignore .mvn folder entirely except wrapper scripts (optional)
+.mvn/
