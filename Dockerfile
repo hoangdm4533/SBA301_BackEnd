@@ -7,14 +7,10 @@ RUN mvn clean package -DskipTests
 # Stage 2: Run
 FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-COPY --from=build /app/target/demo-login-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/demo-login-0.0.1-SNAPSHOT.jar demo-login.jar
 
-# Expose port for Render
 EXPOSE 8080
-EXPOSE $PORT
 
-# Set environment variable for Spring Boot to use PORT from Render
-ENV SERVER_PORT=$PORT
+ENV SERVER_PORT=8080
 
-# Use shell form to allow environment variable substitution
-CMD java -jar app.jar --server.port=${PORT:-8080} 
+CMD ["sh", "-c", "java -jar demo-login.jar --server.port=${PORT:-8080}"]
