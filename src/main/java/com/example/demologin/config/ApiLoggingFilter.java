@@ -15,11 +15,13 @@ import java.io.IOException;
 public class ApiLoggingFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(ApiLoggingFilter.class);
 
+    // ANSI colors
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
     private static final String GREEN = "\u001B[32m";
     private static final String YELLOW = "\u001B[33m";
     private static final String BLUE = "\u001B[34m";
+    private static final String ORANGE = "\u001B[38;5;208m"; // cam ANSI 256-color
     private static final String BOLD = "\u001B[1m";
 
     private String colorStatus(int status) {
@@ -40,9 +42,19 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
     }
 
     private String colorDuration(long ms) {
-        if (ms < 1000) return RESET;      // dưới 1s: mặc định
-        if (ms < 3000) return YELLOW;     // cảnh báo nhẹ
-        return RED;                       // quá lâu
+        if (ms < 200) return BOLD + GREEN;   // Rất nhanh
+        if (ms < 500) return BOLD + BLUE;    // Nhanh
+        if (ms < 1000) return BOLD + YELLOW; // Trung bình
+        if (ms < 3000) return BOLD + ORANGE; // Hơi chậm
+        return BOLD + RED;                   // Rất chậm
+    }
+
+    private String speedIcon(long ms) {
+        if (ms < 200) return "⚡";
+        if (ms < 500) return "🚀";
+        if (ms < 1000) return "⏱️";
+        if (ms < 3000) return "🐢";
+        return "🛑";
     }
 
     @Override
@@ -60,12 +72,13 @@ public class ApiLoggingFilter extends OncePerRequestFilter {
         int status = response.getStatus();
         String uri = request.getRequestURI() + (queryString == null ? "" : "?" + queryString);
 
-        logger.info("{}{}{} {} {}{}{} from {} took {}{}{} ms",
+        logger.info("{}{}{} {} {}{}{} from {} took {}{}{} ms {}",
                 colorMethod(method), method, RESET,
-                uri, // để trắng mặc định
+                uri,
                 colorStatus(status), status, RESET,
                 clientIP,
-                colorDuration(duration), duration, RESET
+                colorDuration(duration), duration, RESET,
+                speedIcon(duration)
         );
     }
 }
