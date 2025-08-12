@@ -1,68 +1,79 @@
 package com.example.demologin.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-@Component
-public class IpUtils {
-    
+public final class IpUtils {
+
+    private static final String UNKNOWN = "unknown";
+    private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
+    private static final String LOCALHOST_IPV4 = "127.0.0.1 (localhost)";
+
+    private IpUtils() {
+        // Private constructor to prevent instantiation
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static String getClientIpAddress() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attr != null) {
             return getClientIpAddress(attr.getRequest());
         }
-        return "unknown";
+        return UNKNOWN;
     }
-    
+
     public static String getClientIpAddress(HttpServletRequest request) {
-        // Check X-Forwarded-For header (for proxies/load balancers)
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
-            return xForwardedFor.split(",")[0].trim();
+        if (request == null) {
+            return UNKNOWN;
         }
-        
-        // Check X-Real-IP header  
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
-            return xRealIp;
-        }
-        
-        // Check Proxy-Client-IP header
-        String proxyClientIp = request.getHeader("Proxy-Client-IP");
-        if (proxyClientIp != null && !proxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(proxyClientIp)) {
-            return proxyClientIp;
-        }
-        
-        // Check WL-Proxy-Client-IP header
-        String wlProxyClientIp = request.getHeader("WL-Proxy-Client-IP");
-        if (wlProxyClientIp != null && !wlProxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(wlProxyClientIp)) {
-            return wlProxyClientIp;
-        }
-        
-        // Get remote address (direct connection)
+
+        String ip = getHeaderIp(request, "X-Forwarded-For");
+        if (isValidIp(ip)) return ip;
+
+        ip = getHeaderIp(request, "X-Real-IP");
+        if (isValidIp(ip)) return ip;
+
+        ip = getHeaderIp(request, "Proxy-Client-IP");
+        if (isValidIp(ip)) return ip;
+
+        ip = getHeaderIp(request, "WL-Proxy-Client-IP");
+        if (isValidIp(ip)) return ip;
+
         String remoteAddr = request.getRemoteAddr();
-        
-        // Convert IPv6 localhost to IPv4 for readability
-        if ("0:0:0:0:0:0:0:1".equals(remoteAddr)) {
-            return "127.0.0.1 (localhost)";
+        if (LOCALHOST_IPV6.equals(remoteAddr)) {
+            return LOCALHOST_IPV4;
         }
-        
-        return remoteAddr;
+        return remoteAddr != null ? remoteAddr : UNKNOWN;
     }
-    
+
+    private static String getHeaderIp(HttpServletRequest request, String header) {
+        String ip = request.getHeader(header);
+        if (ip != null && !ip.isEmpty()) {
+            // If multiple IPs, take the first one
+            String firstIp = ip.split(",")[0].trim();
+            return UNKNOWN.equalsIgnoreCase(firstIp) ? null : firstIp;
+        }
+        return null;
+    }
+
+    private static boolean isValidIp(String ip) {
+        return ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip);
+    }
+
     public static String getUserAgent() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attr != null) {
             return getUserAgent(attr.getRequest());
         }
-        return "unknown";
+        return UNKNOWN;
     }
-    
+
     public static String getUserAgent(HttpServletRequest request) {
+        if (request == null) {
+            return UNKNOWN;
+        }
         String userAgent = request.getHeader("User-Agent");
-        return userAgent != null && !userAgent.isEmpty() ? userAgent : "unknown";
+        return (userAgent != null && !userAgent.isEmpty()) ? userAgent : UNKNOWN;
     }
 }

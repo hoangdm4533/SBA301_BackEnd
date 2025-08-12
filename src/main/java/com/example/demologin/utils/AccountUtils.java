@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 public class AccountUtils {
+
     private final UserRepository userRepository;
 
     public User getCurrentUser() {
@@ -24,12 +25,11 @@ public class AccountUtils {
 
         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof User) {
-            return (User) principal;
+        if (principal instanceof User user) {
+            return user;
         }
 
-        if (principal instanceof String) {
-            String username = (String) principal;
+        if (principal instanceof String username) {
             return userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         }

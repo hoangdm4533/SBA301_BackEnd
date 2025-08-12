@@ -8,11 +8,7 @@ import com.example.demologin.exception.exceptions.UserActivityLoggingException;
 import com.example.demologin.exception.exceptions.UserNotAuthenticatedException;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
-import com.example.demologin.utils.AccountUtils;
-import com.example.demologin.utils.IpUtils;
-import com.example.demologin.utils.LocationUtil;
-import com.example.demologin.utils.UserAgentUtil;
-import com.example.demologin.utils.EmailUtils;
+import com.example.demologin.utils.*;
 import com.example.demologin.dto.request.login.LoginRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +30,7 @@ public class UserActivityAspect {
     private final UserActivityLogRepository userActivityLogRepository;
     private final UserRepository userRepository;
     private final AccountUtils accountUtils;
-    private final IpUtils ipUtils;
+    private final IpUtilsWrapper ipUtils;
     private final UserAgentUtil userAgentUtil;
     private final LocationUtil locationUtil;
 
