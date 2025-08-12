@@ -27,6 +27,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     private final UserActivityLogRepository userActivityLogRepository;
     private final UserActivityLogMapper userActivityLogMapper;
+    private final AccountUtils accountUtils;
 
     @Override
     @Transactional
@@ -133,7 +134,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
 
     @Override
     public Page<UserActivityLogResponse> getMyLoginHistory(int page, int size) {
-        User currentUser = AccountUtils.getCurrentUser();
+        User currentUser = accountUtils.getCurrentUser();
         
         if (currentUser == null) {
             throw new NotFoundException("Current user not found");
@@ -143,9 +144,13 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
         Page<UserActivityLog> loginLogs = userActivityLogRepository
             .findByUserIdAndActivityTypeOrderByTimestampDesc(
                 currentUser.getUserId(), 
-                ActivityType.LOGIN_SUCCESS, 
+                ActivityType.LOGIN_ATTEMPT,
                 pageable
             );
+
+        if (loginLogs.getContent().isEmpty()) {
+            throw new NotFoundException("No login history found for current user");
+        }
         
         return loginLogs.map(userActivityLogMapper::toResponse);
     }

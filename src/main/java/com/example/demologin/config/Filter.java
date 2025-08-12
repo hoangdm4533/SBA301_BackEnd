@@ -1,6 +1,8 @@
 package com.example.demologin.config;
 
 import com.example.demologin.entity.User;
+import com.example.demologin.exception.exceptions.InvalidTokenException;
+import com.example.demologin.exception.exceptions.UnauthorizedException;
 import com.example.demologin.service.TokenService;
 import com.example.demologin.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +13,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,20 +29,15 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@AllArgsConstructor
 public class Filter extends OncePerRequestFilter {
 
-    @Autowired
-    @Qualifier("handlerExceptionResolver")
-    HandlerExceptionResolver resolver;
 
-    @Autowired
-    private TokenService tokenService;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final TokenService tokenService;
 
-    @Autowired
-    private PublicEndpointHandlerMapping publicEndpointHandlerMapping;
+    private final JwtUtil jwtUtil;
+
+    private final PublicEndpointHandlerMapping publicEndpointHandlerMapping;
 
     // Kiểm tra request có phải là public API không
     boolean isPermitted(HttpServletRequest request) {
@@ -83,64 +81,41 @@ public class Filter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         if (isPermitted(request)) {
-            // Cho phép request public API đi qua
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Xử lý request cần authentication
         String token = getToken(request);
-
         if (token == null) {
-            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is missing!");
-            return;
+            throw new UnauthorizedException("Authentication token is missing!");
         }
 
-        try {
-            // Get username from token first
-            String username = jwtUtil.extractUsername(token);
-            if (username == null) {
-                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
-                return;
-            }
-            
-            // Get user from token using TokenService
-            User user = tokenService.getUserByToken(token);
-            if (user == null) {
-                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "User not found for the provided token!");
-                return;
-            }
-            
-            // Validate token with user
-            if (!jwtUtil.validateToken(token, user)) {
-                writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
-                return;
-            }
-
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            filterChain.doFilter(request, response);
-
-        } catch (MalformedJwtException e) {
-            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
-        } catch (ExpiredJwtException e) {
-            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is expired!");
-        } catch (Exception e) {
-            writeAuthError(response, HttpStatus.UNAUTHORIZED.value(), "Authentication token is invalid!");
+        String username = jwtUtil.extractUsername(token);
+        if (username == null || username.isBlank()) {
+            throw new InvalidTokenException("Authentication token is invalid!");
         }
+
+        User user = tokenService.getUserByToken(token);
+        if (user == null) {
+            throw new UnauthorizedException("User not found for the provided token!");
+        }
+
+        if (!jwtUtil.validateToken(token, user)) {
+            throw new InvalidTokenException("Authentication token is invalid!");
+        }
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        filterChain.doFilter(request, response);
     }
+
 
     private String getToken(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         return (token != null && token.startsWith("Bearer ")) ? token.substring(7) : null;
     }
 
-    private void writeAuthError(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType("application/json");
-        ResponseObject resp = new ResponseObject(status, message, null);
-        new ObjectMapper().writeValue(response.getWriter(), resp);
-    }
 }

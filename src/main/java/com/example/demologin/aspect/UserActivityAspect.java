@@ -28,17 +28,15 @@ public class UserActivityAspect {
     
     private final UserActivityLogRepository userActivityLogRepository;
     private final UserRepository userRepository;
+    private final AccountUtils accountUtils;
     
     @AfterReturning(value = "@annotation(userActivity)", returning = "result")
     public void logUserActivity(JoinPoint joinPoint, UserActivity userActivity, Object result) {
         try {
-            User currentUser = null;
-            try {
-                currentUser = AccountUtils.getCurrentUser();
-            } catch (Exception e) {
-                log.debug("Could not get current user from context: {}", e.getMessage());
-            }
-            
+            User currentUser = accountUtils.getCurrentUser();
+
+
+
             // For login attempt, extract user info from request
             if (currentUser == null && "LOGIN_ATTEMPT".equals(userActivity.activityType().name())) {
                 currentUser = extractUserFromLoginRequest(joinPoint, result);

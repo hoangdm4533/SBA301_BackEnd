@@ -6,6 +6,7 @@ import com.example.demologin.exception.exceptions.ValidationException;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.TokenService;
 import com.example.demologin.utils.JwtUtil;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,14 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 public class TokenServiceImpl implements TokenService {
     
-    @Autowired
-    private JwtUtil jwtUtil;
+
+    private final JwtUtil jwtUtil;
     
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
 
     @Override
     public String generateTokenForUser(User user) {

@@ -18,11 +18,12 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     
     private final TokenVersionService tokenVersionService;
     private final UserRepository userRepository;
+    private final AccountUtils accountUtils;
     
     @Override
     @Transactional
     public void logoutCurrentDevice() {
-        User currentUser = AccountUtils.getCurrentUser();
+        User currentUser = accountUtils.getCurrentUser();
         log.info("User {} logging out from current device", currentUser.getUsername());
         
         // Invalidate current token by incrementing token version
@@ -32,7 +33,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     @Override
     @Transactional
     public void logoutFromAllDevices() {
-        User currentUser = AccountUtils.getCurrentUser();
+        User currentUser = accountUtils.getCurrentUser();
         log.info("User {} logging out from all devices", currentUser.getUsername());
         
         // Invalidate all tokens by incrementing token version
@@ -45,7 +46,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         User targetUser = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
         
-        User adminUser = AccountUtils.getCurrentUser();
+        User adminUser = accountUtils.getCurrentUser();
         log.info("Admin {} force logging out user {} from all devices", 
                 adminUser.getUsername(), targetUser.getUsername());
         

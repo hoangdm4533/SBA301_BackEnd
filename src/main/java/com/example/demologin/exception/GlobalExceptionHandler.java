@@ -158,4 +158,10 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ResponseObject> handleInvalidToken(InvalidTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), null));
+    }
 }

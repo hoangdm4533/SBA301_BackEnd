@@ -1,29 +1,27 @@
 package com.example.demologin.utils;
 
 import com.example.demologin.entity.User;
-import com.example.demologin.repository.UserRepository;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AccountUtils implements ApplicationContextAware {
-    private static UserRepository userRepository;
+public class AccountUtils {
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        userRepository = applicationContext.getBean(UserRepository.class);
-    }
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    public static User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        // Kiểm tra xem username có phải là email hợp lệ không
-        if (EmailUtils.isValidEmail(username)) {
-            return userRepository.findByEmail(username).orElseThrow();
-        } else {
-            return userRepository.findByUsername(username).orElseThrow();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UsernameNotFoundException("Không có người dùng nào đang đăng nhập.");
         }
+
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof User)) {
+            throw new UsernameNotFoundException("Principal không phải là kiểu User.");
+        }
+
+        return (User) principal;
     }
 }
