@@ -1,9 +1,12 @@
 package com.example.demologin.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+@Component
 public class IpUtils {
     
     public static String getClientIpAddress() {

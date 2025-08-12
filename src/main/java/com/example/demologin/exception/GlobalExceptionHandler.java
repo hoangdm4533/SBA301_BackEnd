@@ -164,4 +164,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ResponseObject(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), null));
     }
+
+    @ExceptionHandler(InvalidPrincipalTypeException.class)
+    public ResponseEntity<ResponseObject> handleInvalidPrincipalType(InvalidPrincipalTypeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST) // hoặc UNAUTHORIZED nếu phù hợp hơn
+                .body(new ResponseObject(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(UserNotAuthenticatedException.class)
+    public ResponseEntity<ResponseObject> handleUserNotAuthenticated(UserNotAuthenticatedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ResponseObject(
+                        HttpStatus.UNAUTHORIZED.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+    @ExceptionHandler(UserActivityLoggingException.class)
+    public ResponseEntity<ResponseObject> handleUserActivityLogging(UserActivityLoggingException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseObject(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
 }
