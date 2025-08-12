@@ -3,10 +3,39 @@ package com.example.demologin.utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
+import java.util.Map;
+
+@Slf4j
 @Component
 public class LocationUtil {
+
+    // Primary API: ip-api.com (free, no API key needed, 45 requests/minute)
+    private static final String IP_API_URL = "http://ip-api.com/json/{ip}?fields=status,message,country,countryCode,regionName,city,lat,lon,isp,org,as,query";
+
+    // Fallback API: ipapi.co (free tier available with API key)
+    private static final String IPAPI_CO_URL = "https://ipapi.co/{ip}/json/";
+
+    private final RestTemplate restTemplate;
+
+    public LocationUtil(RestTemplateBuilder restTemplateBuilder) {
+        this.restTemplate = restTemplateBuilder
+                .requestFactory(() -> {
+                    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+                    factory.setConnectTimeout(Duration.ofMillis(1500));
+                    factory.setReadTimeout(Duration.ofMillis(3000));
+                    return factory;
+                })
+                .build();
+    }
 
     @Getter
     @Setter
@@ -18,33 +47,95 @@ public class LocationUtil {
         private String countryCode;
     }
 
-    public static LocationInfo getLocationFromIP(String ipAddress) {
+    @Cacheable(value = "ipLocations", unless = "#result.city == null || #result.city.equals('Unknown')")
+    public LocationInfo getLocationFromIP(String ipAddress) {
         if (ipAddress == null || ipAddress.trim().isEmpty()) {
-            return new LocationInfo("Unknown", "Unknown", "Unknown", "Unknown");
+            return unknownLocation();
         }
 
-        // Xử lý localhost và private IP
+        // Handle local/private IPs
         if (isLocalOrPrivateIP(ipAddress)) {
-            return new LocationInfo("Local", "Local Network", "Local", "LOCAL");
+            return localLocation();
         }
 
-        // TODO: Tích hợp với GeoIP service (ví dụ: MaxMind, IPinfo, etc.)
-        // Hiện tại return unknown cho public IP
-        // Trong thực tế, bạn có thể tích hợp với:
-        // 1. MaxMind GeoIP2
-        // 2. IPinfo API
-        // 3. IP2Location
-        // 4. GeoJS API (free)
-        
-        return new LocationInfo("Unknown", "Unknown", "Unknown", "Unknown");
+        // Try primary API first
+        LocationInfo locationInfo = tryIpApi(ipAddress);
+        if (!"Unknown".equals(locationInfo.getCity())) {
+            return locationInfo;
+        }
+
+        // If primary fails, try fallback API
+        locationInfo = tryIpApiCo(ipAddress);
+        if (!"Unknown".equals(locationInfo.getCity())) {
+            return locationInfo;
+        }
+
+        return unknownLocation();
     }
 
-    private static boolean isLocalOrPrivateIP(String ipAddress) {
+    private LocationInfo tryIpApi(String ipAddress) {
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    IP_API_URL.replace("{ip}", ipAddress),
+                    Map.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> data = response.getBody();
+
+                if ("success".equals(data.get("status"))) {
+                    return new LocationInfo(
+                            getStringOrUnknown(data, "city"),
+                            getStringOrUnknown(data, "regionName"),
+                            getStringOrUnknown(data, "country"),
+                            getStringOrUnknown(data, "countryCode")
+                    );
+                } else {
+                    log.warn("IP-API error for {}: {}", ipAddress, data.get("message"));
+                }
+            }
+        } catch (Exception e) {
+            log.debug("IP-API request failed for {}: {}", ipAddress, e.getMessage());
+        }
+        return unknownLocation();
+    }
+
+    private LocationInfo tryIpApiCo(String ipAddress) {
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    IPAPI_CO_URL.replace("{ip}", ipAddress),
+                    Map.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> data = response.getBody();
+
+                if (!Boolean.TRUE.equals(data.get("error"))) {
+                    return new LocationInfo(
+                            getStringOrUnknown(data, "city"),
+                            getStringOrUnknown(data, "region"),
+                            getStringOrUnknown(data, "country_name"),
+                            getStringOrUnknown(data, "country_code")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.debug("ipapi.co request failed for {}: {}", ipAddress, e.getMessage());
+        }
+        return unknownLocation();
+    }
+
+    private String getStringOrUnknown(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        return value != null ? value.toString() : "Unknown";
+    }
+
+    private boolean isLocalOrPrivateIP(String ipAddress) {
         if (ipAddress == null) return true;
-        
-        // Remove port and localhost info if exists  
+
+        // Remove port and localhost info if exists
         String ip = ipAddress.split("\\s+")[0].split(":")[0].trim();
-        
+
         // Check for localhost
         if (ip.equals("127.0.0.1") || ip.equals("::1") || ip.equalsIgnoreCase("localhost")) {
             return true;
@@ -67,6 +158,9 @@ public class LocationUtil {
             // 192.168.0.0 - 192.168.255.255
             if (firstOctet == 192 && secondOctet == 168) return true;
 
+            // 169.254.0.0/16 (APIPA)
+            if (firstOctet == 169 && secondOctet == 254) return true;
+
         } catch (NumberFormatException e) {
             return false;
         }
@@ -75,48 +169,44 @@ public class LocationUtil {
     }
 
     public static String formatLocationInfo(LocationInfo locationInfo) {
-        if (locationInfo.getCountryCode().equals("LOCAL")) {
+        if (locationInfo == null) {
+            return "Unknown Location";
+        }
+
+        if ("LOCAL".equals(locationInfo.getCountryCode())) {
             return "Local Network";
         }
-        
+
         StringBuilder location = new StringBuilder();
-        if (!locationInfo.getCity().equals("Unknown")) {
+
+        if (!"Unknown".equals(locationInfo.getCity())) {
             location.append(locationInfo.getCity());
         }
-        if (!locationInfo.getRegion().equals("Unknown") && !locationInfo.getRegion().equals(locationInfo.getCity())) {
+
+        if (!"Unknown".equals(locationInfo.getRegion()) &&
+                !locationInfo.getRegion().equals(locationInfo.getCity())) {
             if (location.length() > 0) location.append(", ");
             location.append(locationInfo.getRegion());
         }
-        if (!locationInfo.getCountry().equals("Unknown")) {
+
+        if (!"Unknown".equals(locationInfo.getCountry())) {
             if (location.length() > 0) location.append(", ");
             location.append(locationInfo.getCountry());
         }
-        
+
         return location.length() > 0 ? location.toString() : "Unknown Location";
     }
 
-    // Method để tích hợp với GeoIP service thực tế
-    // Ví dụ với MaxMind GeoIP2
-    /*
-    public static LocationInfo getLocationFromIPWithGeoIP2(String ipAddress) {
-        try {
-            // Cần add dependency: com.maxmind.geoip2:geoip2
-            File database = new File("path/to/GeoLite2-City.mmdb");
-            DatabaseReader reader = new DatabaseReader.Builder(database).build();
-            
-            InetAddress inetAddress = InetAddress.getByName(ipAddress);
-            CityResponse response = reader.city(inetAddress);
-            
-            String city = response.getCity().getName();
-            String region = response.getMostSpecificSubdivision().getName();
-            String country = response.getCountry().getName();
-            String countryCode = response.getCountry().getIsoCode();
-            
-            return new LocationInfo(city, region, country, countryCode);
-            
-        } catch (Exception e) {
-            return new LocationInfo("Unknown", "Unknown", "Unknown", "Unknown");
-        }
+    private LocationInfo unknownLocation() {
+        return new LocationInfo("Unknown", "Unknown", "Unknown", "Unknown");
     }
-    */
+
+    private LocationInfo localLocation() {
+        return new LocationInfo("Local", "Local Network", "Local", "LOCAL");
+    }
+
+    // For testing purposes
+    public static LocationInfo testLocation(String city, String region, String country, String countryCode) {
+        return new LocationInfo(city, region, country, countryCode);
+    }
 }
