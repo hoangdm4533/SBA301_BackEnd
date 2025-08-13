@@ -34,8 +34,9 @@
 
 ```mermaid
 flowchart LR
-      A[Controllers\n@PublicEndpoint, @SecuredEndpoint] --> B[Security\nAuto-Discovery, Dynamic Permissions]
-      B --> C[Services\nBusiness Logic, Data Access]
+    A["Controllers<br/>@PublicEndpoint, @SecuredEndpoint"] --> B["Security<br/>Auto-Discovery, Dynamic Permissions"]
+    B --> C["Services<br/>Business Logic, Data Access"]
+
 ```
 
 **Key Components:**
