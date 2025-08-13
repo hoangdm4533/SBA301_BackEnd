@@ -1,184 +1,264 @@
-# 🚀 Spring Boot Authentication System
 
-A modern, enterprise-grade authentication and authorization system built with Spring Boot, featuring intelligent auto-configuration, dynamic permissions, and clean architecture.
+# 🚀 Spring Boot Authentication & Authorization System
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/caovanducanh/demo_login)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/projects/jdk/17/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0+-green.svg)](https://spring.io/projects/spring-boot)
+<div align="center">
+   <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Build Status">
+   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+   <img src="https://img.shields.io/badge/Java-17+-orange.svg" alt="Java">
+   <img src="https://img.shields.io/badge/Spring%20Boot-3.0+-green.svg" alt="Spring Boot">
+</div>
+
+<p align="center">
+   <b>Modern • Secure • Scalable • Enterprise-Ready</b><br>
+   <i>Annotation-driven, dynamic permissions, and clean architecture for Spring Boot authentication & authorization</i>
+</p>
+
+---
 
 ## ✨ Features
 
-### 🔐 **Advanced Authentication**
-- **JWT-based Authentication** with automatic token validation
-- **OAuth2 Integration** (Google, Facebook)
-- **Email OTP Verification** for secure account operations
-- **Multi-factor Authentication** support
-- **Refresh Token Management** with automatic rotation
+- **JWT & OAuth2 Authentication** (Google, Facebook)
+- **Email OTP & Multi-factor Authentication**
+- **Dynamic Permission System** with `@SecuredEndpoint`
+- **Annotation-Driven Security** (`@PublicEndpoint`, `@UserActivity`, `@ApiResponse`)
+- **Automatic Endpoint Discovery & Configuration**
+- **Centralized CORS & Security Management**
+- **Consistent API Responses**
+- **Comprehensive Activity Logging**
+- **Clean, Extensible Architecture**
+- **Docker & Kubernetes Ready**
 
-### 🛡️ **Smart Security Architecture**
-- **Annotation-Driven Configuration** - Zero boilerplate security setup
-- **Dynamic Permission System** - Runtime authorization checking with `@SecuredEndpoint`
-- **Auto-Discovery Engine** - Automatically detects and configures endpoints
-- **CORS Management** - Single source of truth for cross-origin policies
-- **Activity Logging** - Automatic user activity tracking with `@UserActivity`
-- **API Response Standardization** - Consistent response format with `@ApiResponse`
-
-### 🧠 **Intelligent Design**
-- **Self-Configuring** - Add `@PublicEndpoint` and forget about manual config
-- **Zero Duplication** - DRY principles applied throughout
-- **Clean Architecture** - Perfect separation of concerns
-- **Automatic Response Handling** - `@ApiResponse` provides consistent API responses
-- **Activity Tracking** - `@UserActivity` logs all user actions automatically
-- **Future-Proof** - Easy to extend and maintain
+---
 
 ## 🏗️ Architecture Overview
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Controllers   │    │   Security       │    │   Services      │
-│                 │    │                  │    │                 │
-│ @PublicEndpoint │───▶│ Auto-Discovery   │───▶│ Business Logic  │
-│ @SecuredEndpoint│    │ Dynamic Perms    │    │ Data Access     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+```mermaid
+flowchart LR
+      A[Controllers\n@PublicEndpoint, @SecuredEndpoint] --> B[Security\nAuto-Discovery, Dynamic Permissions]
+      B --> C[Services\nBusiness Logic, Data Access]
 ```
 
-### Key Components
-- **`@PublicEndpoint`**: Annotation for public APIs (no authentication required)
-- **`@SecuredEndpoint`**: Annotation for protected APIs with dynamic permissions
-- **`@ApiResponse`**: Standardizes API response format and status codes
-- **`@UserActivity`**: Automatic activity logging for audit trails
-- **`PublicEndpointHandlerMapping`**: Auto-discovery engine for annotated endpoints
-- **`Filter`**: JWT validation and user context setup
-- **`SecurityConfig`**: Centralized security configuration
+**Key Components:**
+- `@PublicEndpoint`: Mark public APIs (no authentication)
+- `@SecuredEndpoint`: Protect APIs with dynamic permissions
+- `@ApiResponse`: Standardize API responses
+- `@UserActivity`: Automatic activity logging
+- `PublicEndpointHandlerMapping`: Auto-discovers endpoints
+- `Filter`: JWT validation & user context
+- `SecurityConfig`: Centralized security
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Java 17+**
-- **Maven 3.6+**
-- **MySQL 8.0+**
-- **Docker** (optional)
+- Java 17+
+- Maven 3.6+
+- MySQL 8.0+ (or H2/PostgreSQL)
+- Docker (optional)
 
-### Installation
-
-1. **Clone the repository**
+### 1. Clone & Setup
 ```bash
 git clone https://github.com/caovanducanh/demo_login.git
 cd demo_login
 ```
 
-2. **Configure database**
-Update `src/main/resources/application.properties`:
+### 2. Configure Database & Security
+Edit `src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/demo_login
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 
-# JWT Configuration
 jwt.secret=your-jwt-secret-key
 jwt.expiration=86400000
 
-# Email Configuration (for OTP)
-spring.mail.host=smtp.gmail.com
+
 spring.mail.username=your-email@gmail.com
 spring.mail.password=your-app-password
 ```
 
-3. **Run the application**
+### 3. Run the Application
 ```bash
 mvn spring-boot:run
 ```
 
-4. **Access the application**
-- **API Base URL**: `http://localhost:8080/api`
-- **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
-- **H2 Console**: `http://localhost:8080/h2-console` (if using H2)
+### 4. Access
+- API: `http://localhost:8080/api`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- H2 Console: `http://localhost:8080/h2-console` (if enabled)
 
-## ✨ Key Annotations
+---
 
-### 🎯 **Security Annotations**
-- **`@PublicEndpoint`**: Marks endpoints as publicly accessible (no authentication)
-- **`@SecuredEndpoint("PERMISSION")`**: Dynamic permission-based access control
-- **`@UserActivity(activityType, details)`**: Automatic user activity logging
+## 🛡️ Annotation Reference
 
-### 📝 **Response Annotations**
-- **`@ApiResponse(message, status)`**: Standardized API response formatting
-- **`@PageResponse`**: Paginated response handling for list endpoints
+### Security
+- `@PublicEndpoint`: Public access (no auth)
+- `@SecuredEndpoint("PERMISSION")`: Permission-based access
+- `@UserActivity(type, details)`: Auto activity logging
 
-### 🔧 **Validation Annotations**
-- **`@ValidEmail`**: Custom email validation
-- **`@StrongPassword`**: Password strength validation
+### Response
+- `@ApiResponse(message, status)`: Standard API response
+- `@PageResponse`: Paginated responses
+
+### Validation
+- `@ValidEmail`: Email validation
+- `@StrongPassword`: Password strength
+
+---
 
 ## 💡 How It Works
 
-### Annotation-Driven Development
-This system revolutionizes Spring Security configuration through smart annotations. Instead of manually updating security configurations every time you add a new endpoint, simply use our custom annotations:
+**Annotation-Driven Security:**
+- Add `@PublicEndpoint` or `@SecuredEndpoint` to your controller methods
+- `PublicEndpointHandlerMapping` scans and configures security at startup
+- `@UserActivity` logs user actions automatically
+- `@ApiResponse` ensures consistent API responses
 
-- **`@PublicEndpoint`** - Automatically configures the endpoint as publicly accessible
-- **`@SecuredEndpoint("PERMISSION")`** - Dynamically validates user permissions at runtime  
-- **`@ApiResponse`** - Ensures consistent API response formatting across all endpoints
-- **`@UserActivity`** - Automatically logs user actions for comprehensive audit trails
+**Example:**
+```java
+@RestController
+public class AuthController {
+      @PublicEndpoint
+      @PostMapping("/api/login")
+      public ApiResponse<?> login(...) { ... }
 
-### Auto-Discovery Engine
-The `PublicEndpointHandlerMapping` component scans your application at startup, discovers all annotated endpoints, and automatically configures Spring Security accordingly. No more manual SecurityConfig updates!
+      @SecuredEndpoint("USER_MANAGEMENT")
+      @GetMapping("/api/users")
+      public ApiResponse<List<User>> getUsers() { ... }
+}
+```
 
-### Real-World Implementation Examples
+---
 
-**Authentication Flow:**
-- Login/Register endpoints use `@PublicEndpoint` for open access
-- Token refresh requires `@SecuredEndpoint("USER_TOKEN_MANAGEMENT")` permission
-- All authentication actions are automatically logged with `@UserActivity`
+## 📊 API Endpoints (Sample)
 
-**Email OTP Verification:**
-- OTP sending and verification endpoints are marked as `@PublicEndpoint`
-- Password reset operations include automatic activity tracking
-- Consistent response format ensured by `@ApiResponse`
+### Authentication
+| Method | Endpoint                | Description           | Auth | Permission              |
+|--------|-------------------------|-----------------------|------|-------------------------|
+| POST   | `/api/login`            | User login            | ❌   | -                       |
+| POST   | `/api/register`         | User registration     | ❌   | -                       |
+| POST   | `/api/refresh-token`    | Refresh JWT token     | ✅   | USER_TOKEN_MANAGEMENT   |
+| POST   | `/api/google-login`     | Google OAuth login    | ❌   | -                       |
+| POST   | `/api/facebook-login`   | Facebook OAuth login  | ❌   | -                       |
 
-**Admin Operations:**
-- User management endpoints protected with `@SecuredEndpoint("USER_MANAGEMENT")`
-- Role creation requires `@SecuredEndpoint("ROLE_ADMIN")` permission
-- Admin actions automatically logged for security auditing
+### Email OTP
+| Method | Endpoint                        | Description                | Auth |
+|--------|----------------------------------|----------------------------|------|
+| POST   | `/api/email/send-verification`   | Send verification OTP      | ❌   |
+| POST   | `/api/email/verify`              | Verify OTP code            | ❌   |
+| POST   | `/api/email/forgot-password`     | Send password reset OTP    | ❌   |
+| POST   | `/api/email/reset-password`      | Reset password with OTP    | ❌   |
+| POST   | `/api/email/resend`              | Resend OTP                 | ❌   |
 
-## 🔧 System Architecture
+### User Management
+| Method | Endpoint                    | Description             | Auth | Permission           |
+|--------|-----------------------------|-------------------------|------|----------------------|
+| GET    | `/api/user-activity-logs`   | Get user activity logs  | ✅   | USER_ACTIVITY_READ   |
+| POST   | `/api/session/logout`       | Logout current session  | ✅   | SESSION_MANAGEMENT   |
+| POST   | `/api/session/logout-all`   | Logout all sessions     | ✅   | SESSION_MANAGEMENT   |
 
-### Smart Security Configuration
-The system automatically discovers and configures endpoints through intelligent annotation scanning. The `PublicEndpointHandlerMapping` component identifies all `@PublicEndpoint` annotated methods at startup and automatically configures Spring Security to permit access without authentication.
+### Admin
+| Method | Endpoint                | Description         | Auth | Permission      |
+|--------|-------------------------|---------------------|------|-----------------|
+| GET    | `/api/admin/roles`      | Get all roles       | ✅   | ROLE_ADMIN      |
+| POST   | `/api/admin/roles`      | Create new role     | ✅   | ROLE_ADMIN      |
+| GET    | `/api/admin/permissions`| Get all permissions | ✅   | PERMISSION_ADMIN|
 
-### Centralized CORS Management
-A single `CORSConfig` class serves as the source of truth for all cross-origin request policies, eliminating configuration conflicts and ensuring consistent behavior across the application.
+---
 
-### Multi-Database Support
-The application supports multiple database providers including MySQL for production, H2 for development, and PostgreSQL as an alternative, with easy configuration switching through properties files.
+## 🏆 Benefits
 
-## 📊 API Endpoints
+### For Developers
+- Zero boilerplate: just add annotations
+- Type-safe, clean, and testable code
+- Auto-generated Swagger docs
+- Consistent API responses
 
-### Authentication Endpoints
-| Method | Endpoint | Description | Auth Required | Permission |
-|--------|----------|-------------|---------------|------------|
-| POST   | `/api/login` | User login | ❌ | - |
-| POST   | `/api/register` | User registration | ❌ | - |
-| POST   | `/api/refresh-token` | Refresh JWT token | ✅ | USER_TOKEN_MANAGEMENT |
-| POST   | `/api/google-login` | Google OAuth login | ❌ | - |
-| POST   | `/api/facebook-login` | Facebook OAuth login | ❌ | - |
+### For Operations
+- Auto-discovery of endpoints
+- Complete activity logging
+- Health checks & metrics
+- Docker & K8s ready
 
-### Email OTP Endpoints
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST   | `/api/email/send-verification` | Send verification OTP | ❌ |
-| POST   | `/api/email/verify` | Verify OTP code | ❌ |
-| POST   | `/api/email/forgot-password` | Send password reset OTP | ❌ |
-| POST   | `/api/email/reset-password` | Reset password with OTP | ❌ |
-| POST   | `/api/email/resend` | Resend OTP | ❌ |
+### For Business
+- Rapid, secure feature delivery
+- Scalable & cloud-ready
+- Enterprise-grade security
+- Lower maintenance cost
 
-### User Management Endpoints
-| Method | Endpoint | Description | Auth Required | Permission |
-|--------|----------|-------------|---------------|------------|
-| GET    | `/api/user-activity-logs` | Get user activity logs | ✅ | USER_ACTIVITY_READ |
-| GET    | `/api/user-activity-logs/{id}` | Get specific activity log | ✅ | USER_ACTIVITY_READ |
-| POST   | `/api/session/logout` | Logout current session | ✅ | SESSION_MANAGEMENT |
-| POST   | `/api/session/logout-all` | Logout all sessions | ✅ | SESSION_MANAGEMENT |
+---
 
+## 🧪 Testing
+
+```bash
+# Unit tests
+mvn test
+# Integration tests
+mvn verify
+# Coverage report
+mvn test jacoco:report
+```
+
+---
+
+## 🐳 Deployment
+
+- **Docker**: Build and run with provided Dockerfile
+- **Docker Compose**: Full-stack orchestration (app + MySQL)
+- **Kubernetes**: Production manifests for scaling & secrets
+
+---
+
+## 📚 Documentation
+
+- **Swagger UI**: `/swagger-ui/index.html`
+- **OpenAPI Spec**: `/v3/api-docs`
+- **Postman Collection**: `/docs/postman_collection.json`
+- **Guides**: See `docs/` for architecture, security, deployment, and API examples
+
+---
+
+## 🔒 Security Highlights
+
+- JWT authentication & expiration
+- BCrypt password encryption
+- SQL injection protection (JPA/Hibernate)
+- Configurable CORS & rate limiting
+- Input validation & activity logging
+- Secure headers & HTTPS (prod)
+- Token blacklisting for logout
+
+---
+
+## 🤝 Contributing
+
+1. Fork & branch: `git checkout -b feature/your-feature`
+2. Code & test (follow Google Java Style)
+3. Commit & push: `git commit -m 'Add feature'`
+4. Open a Pull Request
+
+---
+
+## 📝 License
+
+MIT License © 2024 Cao Van Duc Anh
+
+---
+
+## 🙏 Acknowledgments
+
+- Spring Boot & Spring Security
+- JWT.io
+- Swagger/OpenAPI
+- MySQL Community
+
+---
+
+<div align="center">
+<b>Built with ❤️ by <a href="https://github.com/caovanducanh">Cao Van Duc Anh</a></b><br>
+<i>Modern • Secure • Scalable • Enterprise-Ready</i>
+</div>
 ### Admin Endpoints
 | Method | Endpoint | Description | Auth Required | Permission |
 |--------|----------|-------------|---------------|------------|
