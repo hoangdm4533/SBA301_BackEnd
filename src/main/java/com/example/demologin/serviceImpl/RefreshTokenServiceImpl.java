@@ -48,6 +48,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 LocalDateTime.now().plusSeconds(expirySeconds)
         );
         refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setJti(UUID.randomUUID().toString());
 
         return refreshTokenRepository.save(refreshToken);
     }

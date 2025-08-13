@@ -1,12 +1,15 @@
 package com.example.demologin.utils;
 
+import com.example.demologin.entity.RefreshToken;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.TokenValidationException;
+import com.example.demologin.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * JWT Utility class for token operations
@@ -26,6 +30,7 @@ import java.util.Set;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JwtUtil {
     
     @Value("${jwt.secret}")
@@ -34,6 +39,8 @@ public class JwtUtil {
     @Value("${jwt.expiration.ms}")
     private int jwtExpirationMs;
 
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final Map<String, Long> revokedTokens = new ConcurrentHashMap<>();
     /**
      * Get signing key for JWT
      */
@@ -46,10 +53,19 @@ public class JwtUtil {
      * Generate JWT token for user
      */
     public String generateToken(User user) {
+        // Lấy refresh token mới nhất của user
+        String jti = refreshTokenRepository.findTopByUserOrderByExpiryDateDesc(user)
+                .map(RefreshToken::getJti)
+                .orElse(null);
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenVersion", user.getTokenVersion());
         claims.put("permissionCodes", user.getPermissionCodes());
-        
+
+        if (jti != null) {
+            claims.put("jti", jti);
+        }
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getUsername())
@@ -149,6 +165,10 @@ public class JwtUtil {
             return true;
         }
     }
+    public String extractJti(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("jti", String.class);
+    }
 
     /**
      * Validate JWT token structure and signature
@@ -191,4 +211,38 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload();
     }
+
+    public void revokeToken(String jti, Date expiryDate) {
+        revokedTokens.put(jti, expiryDate.getTime());
+    }
+
+    public boolean validateTokenWithJtiCheck(String token, User user) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String username = claims.getSubject();
+            Integer tokenVersion = claims.get("tokenVersion", Integer.class);
+            String jti = claims.get("jti", String.class);
+
+            // Nếu token không chứa jti => không hợp lệ
+            if (jti == null || jti.isBlank()) {
+                log.warn("Token missing JTI for user: {}", username);
+                return false;
+            }
+
+            // Check JTI có tồn tại trong DB không
+            boolean jtiExists = refreshTokenRepository.existsByJti(jti);
+            if (!jtiExists) {
+                log.warn("Token JTI {} not found in DB for user: {}", jti, username);
+                return false;
+            }
+
+            return username.equals(user.getUsername())
+                    && tokenVersion.equals(user.getTokenVersion())
+                    && !isTokenExpired(token);
+        } catch (Exception e) {
+            log.debug("Token validation with JTI failed for user {}: {}", user.getUsername(), e.getMessage());
+            return false;
+        }
+    }
+
 }

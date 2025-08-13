@@ -24,6 +24,9 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
+    @Column(nullable = false, unique = true)
+    private String jti;
+
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 

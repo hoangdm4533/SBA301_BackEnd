@@ -60,8 +60,8 @@ public class Filter extends OncePerRequestFilter {
                 throw new UnauthorizedException("User not found for the provided token!");
             }
 
-            if (!jwtUtil.validateToken(token, user)) {
-                throw new InvalidTokenException("Authentication token is invalid!");
+            if (!jwtUtil.validateTokenWithJtiCheck(token, user)) {
+                throw new InvalidTokenException("Authentication token is invalid or revoked!");
             }
 
             UsernamePasswordAuthenticationToken authToken =
@@ -98,8 +98,7 @@ public class Filter extends OncePerRequestFilter {
                 "/swagger-resources/**",
                 "/webjars/**",
                 "/login/oauth2/code/**",
-                "/oauth2/authorization/**",
-                "/api/session/logout"  // Added logout endpoint as public
+                "/oauth2/authorization/**"
         );
 
         return systemPublicEndpoints.stream()

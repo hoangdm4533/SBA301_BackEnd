@@ -56,6 +56,7 @@ import org.springframework.web.bind.annotation.*;
 
     @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
     @PostMapping("/refresh-token")
+    @PublicEndpoint
     @ApiResponse(message = "Token refreshed successfully")
     @UserActivity(activityType = ActivityType.TOKEN_REFRESH, details = "Token refresh request")
     @Operation(summary = "Refresh access token", 
