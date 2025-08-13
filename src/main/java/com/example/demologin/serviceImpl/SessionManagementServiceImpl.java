@@ -48,7 +48,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     public void logoutFromAllDevices() {
         User currentUser = accountUtils.getCurrentUser();
         log.info("User {} logging out from all devices", currentUser.getUsername());
-        
+        refreshTokenRepository.deleteByUser(currentUser);
         // Invalidate all tokens by incrementing token version
         tokenVersionService.incrementTokenVersionByUserId(currentUser.getUserId());
     }
