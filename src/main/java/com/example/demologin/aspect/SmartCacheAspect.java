@@ -100,6 +100,17 @@ public class SmartCacheAspect {
         // Get related cache keys
         String relatedCacheKey = detector.getRelatedCacheKey(joinPoint);
 
+        // Invalidate ALL role permission caches when permissions are updated
+        if (cacheKey.contains("updatePermissions")) {
+            CACHE.keySet().stream()
+                    .filter(key -> key.contains("getPermissionsForRoles"))
+                    .forEach(CACHE::remove);
+
+            DATA_VERSION.keySet().stream()
+                    .filter(key -> key.contains("getPermissionsForRoles"))
+                    .forEach(DATA_VERSION::remove);
+        }
+
         // Update versions for both current and related keys
         DATA_VERSION.computeIfAbsent(cacheKey, k -> new AtomicLong(0))
                 .set(newVersion);
