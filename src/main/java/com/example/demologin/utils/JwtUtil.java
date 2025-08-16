@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * JWT Utility class for token operations
@@ -52,15 +53,20 @@ public class JwtUtil {
     /**
      * Generate JWT token for user
      */
+    // In JwtUtil.java
     public String generateToken(User user) {
-        // Lấy refresh token mới nhất của user
         String jti = refreshTokenRepository.findTopByUserOrderByExpiryDateDesc(user)
                 .map(RefreshToken::getJti)
                 .orElse(null);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenVersion", user.getTokenVersion());
-        claims.put("permissionCodes", user.getPermissionCodes());
+
+        // Only store role names, not full objects
+        Set<String> roleNames = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toSet());
+        claims.put("roles", roleNames);
 
         if (jti != null) {
             claims.put("jti", jti);
@@ -75,6 +81,39 @@ public class JwtUtil {
                 .compact();
     }
 
+
+    public Set<String> extractRoles(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object rolesObj = claims.get("roles");
+
+            if (rolesObj instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> rolesList = (List<String>) rolesObj;
+                return new HashSet<>(rolesList);
+            } else if (rolesObj instanceof Set) {
+                @SuppressWarnings("unchecked")
+                Set<String> rolesSet = (Set<String>) rolesObj;
+                return rolesSet;
+            } else {
+                log.warn("Invalid role format in token for user: {}", claims.getSubject());
+                throw new TokenValidationException("Invalid role format in token",
+                        TokenValidationException.TokenErrorType.MISSING_PERMISSIONS);
+            }
+        } catch (ExpiredJwtException e) {
+            log.warn("Expired token used by user: {}", e.getClaims().getSubject());
+            throw new TokenValidationException("Token expired",
+                    TokenValidationException.TokenErrorType.EXPIRED, e);
+        } catch (JwtException e) {
+            log.warn("Invalid token: {}", e.getMessage());
+            throw new TokenValidationException("Token invalid",
+                    TokenValidationException.TokenErrorType.INVALID_SIGNATURE, e);
+        } catch (Exception e) {
+            log.warn("Token validation failed: {}", e.getMessage());
+            throw new TokenValidationException("Token validation failed",
+                    TokenValidationException.TokenErrorType.GENERAL_ERROR, e);
+        }
+    }
     /**
      * Extract username from JWT token
      */

@@ -9,26 +9,29 @@ import com.example.demologin.service.UserActivityLogService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    @Autowired
+
     private AuthenticationService authenticationService;
 
-    @Autowired
-    private UserActivityLogService userActivityLogService;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserActivityLogService userActivityLogService;
+
+    private final UserRepository userRepository;
 
     @Value("${frontend.url.base}")
     private String frontendUrl;

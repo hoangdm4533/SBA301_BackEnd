@@ -2,6 +2,7 @@ package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.annotation.SmartCache;
 import com.example.demologin.dto.request.role.CreateRoleRequest;
 import com.example.demologin.dto.request.role.RolePermissionsRequest;
 import com.example.demologin.dto.request.role.UpdateRoleRequest;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
     @SecuredEndpoint("ROLE_VIEW")
     @GetMapping
+    @SmartCache
     @ApiResponse(message = "Roles retrieved successfully")
     @Operation(summary = "Get all roles", 
                description = "Retrieve all roles in the system")
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
     @PostMapping
     @ApiResponse(message = "Role created successfully")
     @SecuredEndpoint("ROLE_CREATE")
+    @SmartCache
     @Operation(summary = "Create new role", 
                description = "Create a new role with specified name and description")
     public Object create(@RequestBody @Valid CreateRoleRequest req) {
@@ -54,6 +56,7 @@ import org.springframework.web.bind.annotation.*;
 
     @DeleteMapping("/{id}")
 //    @ApiResponse(message = "Role deleted successfully")
+    @SmartCache
     @SecuredEndpoint("ROLE_DELETE")
     @Operation(summary = "Delete role", 
                description = "Delete a role from the system")
@@ -65,6 +68,7 @@ import org.springframework.web.bind.annotation.*;
     @PutMapping("/{id}/permissions")
     @ApiResponse(message = "Role permissions updated successfully")
     @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
+    @SmartCache
     @Operation(summary = "Update role permissions", 
                description = "Update permissions assigned to a role")
     public Object updatePermissions(

@@ -193,4 +193,44 @@ public class GlobalExceptionHandler {
                         null
                 ));
     }
+
+    @ExceptionHandler(CacheInvocationException.class)
+    public ResponseEntity<ResponseObject> handleCacheInvocation(CacheInvocationException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseObject(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+    @ExceptionHandler(CacheRefreshException.class)
+    public ResponseEntity<ResponseObject> handleCacheRefresh(CacheRefreshException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseObject(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(AccessDenyException.class)
+    public ResponseEntity<ResponseObject> handleAccessDenied(AccessDenyException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN) // 403 thay vì 500
+                .body(new ResponseObject(
+                        HttpStatus.FORBIDDEN.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ResponseObject> handlePermissionDenied(PermissionDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN) // 403
+                .body(new ResponseObject(
+                        HttpStatus.FORBIDDEN.value(),
+                        ex.getMessage(),
+                        null
+                ));
+    }
+
 }

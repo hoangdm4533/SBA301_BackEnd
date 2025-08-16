@@ -82,6 +82,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Scheduled(fixedRate = 3600000)
+    @Transactional
     public void cleanExpiredTokens() {
         LocalDateTime now = LocalDateTime.now();
         int deletedCount = refreshTokenRepository.deleteByExpiryDateBefore(now);
