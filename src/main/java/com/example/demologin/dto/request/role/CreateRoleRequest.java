@@ -1,14 +1,12 @@
 package com.example.demologin.dto.request.role;
-import com.example.demologin.dto.request.BaseActionRequest;
 
-import com.example.demologin.dto.request.BaseActionRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateRoleRequest extends BaseActionRequest {
+public class CreateRoleRequest  {
     @NotBlank(message = "Role name must not be blank")
     public String name;
     

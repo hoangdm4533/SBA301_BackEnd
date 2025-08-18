@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PermissionRequest extends BaseActionRequest {
+public class PermissionRequest  {
     @NotBlank(message = "Permission name must not be blank")
     private String name;
     

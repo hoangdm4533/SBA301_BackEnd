@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateRoleRequest extends BaseActionRequest {
+public class UpdateRoleRequest {
     @NotBlank(message = "Role name must not be blank")
     public String name;
     

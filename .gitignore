@@ -49,7 +49,6 @@ Thumbs.db
 
 # Others
 HELP.md
-.copilot-rules.md
 
 # Ignore .mvn folder entirely except wrapper scripts (optional)
 .mvn/

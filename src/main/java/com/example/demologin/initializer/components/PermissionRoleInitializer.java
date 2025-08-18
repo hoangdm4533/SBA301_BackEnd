@@ -112,8 +112,16 @@ public class PermissionRoleInitializer {
         memberPerms.add(p5); // TOKEN_VIEW_OWN
         memberPerms.add(p17); // USER_VIEW_OWN_LOGIN_HISTORY
 
-        roleRepository.save(new Role("ADMIN", adminPerms));
-        roleRepository.save(new Role("MEMBER", memberPerms));
+        roleRepository.save(Role.builder()
+                .name("ADMIN")
+                .permissions(adminPerms)
+                .build());
+
+        roleRepository.save(Role.builder()
+                .name("MEMBER")
+                .permissions(memberPerms)
+                .build());
+
         
         log.debug("✅ Created {} roles", roleRepository.count());
     }

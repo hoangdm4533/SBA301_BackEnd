@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-public class RolePermissionsRequest extends BaseActionRequest {
+public class RolePermissionsRequest {
     @NotEmpty(message = "Permission IDs must not be empty")
     public Set<Long> permissionIds;
     
