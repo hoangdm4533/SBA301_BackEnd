@@ -26,7 +26,7 @@ import java.io.IOException;
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
 
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
 
     private final UserActivityLogService userActivityLogService;

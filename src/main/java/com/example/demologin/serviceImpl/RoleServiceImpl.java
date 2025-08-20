@@ -72,4 +72,12 @@ public class RoleServiceImpl implements RoleService {
         Role updatedRole = roleRepository.save(r);
         return roleMapper.toResponse(updatedRole);
     }
+
+    @Override
+    public RoleResponse getById(Long id) {
+        Role r = roleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Role with id " + id + " not found"));
+        return roleMapper.toResponse(r);
+    }
+
 }

@@ -76,4 +76,16 @@ import org.springframework.web.bind.annotation.*;
             @RequestBody @Valid RolePermissionsRequest req) {
         return roleService.updatePermissions(id, req);
     }
+
+    @SecuredEndpoint("ROLE_VIEW")
+    @GetMapping("/{id}")
+    @SmartCache
+    @ApiResponse(message = "Role retrieved successfully")
+    @Operation(summary = "Get role by ID",
+            description = "Retrieve a role by its ID")
+    public Object getById(
+            @Parameter(description = "Role ID") @PathVariable Long id) {
+        return roleService.getById(id);
+    }
+
 }

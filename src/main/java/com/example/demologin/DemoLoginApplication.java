@@ -14,7 +14,12 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @EnableAspectJAutoProxy
 
-@SecurityScheme(name = "api", scheme = "bearer", type = SecuritySchemeType.HTTP, in = SecuritySchemeIn.HEADER)
+@SecurityScheme(
+        name = "bearerAuth",
+        scheme = "bearer",
+        type = SecuritySchemeType.HTTP,
+        in = SecuritySchemeIn.HEADER
+)
 // http://localhost:8080/swagger-ui/index.html#/
 public class DemoLoginApplication {
 

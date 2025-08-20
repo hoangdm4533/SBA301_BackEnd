@@ -17,4 +17,6 @@ public interface RoleService {
     void delete(Long id);
 
     RoleResponse updatePermissions(Long id, RolePermissionsRequest req);
+
+    RoleResponse getById(Long id);
 }

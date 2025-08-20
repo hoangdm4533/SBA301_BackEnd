@@ -21,8 +21,13 @@ public class Role {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "role_permission",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 
 }
