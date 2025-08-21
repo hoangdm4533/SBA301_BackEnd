@@ -32,19 +32,21 @@ public class TokenServiceImpl implements TokenService {
         return jwtUtil.generateToken(user);
     }
 
-    @Override
     public User getUserByToken(String token) {
         try {
-            String username = jwtUtil.extractUsername(token);
-            if (username == null || username.trim().isEmpty()) {
-                throw new ValidationException("Invalid token: username not found");
+            String userIdStr = jwtUtil.extractUsername(token); // vẫn dùng method cũ, nhưng thực chất đang lấy subject
+            if (userIdStr == null || userIdStr.trim().isEmpty()) {
+                throw new ValidationException("Invalid token: userId not found");
             }
-            
-            return userRepository.findByUsername(username)
-                    .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
+
+            Long userId = Long.parseLong(userIdStr);
+
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         } catch (Exception e) {
             log.warn("Failed to extract user from token: {}", e.getMessage());
             throw new ValidationException("Invalid token: " + e.getMessage());
         }
     }
+
 }

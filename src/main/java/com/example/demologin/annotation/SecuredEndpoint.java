@@ -24,7 +24,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@SecurityRequirement(name = "api")
+@SecurityRequirement(name = "bearerAuth")
 public @interface SecuredEndpoint {
     /**
      * The permission code required to access this endpoint.

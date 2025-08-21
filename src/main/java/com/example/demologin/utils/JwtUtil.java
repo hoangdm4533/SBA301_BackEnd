@@ -55,8 +55,8 @@ public class JwtUtil {
      */
     // In JwtUtil.java
     public String generateToken(User user) {
-        String jti = refreshTokenRepository.findTopByUserOrderByExpiryDateDesc(user)
-                .map(RefreshToken::getJti)
+        RefreshToken latestRefreshToken = refreshTokenRepository
+                .findTopByUserOrderByExpiryDateDesc(user)
                 .orElse(null);
 
         Map<String, Object> claims = new HashMap<>();
@@ -68,18 +68,27 @@ public class JwtUtil {
                 .collect(Collectors.toSet());
         claims.put("roles", roleNames);
 
-        if (jti != null) {
-            claims.put("jti", jti);
+        claims.put("fullName", user.getFullName());
+
+        if (latestRefreshToken != null) {
+            claims.put("jti", latestRefreshToken.getJti());
+
+            // Truyền luôn expiryDate refresh token (dạng epoch millis cho frontend dễ xử lý)
+            claims.put("refreshExp", latestRefreshToken.getExpiryDate()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli());
         }
 
         return Jwts.builder()
                 .claims(claims)
-                .subject(user.getUsername())
+                .subject(String.valueOf(user.getUserId()))
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // access token exp
                 .signWith(getSigningKey())
                 .compact();
     }
+
 
 
     public Set<String> extractRoles(String token) {
@@ -258,30 +267,32 @@ public class JwtUtil {
     public boolean validateTokenWithJtiCheck(String token, User user) {
         try {
             Claims claims = extractAllClaims(token);
-            String username = claims.getSubject();
+            String userIdFromToken = claims.getSubject(); // giờ subject là userId
             Integer tokenVersion = claims.get("tokenVersion", Integer.class);
             String jti = claims.get("jti", String.class);
 
             // Nếu token không chứa jti => không hợp lệ
             if (jti == null || jti.isBlank()) {
-                log.warn("Token missing JTI for user: {}", username);
+                log.warn("Token missing JTI for userId: {}", userIdFromToken);
                 return false;
             }
 
             // Check JTI có tồn tại trong DB không
             boolean jtiExists = refreshTokenRepository.existsByJti(jti);
             if (!jtiExists) {
-                log.warn("Token JTI {} not found in DB for user: {}", jti, username);
+                log.warn("Token JTI {} not found in DB for userId: {}", jti, userIdFromToken);
                 return false;
             }
 
-            return username.equals(user.getUsername())
+            return userIdFromToken.equals(String.valueOf(user.getUserId())) // so sánh theo id
                     && tokenVersion.equals(user.getTokenVersion())
                     && !isTokenExpired(token);
         } catch (Exception e) {
-            log.debug("Token validation with JTI failed for user {}: {}", user.getUsername(), e.getMessage());
+            log.debug("Token validation with JTI failed for userId {}: {}",
+                    user.getUserId(), e.getMessage());
             return false;
         }
     }
+
 
 }
