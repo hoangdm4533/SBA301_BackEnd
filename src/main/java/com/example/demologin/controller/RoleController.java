@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.*;
 
     @PutMapping("/{id}")
     @ApiResponse(message = "Role updated successfully")
+    @SmartCache
     @SecuredEndpoint("ROLE_UPDATE")
     @Operation(summary = "Update role", 
                description = "Update role name and description")

@@ -7,12 +7,14 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,7 +34,8 @@ public class SmartCacheAspect {
 
     @Around("@annotation(com.example.demologin.annotation.SmartCache)")
     public Object handleCache(ProceedingJoinPoint joinPoint) throws Throwable {
-        String baseCacheKey = detector.generateCacheKey(joinPoint);
+        // Generate base cache key including method parameters
+        String baseCacheKey = generateCacheKeyWithArgs(joinPoint);
         String enhancedCacheKey = enhanceCacheKeyWithUserContext(baseCacheKey, joinPoint);
 
         boolean isWriteOperation = detector.isWriteOperation(joinPoint);
@@ -67,12 +70,38 @@ public class SmartCacheAspect {
         return result;
     }
 
+    private String generateCacheKeyWithArgs(ProceedingJoinPoint joinPoint) {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Object[] args = joinPoint.getArgs();
+        String argsKey = "";
+        if (args != null && args.length > 0) {
+            argsKey = ":" + Arrays.stream(args)
+                    .map(arg -> {
+                        if (arg != null) {
+                            // Handle arrays and collections for better cache key generation
+                            if (arg.getClass().isArray()) {
+                                return Arrays.toString((Object[]) arg);
+                            } else if (arg instanceof java.util.Collection) {
+                                return ((java.util.Collection<?>) arg).toString();
+                            }
+                            return arg.toString();
+                        }
+                        return "null";
+                    })
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+        }
+        return signature.getDeclaringType().getSimpleName() +
+                ":" +
+                signature.getMethod().getName() +
+                argsKey;
+    }
+
     private String enhanceCacheKeyWithUserContext(String baseCacheKey, ProceedingJoinPoint joinPoint) {
         // Only enhance cache key for permission-related methods
         if (baseCacheKey.contains("RolePermissionServiceImpl") &&
                 baseCacheKey.contains("getPermissionsForRoles")) {
             try {
-                // Get current request from RequestContextHolder
                 HttpServletRequest request =
                         ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                                 .getRequest();
@@ -94,13 +123,22 @@ public class SmartCacheAspect {
     }
 
     private void handleWriteOperation(String cacheKey, ProceedingJoinPoint joinPoint, long executionTime) {
-        // Update global version
         long newVersion = GLOBAL_VERSION.incrementAndGet();
+        Set<String> relatedCacheKeys = detector.getRelatedCacheKeys(joinPoint);
 
-        // Get related cache keys
-        String relatedCacheKey = detector.getRelatedCacheKey(joinPoint);
+        // Invalidate all related caches
+        for (String relatedKey : relatedCacheKeys) {
+            DATA_VERSION.computeIfAbsent(relatedKey, k -> new AtomicLong(0))
+                    .set(newVersion);
+            CACHE.remove(relatedKey);
+        }
 
-        // Invalidate ALL role permission caches when permissions are updated
+        // Also invalidate the current operation's cache
+        DATA_VERSION.computeIfAbsent(cacheKey, k -> new AtomicLong(0))
+                .set(newVersion);
+        CACHE.remove(cacheKey);
+
+        // Special handling for permission updates - invalidate all permission caches
         if (cacheKey.contains("updatePermissions")) {
             CACHE.keySet().stream()
                     .filter(key -> key.contains("getPermissionsForRoles"))
@@ -108,21 +146,11 @@ public class SmartCacheAspect {
 
             DATA_VERSION.keySet().stream()
                     .filter(key -> key.contains("getPermissionsForRoles"))
-                    .forEach(DATA_VERSION::remove);
+                    .forEach(key -> DATA_VERSION.computeIfAbsent(key, k -> new AtomicLong(0)).set(newVersion));
         }
 
-        // Update versions for both current and related keys
-        DATA_VERSION.computeIfAbsent(cacheKey, k -> new AtomicLong(0))
-                .set(newVersion);
-        DATA_VERSION.computeIfAbsent(relatedCacheKey, k -> new AtomicLong(0))
-                .set(newVersion);
-
-        // Clear both caches
-        CACHE.remove(cacheKey);
-        CACHE.remove(relatedCacheKey);
-
-        logger.info("🔄 [CACHE INVALIDATED] Key: {} and Related Key: {} | New Version: {} | Execution Time: {}ms",
-                cacheKey, relatedCacheKey, newVersion, executionTime);
+        logger.info("🔄 [CACHE INVALIDATED] Key: {} and Related Keys: {} | New Version: {} | Execution Time: {}ms",
+                cacheKey, relatedCacheKeys, newVersion, executionTime);
     }
 
     private void handleReadOperation(String cacheKey, Object result, long executionTime) {
@@ -137,11 +165,17 @@ public class SmartCacheAspect {
         }
     }
 
-    // Method to manually clear cache (can be called from other services)
+    // Method to manually clear cache
     public static void clearCacheForKeys(String... keys) {
         for (String key : keys) {
             CACHE.remove(key);
             DATA_VERSION.remove(key);
         }
+    }
+
+    // Method to get cache statistics
+    public static String getCacheStats() {
+        return String.format("Cache size: %d, Data versions: %d, Global version: %d",
+                CACHE.size(), DATA_VERSION.size(), GLOBAL_VERSION.get());
     }
 }
