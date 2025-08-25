@@ -501,13 +501,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setGender(Gender.OTHER);
             user.setRoles(roles);
             user.setVerify(true);
-            
+            user.setRoles(roles);
             user = userRepository.save(user);
         }
-        
-        String token = tokenService.generateTokenForUser(user);
+
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-        
+
+        String token = tokenService.generateTokenForUser(user);
+
         return UserMapper.toResponse(user, token, refreshToken.getToken());
     }
 } 

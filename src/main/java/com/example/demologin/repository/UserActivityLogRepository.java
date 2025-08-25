@@ -62,5 +62,7 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
     // Find login history for a specific user
     Page<UserActivityLog> findByUserIdAndActivityTypeOrderByTimestampDesc(
         Long userId, ActivityType activityType, Pageable pageable);
+
+    void deleteByUserId(Long userId);
 }
 

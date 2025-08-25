@@ -3,6 +3,7 @@ package com.example.demologin.serviceImpl;
 import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.RefreshTokenRepository;
+import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.SessionManagementService;
 import com.example.demologin.service.TokenVersionService;
@@ -25,6 +26,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     private final AccountUtils accountUtils;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserActivityLogRepository userActivityLogReppsitory;
 
     @Override
     @Transactional
@@ -51,6 +53,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         refreshTokenRepository.deleteByUser(currentUser);
         // Invalidate all tokens by incrementing token version
         tokenVersionService.incrementTokenVersionByUserId(currentUser.getUserId());
+        userActivityLogReppsitory.deleteByUserId(currentUser.getUserId());
     }
     
     @Override
