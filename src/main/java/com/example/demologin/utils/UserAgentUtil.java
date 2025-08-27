@@ -97,7 +97,21 @@ public class UserAgentUtil {
     }
 
     private static String extractOperatingSystem(String userAgent) {
-        if (userAgent.contains("Windows NT 10.0")) {
+        if (userAgent.contains("Android")) {
+            Pattern pattern = Pattern.compile("Android ([0-9.]+)");
+            Matcher matcher = pattern.matcher(userAgent);
+            if (matcher.find()) {
+                return "Android " + matcher.group(1);
+            }
+            return "Android";
+        } else if (userAgent.contains("iPhone OS") || userAgent.contains("iOS")) {
+            Pattern pattern = Pattern.compile("OS ([0-9_]+)");
+            Matcher matcher = pattern.matcher(userAgent);
+            if (matcher.find()) {
+                return "iOS " + matcher.group(1).replace("_", ".");
+            }
+            return "iOS";
+        } else if (userAgent.contains("Windows NT 10.0")) {
             return "Windows 10/11";
         } else if (userAgent.contains("Windows NT 6.3")) {
             return "Windows 8.1";
@@ -116,20 +130,6 @@ public class UserAgentUtil {
             return "macOS";
         } else if (userAgent.contains("Linux")) {
             return "Linux";
-        } else if (userAgent.contains("Android")) {
-            Pattern pattern = Pattern.compile("Android ([0-9.]+)");
-            Matcher matcher = pattern.matcher(userAgent);
-            if (matcher.find()) {
-                return "Android " + matcher.group(1);
-            }
-            return "Android";
-        } else if (userAgent.contains("iPhone OS") || userAgent.contains("iOS")) {
-            Pattern pattern = Pattern.compile("OS ([0-9_]+)");
-            Matcher matcher = pattern.matcher(userAgent);
-            if (matcher.find()) {
-                return "iOS " + matcher.group(1).replace("_", ".");
-            }
-            return "iOS";
         }
         return "Unknown OS";
     }

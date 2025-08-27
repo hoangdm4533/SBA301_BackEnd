@@ -43,14 +43,6 @@ public class UserMapper {
         return user;
     }
 
-    // Convert User -> UserResponse (cho login) - chỉ trả về token và refreshToken  
-    public static UserResponse toResponse(User user, String token, String refreshToken) {
-        return UserResponse.builder()
-                .token(token)
-                .refreshToken(refreshToken)
-                .build();
-    }
-
     // Convert User -> LoginResponse (cho login) - chỉ trả về token và refreshToken
     public static LoginResponse toLoginResponse(User user, String token, String refreshToken) {
         return LoginResponse.builder()

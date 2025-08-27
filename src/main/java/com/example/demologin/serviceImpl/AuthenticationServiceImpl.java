@@ -5,7 +5,7 @@ import com.example.demologin.dto.request.login.GoogleLoginRequest;
 import com.example.demologin.dto.request.login.LoginRequest;
 import com.example.demologin.dto.request.user.UserRegistrationRequest;
 import com.example.demologin.dto.response.LoginResponse;
-import com.example.demologin.dto.response.UserResponse;
+import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.entity.RefreshToken;
 import com.example.demologin.entity.User;
 import com.example.demologin.entity.UserActivityLog;
@@ -86,7 +86,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse register(UserRegistrationRequest request) {
+    public LoginResponse register(UserRegistrationRequest request) {
         UserActivityLog log = null;
         try {
             // Business logic validation
@@ -131,7 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .status("SUCCESS")
                     .details("New user registered: " + savedUser.getUsername())
                     .build();
-            return UserMapper.toResponse(savedUser, "", "");
+            return UserMapper.toLoginResponse(savedUser, "", "");
         } catch (ConflictException | ValidationException e) {
             log = UserActivityLog.builder()
                     .activityType(ActivityType.REGISTRATION)
@@ -206,7 +206,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse authenticateWithGoogle(GoogleLoginRequest request) {
+    public LoginResponse authenticateWithGoogle(GoogleLoginRequest request) {
         try {
             log.debug("Attempting to verify Google token: {}", request.getIdToken().substring(0, Math.min(10, request.getIdToken().length())) + "...");
             if (request.getIdToken().startsWith("ya29.")) {
@@ -254,7 +254,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             
-            return UserMapper.toResponse(user, token, refreshToken.getToken());
+            return UserMapper.toLoginResponse(user, token, refreshToken.getToken());
         } catch (BadRequestException | UnauthorizedException e) {
             throw e;
         } catch (Exception e) {
@@ -263,7 +263,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private UserResponse authenticateWithGoogleAccessToken(String accessToken) {
+    private LoginResponse authenticateWithGoogleAccessToken(String accessToken) {
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -293,7 +293,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse authenticateWithOAuth2FromAuthentication(org.springframework.security.core.Authentication authentication) {
+    public LoginResponse authenticateWithOAuth2FromAuthentication(org.springframework.security.core.Authentication authentication) {
         if (!(authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken)) {
             throw new BadRequestException("Not an OAuth2 authentication");
         }
@@ -314,7 +314,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse authenticateWithFacebook(FacebookLoginRequest request) {
+    public LoginResponse authenticateWithFacebook(FacebookLoginRequest request) {
         try {
             log.debug("Attempting to verify Facebook token: {}", request.getAccessToken().substring(0, Math.min(10, request.getAccessToken().length())) + "...");
             String fields = "id,name,email,first_name,last_name,picture,gender,birthday,location";
@@ -380,7 +380,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private UserResponse authenticateWithFacebookOAuth2(
+    private LoginResponse authenticateWithFacebookOAuth2(
             String email,
             String name,
             String firstName,
@@ -440,7 +440,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String token = tokenService.generateTokenForUser(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
             
-            return UserMapper.toResponse(user, token, refreshToken.getToken());
+            return UserMapper.toLoginResponse(user, token, refreshToken.getToken());
         } catch (Exception e) {
             log.error("Error authenticating with Facebook OAuth2", e);
             throw new InternalServerErrorException("Facebook OAuth2 authentication failed: " + e.getMessage());
@@ -479,7 +479,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse getUserResponse(String email, String name) {
+    public LoginResponse getUserResponse(String email, String name) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
@@ -510,6 +510,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String token = tokenService.generateTokenForUser(user);
 
-        return UserMapper.toResponse(user, token, refreshToken.getToken());
+    return UserMapper.toLoginResponse(user, token, refreshToken.getToken());
     }
 } 

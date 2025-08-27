@@ -9,11 +9,11 @@ import com.example.demologin.dto.response.UserResponse;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AuthenticationService extends UserDetailsService {
-    UserResponse register(UserRegistrationRequest request);
+    LoginResponse register(UserRegistrationRequest request);
     LoginResponse login(LoginRequest loginRequest);
-    UserResponse authenticateWithGoogle(GoogleLoginRequest request);
-    UserResponse authenticateWithOAuth2FromAuthentication(org.springframework.security.core.Authentication authentication);
-    UserResponse authenticateWithFacebook(FacebookLoginRequest request);
-    UserResponse getUserResponse(String email, String name);
+    LoginResponse authenticateWithGoogle(GoogleLoginRequest request);
+    LoginResponse authenticateWithOAuth2FromAuthentication(org.springframework.security.core.Authentication authentication);
+    LoginResponse authenticateWithFacebook(FacebookLoginRequest request);
+    LoginResponse getUserResponse(String email, String name);
     void handleOAuth2Failure();
 }

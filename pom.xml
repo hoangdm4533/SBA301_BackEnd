@@ -29,6 +29,7 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -161,6 +162,41 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- JaCoCo Plugin -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>com/example/demologin/dto/**</exclude>
+                        <exclude>com/example/demologin/entity/**</exclude>
+                        <exclude>com/example/demologin/mapper/**</exclude>
+                        <exclude>com/example/demologin/config/**</exclude>
+                        <exclude>com/example/demologin/constant/**</exclude>
+                        <exclude>com/example/demologin/enums/**</exclude>
+                        <exclude>com/example/demologin/initializer/**</exclude>
+                        <exclude>com/example/demologin/utils/**</exclude>
+                        <exclude>com/example/demologin/exception/exceptions/**</exclude>
+                        <exclude>com/example/demologin/repository/**</exclude>
+                        <exclude>com/example/demologin/DemoLoginApplication*</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

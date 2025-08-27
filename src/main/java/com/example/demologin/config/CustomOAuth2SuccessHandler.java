@@ -1,6 +1,6 @@
 package com.example.demologin.config;
 
-import com.example.demologin.dto.response.UserResponse;
+import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.repository.UserRepository;
@@ -49,7 +49,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         }
         
         try {
-            UserResponse userResponse = authenticationService.getUserResponse(email, name);
+            LoginResponse userResponse = authenticationService.getUserResponse(email, name);
             
             // Log successful OAuth2 login
             User user = userRepository.findByEmail(email).orElse(null);
