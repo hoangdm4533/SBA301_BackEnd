@@ -15,6 +15,64 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CacheDetectorTest {
+    @Test
+    void testGetRelatedCacheKeys_updateOtherType() throws Exception {
+        setMethod("update", Integer.class);
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{42});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        // Chỉ có getAll, không có getById
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertEquals(1, keys.size());
+    }
+    @Test
+    void testGetRelatedCacheKeys_deleteNoArgs2() throws Exception {
+        setMethod("delete");
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertEquals(1, keys.size());
+    }
+    @Test
+    void testGetRelatedCacheKeys_deleteStringNumeric() throws Exception {
+        setMethod("delete", String.class);
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{"789"});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertTrue(keys.contains("DummyController:getById:789"));
+    }
+    @Test
+    void testGetRelatedCacheKeys_updateStringNumeric() throws Exception {
+        setMethod("update", String.class);
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertTrue(keys.contains("DummyController:getById:123"));
+    }
+    @Test
+    void testGetRelatedCacheKeys_updateStringNonNumeric() throws Exception {
+        setMethod("update", String.class);
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{"abc"});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertTrue(keys.contains("DummyController:getById:abc"));
+    }
+    @Test
+    void testGetRelatedCacheKeys_updateNoArgs() throws Exception {
+        setMethod("update");
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertEquals(1, keys.size());
+    }
+
+    @Test
+    void testGetRelatedCacheKeys_deleteNoArgs() throws Exception {
+        setMethod("delete");
+        Mockito.when(joinPoint.getArgs()).thenReturn(new Object[]{});
+        Set<String> keys = detector.getRelatedCacheKeys(joinPoint);
+        assertTrue(keys.contains("DummyController:getAll"));
+        assertEquals(1, keys.size());
+    }
     private CacheDetector detector;
     private ProceedingJoinPoint joinPoint;
     private MethodSignature signature;
@@ -25,10 +83,18 @@ class CacheDetectorTest {
         public void getAll() {}
         @PostMapping
         public void create() {}
+    @PutMapping
+    public void update(Long id) {}
+    @PutMapping
+    public void update(String id) {}
+    @PutMapping
+    public void update(Integer id) {}
         @PutMapping
-        public void update(Long id) {}
+        public void update() {}
         @DeleteMapping
         public void delete(String id) {}
+        @DeleteMapping
+        public void delete() {}
         @PatchMapping
         public void patch() {}
         public void custom(Long id) {}

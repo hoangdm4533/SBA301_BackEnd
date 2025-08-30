@@ -1,7 +1,10 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.dto.response.MemberResponse;
+import com.example.demologin.dto.response.UserResponse;
+import com.example.demologin.entity.User;
 import com.example.demologin.service.UserService;
+import com.example.demologin.utils.AccountUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +25,9 @@ class UserControllerTest {
 	@Mock
 	private UserService userService;
 
+	@Mock
+	private AccountUtils accountUtils;
+
 	@Test
 	void testGetAllUsers_emptyPage() {
 		Page<MemberResponse> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0);
@@ -30,6 +36,15 @@ class UserControllerTest {
 		assertNotNull(result);
 		assertTrue(result instanceof Page);
 		assertTrue(((Page<?>) result).isEmpty());
+	}
+
+	@Test
+	void testGetCurrentUserProfile() {
+	User user = new User();
+	when(accountUtils.getCurrentUser()).thenReturn(user);
+	Object result = userController.getCurrentUserProfile();
+	assertNotNull(result);
+	assertTrue(result instanceof UserResponse);
 	}
 }
 

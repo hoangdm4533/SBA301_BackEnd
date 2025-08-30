@@ -1,7 +1,5 @@
 package com.example.demologin.controller;
 
-import com.example.demologin.annotation.ApiResponse;
-import com.example.demologin.annotation.PublicEndpoint;
 import org.springframework.boot.actuate.health.CompositeHealth;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthComponent;
@@ -28,8 +26,8 @@ public class CustomHealthController {
         this.healthEndpoint = healthEndpoint;
     }
 
-    @PublicEndpoint
-    @ApiResponse(message = "Health check response")
+    // @PublicEndpoint
+    // @ApiResponse(message = "Health check response")
     @GetMapping("/health")
     public Object health() {
         HealthComponent healthComponent = healthEndpoint.health();
@@ -48,8 +46,9 @@ public class CustomHealthController {
                     details.put(name, Map.of(STATUS, component.getStatus().getCode()));
                 }
             });
-        } else if (healthComponent instanceof Health simple) {
-            details.putAll(simple.getDetails());
+        }
+        if (healthComponent instanceof Health) {
+            details.putAll(((Health) healthComponent).getDetails());
         }
 
         return Map.of(

@@ -195,6 +195,7 @@
                         <exclude>com/example/demologin/exception/exceptions/**</exclude>
                         <exclude>com/example/demologin/repository/**</exclude>
                         <exclude>com/example/demologin/DemoLoginApplication*</exclude>
+                        <exclude>com/example/demologin/exception/GlobalExceptionHandler*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
