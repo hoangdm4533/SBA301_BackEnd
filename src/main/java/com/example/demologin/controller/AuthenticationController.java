@@ -85,17 +85,6 @@ import org.springframework.web.bind.annotation.*;
         return authenticationService.authenticateWithOAuth2FromAuthentication(authentication);
     }
 
-    @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
-    @GetMapping("/oauth2/failure")
-    @ApiResponse(message = "OAuth2 login failed")
-    @UserActivity(activityType = ActivityType.LOGIN_FAILED, details = "OAuth2 login failed")
-    @Operation(summary = "OAuth2 login failure callback", 
-               description = "Handle failed OAuth2 authentication callback")
-    public Object oauth2LoginFailure() {
-        authenticationService.handleOAuth2Failure();
-        return null; // This will never be reached due to exception
-    }
-
     @PublicEndpoint
     @PostMapping("/facebook-login")
     @ApiResponse(message = "Facebook login successful")
