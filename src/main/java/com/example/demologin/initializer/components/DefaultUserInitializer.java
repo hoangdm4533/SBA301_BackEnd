@@ -70,15 +70,11 @@ public class DefaultUserInitializer {
                 username,
                 passwordEncoder.encode(rawPassword),
                 username + " Fullname",
-                username + "@example.com",
-                "0123456789",
-                "123 Main Street"
+                username + "@example.com"
         );
         
         // Set additional properties
         user.setRoles(roles);
-        user.setIdentityCard("123456789");
-        user.setDateOfBirth(LocalDate.of(1995, 1, 1));
         user.setStatus(UserStatus.ACTIVE);
         user.setGender(Gender.OTHER);
         user.setTokenVersion(0);
