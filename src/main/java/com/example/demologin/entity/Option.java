@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "options") // Use a non-reserved name
 public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
