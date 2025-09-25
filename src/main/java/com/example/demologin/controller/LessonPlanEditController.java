@@ -20,7 +20,7 @@ public class LessonPlanEditController {
     }
 
     @PostMapping
-    @SecuredEndpoint("LESSON_PLAN_EDIT_CREATE")
+//    @SecuredEndpoint("LESSON_PLAN_EDIT_CREATE")
     @SmartCache
     @Operation(summary = "Create new lesson plan edit",
             description = "Create a lesson plan edit record")
@@ -29,7 +29,7 @@ public class LessonPlanEditController {
     }
 
     @GetMapping("/{lessonPlanId}")
-    @SecuredEndpoint("LESSON_PLAN_EDIT_VIEW")
+//    @SecuredEndpoint("LESSON_PLAN_EDIT_VIEW")
     @SmartCache
     @Operation(summary = "Create new lesson plan",
             description = "Create a lesson plan")

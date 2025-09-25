@@ -29,14 +29,14 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 
     @Override
     public LessonPlanResponse createLessonPlan(LessonPlanRequest req) {
-        User teacher = userRepo.findById(req.getTeacherId())
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
-        Grade grade = gradeRepo.findById(req.getGradeId())
-                .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
+//        User teacher = userRepo.findById(req.getTeacherId())
+//                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+//        Grade grade = gradeRepo.findById(req.getGradeId())
+//                .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
 
         LessonPlan plan = LessonPlan.builder()
-                .teacher(teacher)
-                .grade(grade)
+//                .teacher(teacher)
+//                .grade(grade)
                 .title(req.getTitle())
                 .content(req.getContent())
                 .filePath(req.getFilePath())
@@ -57,8 +57,8 @@ public class LessonPlanServiceImpl implements LessonPlanService {
         dto.setFilePath(plan.getFilePath());
         dto.setCreatedAt(plan.getCreatedAt());
         dto.setUpdatedAt(plan.getUpdatedAt());
-        dto.setTeacherName(plan.getTeacher().getFullName()); // giả sử có field name
-        dto.setGradeName(plan.getGrade().getName());     // giả sử có field name
+//        dto.setTeacherName(plan.getTeacher().getFullName()); // giả sử có field name
+//        dto.setGradeName(plan.getGrade().getName());     // giả sử có field name
         return dto;
     }
 }
