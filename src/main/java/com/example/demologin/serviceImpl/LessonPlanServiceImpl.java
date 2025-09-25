@@ -9,6 +9,7 @@ import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanService;
+import com.example.demologin.service.ObjectStorageService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,33 +19,51 @@ public class LessonPlanServiceImpl implements LessonPlanService {
     private final LessonPlanRepository lessonPlanRepo;
     private final UserRepository userRepo;
     private final GradeRepository gradeRepo;
+    private final ObjectStorageService storageService; // Sử dụng MinIO
 
     public LessonPlanServiceImpl(LessonPlanRepository lessonPlanRepo,
-                             UserRepository userRepo,
-                             GradeRepository gradeRepo) {
+                                 UserRepository userRepo,
+                                 GradeRepository gradeRepo,
+                                 ObjectStorageService storageService) {
         this.lessonPlanRepo = lessonPlanRepo;
         this.userRepo = userRepo;
         this.gradeRepo = gradeRepo;
+        this.storageService = storageService;
+
     }
 
     @Override
     public LessonPlanResponse createLessonPlan(LessonPlanRequest req) {
-//        User teacher = userRepo.findById(req.getTeacherId())
-//                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+        User teacher = userRepo.findById(req.getTeacherId())
+                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
 //        Grade grade = gradeRepo.findById(req.getGradeId())
 //                .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
 
+        // 1. Tạo lesson plan (chưa có filePath)
         LessonPlan plan = LessonPlan.builder()
-//                .teacher(teacher)
+                .teacher(teacher)
 //                .grade(grade)
                 .title(req.getTitle())
-                .content(req.getContent())
-                .filePath(req.getFilePath())
+                .content(null) // content sẽ được lưu trong MinIO
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         LessonPlan saved = lessonPlanRepo.save(plan);
+
+        // 2. BE tự sinh filePath
+        String objectKey = "lessonplan/" + saved.getId() + "/base.json";
+
+        try {
+            // 3. Upload content lên MinIO
+            storageService.uploadDocument(objectKey, req.getContent());
+
+            // 4. Update lại filePath
+            saved.setFilePath(objectKey);
+            lessonPlanRepo.save(saved);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save lesson plan content to MinIO", e);
+        }
 
         return mapToResponse(saved);
     }

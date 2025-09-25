@@ -11,4 +11,5 @@ import java.util.List;
 public interface LessonPlanEditRepository extends JpaRepository<LessonPlanEdit, Long> {
     List<LessonPlanEdit> findByLessonPlanOrderByCreatedAtAsc(LessonPlan lessonPlan);
     void deleteByLessonPlan(LessonPlan lessonPlan);
+    List<LessonPlanEdit> findByLessonPlanIdOrderByCreatedAtAsc(Long lessonPlanId);
 }

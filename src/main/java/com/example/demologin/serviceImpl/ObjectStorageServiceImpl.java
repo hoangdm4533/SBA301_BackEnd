@@ -2,6 +2,7 @@ package com.example.demologin.serviceImpl;
 
 import com.example.demologin.service.ObjectStorageService;
 import io.minio.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 @Service
+@Slf4j
 public class ObjectStorageServiceImpl implements ObjectStorageService {
 
     private final MinioClient minioClient;
@@ -24,6 +26,7 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
     @Override
     public void initBucket() {
         try {
+            log.info("Initializing bucket " + bucketName);
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());

@@ -6,6 +6,7 @@ import com.example.demologin.entity.LessonPlanEdit;
 import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.service.LessonPlanCompactionService;
+import com.example.demologin.service.LessonPlanStorageService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -18,11 +19,14 @@ import java.util.List;
 public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionService {
     private final LessonPlanRepository lessonPlanRepo;
     private final LessonPlanEditRepository lessonPlanEditRepo;
+    private final LessonPlanStorageService storageService;
 
     public LessonPlanCompactionServiceImpl(LessonPlanRepository lessonPlanRepo,
-                                       LessonPlanEditRepository lessonPlanEditRepo) {
+                                       LessonPlanEditRepository lessonPlanEditRepo,
+                                           LessonPlanStorageService storageService) {
         this.lessonPlanRepo = lessonPlanRepo;
         this.lessonPlanEditRepo = lessonPlanEditRepo;
+        this.storageService = storageService;
     }
 
     /**
@@ -30,61 +34,64 @@ public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionServ
      */
     @Transactional
     @Override
-    public LessonPlanResponse compactLessonPlan(Long lessonPlanId) {
-        LessonPlan plan = lessonPlanRepo.findById(lessonPlanId)
-                .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found"));
+    public void compactLessonPlan(Long lessonPlanId) {
+        LessonPlan lessonPlan = lessonPlanRepo.findById(lessonPlanId)
+                .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found: " + lessonPlanId));
 
-        // Lấy tất cả edits
-        List<LessonPlanEdit> edits = lessonPlanEditRepo.findByLessonPlanOrderByCreatedAtAsc(plan);
+        String objectKey = lessonPlan.getFilePath();
+        try {
+            // 1. Lấy base content từ MinIO
+            String baseContent = storageService.downloadContent(objectKey);
 
-        if (edits.isEmpty()) {
-            return mapToResponse(plan); // không có edit nào thì trả về luôn
+            // 2. Lấy edits từ MySQL
+            List<LessonPlanEdit> edits = lessonPlanEditRepo.findByLessonPlanIdOrderByCreatedAtAsc(lessonPlanId);
+
+            // 3. Merge edits vào baseContent
+            String mergedContent = applyEdits(baseContent, edits);
+
+            // 4. Upload content mới lên MinIO
+            storageService.uploadContent(objectKey, mergedContent);
+
+            // 5. Update DB metadata
+            lessonPlan.setUpdatedAt(LocalDateTime.now());
+            lessonPlanRepo.save(lessonPlan);
+
+            // 6. Xoá edits cũ
+            lessonPlanEditRepo.deleteAll(edits);
+
+            System.out.println("Compaction thành công cho lessonPlanId=" + lessonPlanId);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi compaction cho lessonPlanId=" + lessonPlanId, e);
         }
-
-        String currentContent = plan.getContent() != null ? plan.getContent() : "";
-
-        // Apply các edits tuần tự
-        for (LessonPlanEdit edit : edits) {
-            currentContent = applyOperation(currentContent, edit.getOperation());
-        }
-
-        // Update LessonPlan
-        plan.setContent(currentContent);
-        plan.setUpdatedAt(LocalDateTime.now());
-        lessonPlanRepo.save(plan);
-
-        // Xóa edits sau khi compact
-        lessonPlanEditRepo.deleteByLessonPlan(plan);
-
-        return mapToResponse(plan);
     }
 
     /**
-     * Hàm apply operation đơn giản (có thể thay bằng parser JSON phức tạp hơn sau)
+     * Demo apply edit đơn giản:
+     * Edit JSON có thể là { "operation":"append", "text":"abc" }
+     * hoặc { "operation":"replace", "text":"new text" }
      */
-    private String applyOperation(String content, String operationJson) {
-        // Ví dụ: {"action":"insert","pos":5,"char":"A"}
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(operationJson);
-            String action = node.get("action").asText();
+    private String applyEdits(String baseContent, List<LessonPlanEdit> edits) {
+        StringBuilder result = new StringBuilder(baseContent);
+        for (LessonPlanEdit edit : edits) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode node = mapper.readTree(edit.getOperation());
+                String op = node.get("operation").asText();
+                String text = node.get("text").asText();
 
-            if ("insert".equals(action)) {
-                int pos = node.get("pos").asInt();
-                String ch = node.get("char").asText();
-                return new StringBuilder(content).insert(pos, ch).toString();
-            } else if ("delete".equals(action)) {
-                int pos = node.get("pos").asInt();
-                return new StringBuilder(content).deleteCharAt(pos).toString();
-            } else if ("replace".equals(action)) {
-                int pos = node.get("pos").asInt();
-                String ch = node.get("char").asText();
-                return new StringBuilder(content).replace(pos, pos + 1, ch).toString();
+                switch (op) {
+                    case "append" -> result.append(text);
+                    case "replace" -> {
+                        result.setLength(0);
+                        result.append(text);
+                    }
+                    default -> System.out.println("Unknown operation: " + op);
+                }
+            } catch (Exception ex) {
+                System.err.println("Skip invalid edit: " + edit.getId());
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to apply operation: " + operationJson, e);
         }
-        return content;
+        return result.toString();
     }
 
     private LessonPlanResponse mapToResponse(LessonPlan plan) {

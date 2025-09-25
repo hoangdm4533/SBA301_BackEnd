@@ -7,6 +7,7 @@ import com.example.demologin.dto.response.LessonPlanResponse;
 import com.example.demologin.service.LessonPlanCompactionService;
 import com.example.demologin.service.LessonPlanService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,8 +32,14 @@ public class LessonPlanController {
     }
 
     @PostMapping("/{lessonPlanId}/save")
-    public ResponseEntity<LessonPlanResponse> compactAndSave(@PathVariable Long lessonPlanId) {
-        return ResponseEntity.ok(compactionService.compactLessonPlan(lessonPlanId));
+    public ResponseEntity<String> compactAndSave(@PathVariable Long lessonPlanId) {
+        try {
+            compactionService.compactLessonPlan(lessonPlanId);
+            return ResponseEntity.ok("Lesson plan " + lessonPlanId + " compacted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to compact lesson plan " + lessonPlanId + ": " + e.getMessage());
+        }
     }
 
 
