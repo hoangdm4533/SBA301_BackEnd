@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * 6. ExamDataInitializer - Creates questions, options, and exams
  * 7. Future initializers can be added here with proper ordering
  */
+// Temporarily disabled for debugging
 @Component
 @RequiredArgsConstructor
 @Slf4j

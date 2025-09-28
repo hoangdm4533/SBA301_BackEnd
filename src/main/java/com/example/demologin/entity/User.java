@@ -20,7 +20,7 @@ import java.util.Set;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 28)
     private String username;
@@ -135,12 +135,21 @@ public class User implements UserDetails {
         this.tokenVersion++;
     }
     
-    public Long getUserId() {
-        return userId;
+    public Long getId() {
+        return id;
     }
-    
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    // Convenience methods for backward compatibility
+    public Long getUserId() {
+        return id;
+    }
+
     public void setUserId(Long userId) {
-        this.userId = userId;
+        this.id = userId;
     }
     
     public String getUsername() {

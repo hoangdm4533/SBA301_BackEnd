@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "chapters")
 public class Chapter {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

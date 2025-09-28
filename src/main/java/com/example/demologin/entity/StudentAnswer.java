@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "student_answers")
 public class StudentAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -28,8 +28,10 @@ public class EmailOtp {
     private LocalDateTime expiredAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean verified = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 } 

@@ -96,6 +96,17 @@ public class PermissionRoleInitializer {
     private void createRoles() {
         log.debug("👑 Creating system roles...");
 
+        // Create roles first without permissions
+        Role adminRole = roleRepository.save(Role.builder()
+                .name("ADMIN")
+                .permissions(new HashSet<>())
+                .build());
+
+        Role memberRole = roleRepository.save(Role.builder()
+                .name("MEMBER")
+                .permissions(new HashSet<>())
+                .build());
+
         // Tạo map {code -> Permission}
         Map<String, Permission> permMap = permissionRepository.findAll()
                 .stream()
@@ -105,22 +116,20 @@ public class PermissionRoleInitializer {
         Set<Permission> adminPerms = new HashSet<>(permMap.values());
 
         // Member: quyền giới hạn
-        Set<Permission> memberPerms = Set.of(
+        Set<Permission> memberPerms = new HashSet<>(Arrays.asList(
                 permMap.get(USER_TOKEN_MANAGEMENT),
                 permMap.get(TOKEN_INVALIDATE_OWN),
                 permMap.get(TOKEN_VIEW_OWN),
                 permMap.get(USER_VIEW_OWN_LOGIN_HISTORY)
-        );
+        ));
 
-        roleRepository.save(Role.builder()
-                .name("ADMIN")
-                .permissions(adminPerms)
-                .build());
+        // Now add permissions to roles
+        adminRole.setPermissions(adminPerms);
+        memberRole.setPermissions(memberPerms);
 
-        roleRepository.save(Role.builder()
-                .name("MEMBER")
-                .permissions(memberPerms)
-                .build());
+        // Save roles with permissions
+        roleRepository.save(adminRole);
+        roleRepository.save(memberRole);
 
         log.debug("✅ Created {} roles", roleRepository.count());
     }

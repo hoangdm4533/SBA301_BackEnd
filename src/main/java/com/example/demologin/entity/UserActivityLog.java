@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_activity_logs")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class UserActivityLog {
 

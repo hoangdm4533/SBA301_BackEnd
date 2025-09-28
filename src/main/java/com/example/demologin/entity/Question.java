@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "questions")
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +38,7 @@ public class Question {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "question")
+    @Builder.Default
     private List<Option> options = new ArrayList<>();
 
     @ManyToMany
@@ -45,9 +47,11 @@ public class Question {
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "grade_id")
     )
+    @Builder.Default
     private List<Grade> grades = new ArrayList<>();
 
     @ManyToMany(mappedBy = "questions")
+    @Builder.Default
     private List<Exam> exams = new ArrayList<>();
 }
 

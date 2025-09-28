@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean:*)",
+      "Bash(mvn:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

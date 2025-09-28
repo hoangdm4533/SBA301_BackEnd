@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "exam_attempts")
 public class ExamAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +32,7 @@ public class ExamAttempt {
     private Double score;
 
     @OneToMany(mappedBy = "attempt")
+    @Builder.Default
     private List<StudentAnswer> answers = new ArrayList<>();
 }
 

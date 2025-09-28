@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
+
 @Getter
 @Setter
 public class RefreshToken {
@@ -18,7 +19,7 @@ public class RefreshToken {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(nullable = false, unique = true)

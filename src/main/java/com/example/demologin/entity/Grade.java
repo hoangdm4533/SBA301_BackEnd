@@ -11,6 +11,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "grades")
 public class Grade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,14 +24,18 @@ public class Grade {
     private String description;
 
     @OneToMany(mappedBy = "grade")
+    @Builder.Default
     private List<ClassEntity> classes = new ArrayList<>();
 
     @OneToMany(mappedBy = "grade")
+    @Builder.Default
     private List<LessonPlan> lessonPlans = new ArrayList<>();
 
     @OneToMany(mappedBy = "grade")
+    @Builder.Default
     private List<Exam> exams = new ArrayList<>();
 
     @ManyToMany(mappedBy = "grades")
+    @Builder.Default
     private List<Question> questions = new ArrayList<>();
 }

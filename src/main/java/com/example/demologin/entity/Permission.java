@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 
 @Entity
 public class Permission {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)

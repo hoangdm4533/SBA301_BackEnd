@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "lesson_plans")
 public class LessonPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,5 +39,6 @@ public class LessonPlan {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "lessonPlan")
+    @Builder.Default
     private List<Chapter> chapters = new ArrayList<>();
 }
