@@ -49,6 +49,27 @@ public class PermissionRoleInitializer {
 
     private static final String USER_VIEW_OWN_LOGIN_HISTORY = "USER_VIEW_OWN_LOGIN_HISTORY";
 
+    // Grade permissions
+    private static final String GRADE_VIEW = "GRADE_VIEW";
+    private static final String GRADE_CREATE = "GRADE_CREATE";
+    private static final String GRADE_UPDATE = "GRADE_UPDATE";
+    private static final String GRADE_DELETE = "GRADE_DELETE";
+
+    // Level permissions
+    private static final String LEVEL_VIEW = "LEVEL_VIEW";
+    private static final String LEVEL_CREATE = "LEVEL_CREATE";
+    private static final String LEVEL_UPDATE = "LEVEL_UPDATE";
+    private static final String LEVEL_DELETE = "LEVEL_DELETE";
+
+    // Exam Template permissions
+    private static final String EXAM_TEMPLATE_VIEW = "EXAM_TEMPLATE_VIEW";
+    private static final String EXAM_TEMPLATE_CREATE = "EXAM_TEMPLATE_CREATE";
+    private static final String EXAM_TEMPLATE_UPDATE = "EXAM_TEMPLATE_UPDATE";
+    private static final String EXAM_TEMPLATE_DELETE = "EXAM_TEMPLATE_DELETE";
+    private static final String EXAM_TEMPLATE_MANAGE_QUESTIONS = "EXAM_TEMPLATE_MANAGE_QUESTIONS";
+    private static final String EXAM_TEMPLATE_PUBLISH = "EXAM_TEMPLATE_PUBLISH";
+    private static final String EXAM_TEMPLATE_APPROVE = "EXAM_TEMPLATE_APPROVE";
+
     @Transactional
     public void initializePermissionsAndRoles() {
         log.info("🔑 Initializing system permissions and roles...");
@@ -85,7 +106,28 @@ public class PermissionRoleInitializer {
                 new Permission(LOG_VIEW_ACTIVITY, "Xem user activity logs"),
                 new Permission(ADMIN_ACTIVITY_LOG_EXPORT, "Export user activity logs"),
                 new Permission(LOG_DELETE, "Xóa user activity logs"),
-                new Permission(USER_VIEW_OWN_LOGIN_HISTORY, "Xem lịch sử đăng nhập của bản thân")
+                new Permission(USER_VIEW_OWN_LOGIN_HISTORY, "Xem lịch sử đăng nhập của bản thân"),
+                
+                // Grade permissions
+                new Permission(GRADE_VIEW, "Xem danh sách grade"),
+                new Permission(GRADE_CREATE, "Tạo grade mới"),
+                new Permission(GRADE_UPDATE, "Cập nhật grade"),
+                new Permission(GRADE_DELETE, "Xóa grade"),
+                
+                // Level permissions
+                new Permission(LEVEL_VIEW, "Xem danh sách level"),
+                new Permission(LEVEL_CREATE, "Tạo level mới"),
+                new Permission(LEVEL_UPDATE, "Cập nhật level"),
+                new Permission(LEVEL_DELETE, "Xóa level"),
+                
+                // Exam Template permissions
+                new Permission(EXAM_TEMPLATE_VIEW, "Xem danh sách exam template"),
+                new Permission(EXAM_TEMPLATE_CREATE, "Tạo exam template mới"),
+                new Permission(EXAM_TEMPLATE_UPDATE, "Cập nhật exam template"),
+                new Permission(EXAM_TEMPLATE_DELETE, "Xóa exam template"),
+                new Permission(EXAM_TEMPLATE_MANAGE_QUESTIONS, "Quản lý câu hỏi trong exam template"),
+                new Permission(EXAM_TEMPLATE_PUBLISH, "Publish exam template"),
+                new Permission(EXAM_TEMPLATE_APPROVE, "Approve exam template")
         );
 
         permissionRepository.saveAll(permissions);
