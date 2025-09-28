@@ -42,15 +42,16 @@ Retrieve all exam templates with pagination.
 
 **Query Parameters:**
 - `page` (optional): Page number (default: 0)
-- `size` (optional): Page size (default: 10)
-- `sort` (optional): Sort criteria (format: `field,direction`)
+- `size` (optional): Page size (default: 20)
+- `sortBy` (optional): Sort field (default: "createdAt")
+- `sortDir` (optional): Sort direction "asc" or "desc" (default: "desc")
 
 **Valid Sort Fields:**
 - `id`, `title`, `status`, `createdAt`, `updatedAt`, `level`
 
 **Example Request:**
 ```http
-GET /api/exam-templates?page=0&size=5&sort=createdAt,desc
+GET /api/exam-templates?page=0&size=5&sortBy=createdAt&sortDir=desc
 Authorization: Bearer <token>
 ```
 
@@ -154,6 +155,26 @@ Create a new exam template.
 ```
 
 For more detailed API documentation including all endpoints (Update, Delete, Question Management, Workflow Management, Error Responses, and Data Models), please refer to the complete documentation file.
+
+## 📋 Pagination Parameters
+
+All list endpoints now use individual query parameters instead of Pageable object:
+
+### Standard Parameters
+- `page` (optional): Page number, 0-based (default: 0)
+- `size` (optional): Page size (default: 20)
+- `sortBy` (optional): Field to sort by (default: "createdAt")
+- `sortDir` (optional): Sort direction "asc" or "desc" (default: "desc")
+
+### Valid Sort Fields for Exam Templates
+- `id`, `title`, `status`, `createdAt`, `updatedAt`, `level`
+
+### Example Usage
+```http
+GET /api/exam-templates?page=0&size=10&sortBy=title&sortDir=asc
+GET /api/exam-templates/level/1?page=1&size=5&sortBy=createdAt&sortDir=desc
+GET /api/exam-templates/status/PUBLISHED?page=0&size=15&sortBy=updatedAt&sortDir=desc
+```
     "createdBy": "teacher1",
     "updatedBy": "teacher1",
     "approvedBy": null,

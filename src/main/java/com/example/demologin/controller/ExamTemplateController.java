@@ -52,8 +52,11 @@ public class ExamTemplateController {
     @ApiResponse(message = "Exam templates retrieved successfully")
     @Operation(summary = "Get all exam templates", description = "Retrieve all exam templates with pagination")
     public Object getAllExamTemplates(
-            @Parameter(description = "Pagination information") Pageable pageable) {
-        return examTemplateService.getAllExamTemplates(pageable);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return examTemplateService.getAllExamTemplates(page, size, sortBy, sortDir);
     }
 
     @GetMapping("/level/{levelId}")
@@ -63,8 +66,11 @@ public class ExamTemplateController {
     @Operation(summary = "Get exam templates by level", description = "Retrieve exam templates filtered by level")
     public Object getExamTemplatesByLevel(
             @Parameter(description = "Level ID") @PathVariable Long levelId,
-            @Parameter(description = "Pagination information") Pageable pageable) {
-        return examTemplateService.getExamTemplatesByLevel(levelId, pageable);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return examTemplateService.getExamTemplatesByLevel(levelId, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/status/{status}")
@@ -74,8 +80,11 @@ public class ExamTemplateController {
     @Operation(summary = "Get exam templates by status", description = "Retrieve exam templates filtered by status")
     public Object getExamTemplatesByStatus(
             @Parameter(description = "Status (DRAFT, PUBLISHED, ARCHIVED)") @PathVariable String status,
-            @Parameter(description = "Pagination information") Pageable pageable) {
-        return examTemplateService.getExamTemplatesByStatus(status, pageable);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return examTemplateService.getExamTemplatesByStatus(status, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/search")

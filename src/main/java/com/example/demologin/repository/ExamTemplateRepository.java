@@ -18,6 +18,8 @@ public interface ExamTemplateRepository extends JpaRepository<ExamTemplate, Long
     
     List<ExamTemplate> findByStatus(String status);
     
+    Page<ExamTemplate> findByStatus(String status, Pageable pageable);
+    
     List<ExamTemplate> findByCreatedBy(User createdBy);
     
     List<ExamTemplate> findByLevelAndStatus(Level level, String status);

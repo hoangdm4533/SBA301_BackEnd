@@ -13,9 +13,9 @@ public interface ExamTemplateService {
     ExamTemplateResponse createExamTemplate(ExamTemplateRequest request);
     ExamTemplateResponse getExamTemplateById(Long id);
     List<ExamTemplateResponse> getAllExamTemplates();
-    Page<ExamTemplateResponse> getAllExamTemplates(Pageable pageable);
-    Page<ExamTemplateResponse> getExamTemplatesByLevel(Long levelId, Pageable pageable);
-    Page<ExamTemplateResponse> getExamTemplatesByStatus(String status, Pageable pageable);
+    Page<ExamTemplateResponse> getAllExamTemplates(int page, int size, String sortBy, String sortDir);
+    Page<ExamTemplateResponse> getExamTemplatesByLevel(Long levelId, int page, int size, String sortBy, String sortDir);
+    Page<ExamTemplateResponse> getExamTemplatesByStatus(String status, int page, int size, String sortBy, String sortDir);
     Page<ExamTemplateResponse> searchExamTemplates(String keyword, Pageable pageable);
     Page<ExamTemplateResponse> searchExamTemplatesByLevel(Long levelId, String keyword, Pageable pageable);
     ExamTemplateResponse updateExamTemplate(Long id, ExamTemplateRequest request);
