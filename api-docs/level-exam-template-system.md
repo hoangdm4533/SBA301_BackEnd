@@ -1,53 +1,272 @@
-# Chức năng Soạn Đề (Level Management) - API Documentation
+# Level & Exam Template System - Complete Documentation
 
-## Tổng quan
-Hệ thống đã được bổ sung chức năng soạn đề hoàn chỉnh bao gồm quản lý Level và Exam Template với đầy đủ các API cần thiết và phân quyền chi tiết.
+## 🎯 Tổng quan hệ thống
+Hệ thống "Soạn Đề" (Level & Exam Template Management) đã được xây dựng hoàn chỉnh với đầy đủ CRUD operations, phân quyền chi tiết, và workflow management.
 
-## 🏗️ Kiến trúc đã được tạo
+## 🏗️ Kiến trúc hệ thống
 
-### 1. Entities
-- **Level**: Quản lý các cấp độ khó (Beginner, Intermediate, Advanced, etc.)
-- **ExamTemplate**: Template cho việc tạo đề thi
-- **ExamQuestion**: Liên kết giữa đề thi và câu hỏi với thứ tự và điểm số
+### 1. Core Entities
 
-### 2. DTOs
-#### Request DTOs:
-- `LevelRequest`: Tạo/cập nhật level
-- `ExamTemplateRequest`: Tạo/cập nhật exam template
-- `AddQuestionToExamRequest`: Thêm câu hỏi vào đề
+#### Level Entity
+- **Purpose**: Quản lý các cấp độ khó của bài thi
+- **Key Fields**: 
+  - `id`, `name`, `description`
+  - `minScore`, `maxScore`: Khoảng điểm số (0-100)
+- **Relationships**: One-to-Many với ExamTemplate
+- **Initial Data**: 5 levels (Beginner → Master)
 
-#### Response DTOs:
-- `LevelResponse`: Thông tin level chi tiết
-- `ExamTemplateResponse`: Thông tin exam template chi tiết
-- `ExamQuestionResponse`: Thông tin câu hỏi trong đề
+#### ExamTemplate Entity  
+- **Purpose**: Template để tạo đề thi
+- **Key Fields**:
+  - `id`, `title`, `description`, `status`
+  - `levelId`: Foreign key to Level
+  - `duration`: Thời gian làm bài (phút)
+  - `totalQuestions`, `totalPoints`: Thống kê tự động
+- **Status Workflow**: DRAFT → PUBLISHED → ARCHIVED
+- **Relationships**: 
+  - Many-to-One với Level
+  - One-to-Many với ExamQuestion
 
-### 3. Repositories
-- `LevelRepository`: Truy vấn dữ liệu level
-- `ExamTemplateRepository`: Truy vấn dữ liệu exam template
-- `ExamQuestionRepository`: Truy vấn dữ liệu câu hỏi trong đề
+#### ExamQuestion Entity
+- **Purpose**: Liên kết câu hỏi với exam template
+- **Key Fields**:
+  - `examTemplateId`, `questionId`
+  - `questionOrder`: Thứ tự câu hỏi
+  - `points`: Điểm số
+  - `note`: Ghi chú
 
-### 4. Services & ServiceImpl
-- `LevelService` & `LevelServiceImpl`: Business logic cho level
-- `ExamTemplateService` & `ExamTemplateServiceImpl`: Business logic cho exam template
+### 2. Data Transfer Objects (DTOs)
 
-### 5. Controllers
-- `LevelController`: REST API cho level management
-- `ExamTemplateController`: REST API cho exam template management
-- `GradeController`: Đã cập nhật với các annotation custom
+#### Request DTOs
+```java
+// Level operations
+LevelRequest {
+  String name;       // Required, 1-100 chars, unique
+  String description; // Optional, max 500 chars  
+  Integer minScore;  // Required, 0-100, < maxScore
+  Integer maxScore;  // Required, 0-100, > minScore
+}
 
-## 🔐 Permissions đã được thêm
+// ExamTemplate operations
+ExamTemplateRequest {
+  String title;       // Required, 1-200 chars, unique
+  String description; // Optional, max 1000 chars
+  Long levelId;       // Required, must exist
+  Integer duration;   // Optional, > 0 minutes
+}
 
-### Level Permissions
-- `LEVEL_VIEW`: Xem danh sách level
+// Question management
+AddQuestionToExamRequest {
+  Long questionId;     // Required, must exist
+  Integer questionOrder; // Required, unique within template
+  Integer points;      // Required, > 0
+  String note;        // Optional, max 500 chars
+}
+```
+
+#### Response DTOs
+```java
+// Level information
+LevelResponse {
+  Long id;
+  String name, description;
+  Integer minScore, maxScore;
+  Integer examTemplateCount; // Calculated field
+  LocalDateTime createdAt, updatedAt;
+}
+
+// ExamTemplate information  
+ExamTemplateResponse {
+  Long id;
+  String title, description, status;
+  Long levelId;
+  String levelName;
+  Integer totalQuestions, duration;
+  Double totalPoints;
+  UserInfo createdBy, approvedBy;
+  LocalDateTime createdAt, updatedAt, approvedAt;
+}
+
+// Question in exam
+ExamQuestionResponse {
+  Long id, questionId;
+  String questionText;
+  Integer questionOrder, points;
+  String note;
+}
+```
+
+## 🔐 Security & Permissions
+
+### Level Permissions (4 permissions)
+- `LEVEL_VIEW`: Xem danh sách và chi tiết level
 - `LEVEL_CREATE`: Tạo level mới
-- `LEVEL_UPDATE`: Cập nhật level
-- `LEVEL_DELETE`: Xóa level
+- `LEVEL_UPDATE`: Cập nhật thông tin level
+- `LEVEL_DELETE`: Xóa level (chỉ khi không có exam template nào sử dụng)
 
-### Grade Permissions (đã cập nhật)
-- `GRADE_VIEW`: Xem danh sách grade
-- `GRADE_CREATE`: Tạo grade mới
-- `GRADE_UPDATE`: Cập nhật grade
-- `GRADE_DELETE`: Xóa grade
+### Exam Template Permissions (7 permissions)
+- `EXAM_TEMPLATE_VIEW`: Xem danh sách và chi tiết exam template
+- `EXAM_TEMPLATE_CREATE`: Tạo exam template mới
+- `EXAM_TEMPLATE_UPDATE`: Cập nhật exam template (chỉ DRAFT)
+- `EXAM_TEMPLATE_DELETE`: Xóa exam template (chỉ DRAFT)
+- `EXAM_TEMPLATE_MANAGE_QUESTIONS`: Thêm/xóa/sắp xếp câu hỏi
+- `EXAM_TEMPLATE_PUBLISH`: Publish exam template
+- `EXAM_TEMPLATE_APPROVE`: Approve exam template
+
+### Custom Annotations Used
+- `@SecuredEndpoint("PERMISSION")`: Kiểm tra quyền trước khi truy cập
+- `@ApiResponse(message = "...")`: Tự động wrap response
+- `@PageResponse`: Tự động wrap paginated response
+- `@UserActivity`: KHÔNG sử dụng cho business operations (chỉ login/logout)
+
+## 📊 Business Logic & Workflow
+
+### Level Management
+1. **Create**: Validate unique name, score range không overlap
+2. **Update**: Kiểm tra có exam template đang sử dụng
+3. **Delete**: Chỉ xóa được khi không có exam template nào reference
+
+### Exam Template Lifecycle
+```
+DRAFT → PUBLISHED → ARCHIVED
+   ↓        ↓         ↓
+Editable  Readonly   Readonly
+   ↓        ↓         ✗
+Can Delete ✗ Delete  ✗ Delete
+```
+
+#### Business Rules
+- Chỉ DRAFT templates có thể modify/delete
+- Publish yêu cầu ít nhất 1 câu hỏi
+- PUBLISHED templates không thể xóa
+- Approval có thể thực hiện ở bất kỳ trạng thái nào (trừ ARCHIVED)
+
+### Question Management
+- Thứ tự câu hỏi (`questionOrder`) phải unique trong exam template
+- Tự động cập nhật `totalQuestions` và `totalPoints`
+- Chỉ có thể thao tác với DRAFT templates
+
+## 🚀 API Endpoints Summary
+
+### Level APIs (5 endpoints)
+```
+GET    /api/levels              - Danh sách level (paginated)
+GET    /api/levels/{id}         - Chi tiết level
+POST   /api/levels              - Tạo level mới
+PUT    /api/levels/{id}         - Cập nhật level
+DELETE /api/levels/{id}         - Xóa level
+```
+
+### Exam Template APIs (15 endpoints)
+```
+# CRUD Operations
+GET    /api/exam-templates                    - Danh sách (paginated)
+GET    /api/exam-templates/{id}              - Chi tiết
+POST   /api/exam-templates                   - Tạo mới
+PUT    /api/exam-templates/{id}              - Cập nhật
+DELETE /api/exam-templates/{id}              - Xóa
+
+# Filter Operations
+GET    /api/exam-templates/level/{levelId}   - Filter by level
+GET    /api/exam-templates/status/{status}   - Filter by status
+
+# Question Management
+GET    /api/exam-templates/{id}/questions              - Danh sách câu hỏi
+POST   /api/exam-templates/{id}/questions              - Thêm câu hỏi
+DELETE /api/exam-templates/{examId}/questions/{qId}    - Xóa câu hỏi
+PUT    /api/exam-templates/{examId}/questions/{qId}    - Cập nhật câu hỏi
+PUT    /api/exam-templates/{id}/questions/reorder      - Sắp xếp lại
+
+# Workflow Management  
+POST   /api/exam-templates/{id}/publish      - Publish template
+POST   /api/exam-templates/{id}/archive      - Archive template
+POST   /api/exam-templates/{id}/approve      - Approve template
+```
+
+## 🎛️ Features Implemented
+
+### ✅ Core Features
+- [x] Full CRUD operations for Level and ExamTemplate
+- [x] Comprehensive validation and business rules
+- [x] Complete question management (add/remove/reorder)
+- [x] Status workflow management (draft → published → archived)
+- [x] Approval system for exam templates
+
+### ✅ Advanced Features  
+- [x] Pagination support with custom sort fields
+- [x] Advanced filtering (by level, status)
+- [x] Automatic statistics calculation (question count, total points)
+- [x] Proper exception handling with custom exceptions
+- [x] Complete permission-based access control
+
+### ✅ Data & Infrastructure
+- [x] Initial data seeding (5 levels, 15 exam templates, questions)
+- [x] Repository pattern with custom queries
+- [x] Service layer with proper transaction management
+- [x] Controller layer with proper HTTP status codes
+
+## �️ Initial Data
+
+### Levels (5 records)
+1. **Beginner** (0-40): Người mới bắt đầu học
+2. **Elementary** (41-55): Trình độ cơ bản
+3. **Intermediate** (56-70): Trình độ trung cấp
+4. **Advanced** (71-85): Trình độ cao
+5. **Master** (86-100): Trình độ chuyên gia
+
+### Exam Templates (15 records)
+- 3 templates per level
+- Realistic titles and descriptions
+- Various durations (15-120 minutes)
+- Mix of DRAFT, PUBLISHED, ARCHIVED status
+
+### Questions (Sample data)
+- Each template has 2-5 questions
+- Proper point distribution
+- Ordered sequence
+- Descriptive notes
+
+## 🛡️ Error Handling
+
+### Custom Exceptions
+- `NotFoundException`: Entity không tồn tại (404)
+- `BadRequestException`: Business rule violation (400)
+- `PropertyReferenceException`: Invalid sort parameters (400)
+
+### Validation Errors
+- Automatic field validation with detailed messages
+- Business rule validation in service layer
+- Proper HTTP status codes for all error scenarios
+
+## 📋 Testing & Quality
+
+### Code Quality
+- ✅ Clean code structure
+- ✅ Proper separation of concerns
+- ✅ Consistent naming conventions
+- ✅ Comprehensive error handling
+
+### Data Integrity
+- ✅ Foreign key constraints
+- ✅ Unique constraints on names/titles
+- ✅ Range validations on scores
+- ✅ Business rule enforcement
+
+## 🎉 System Ready For
+- Production deployment
+- Extended with more features
+- Integration with frontend applications
+- Performance optimization if needed
+
+**Total Implementation**: 
+- **3 Entities** + relationships
+- **6 DTOs** (Request/Response)
+- **3 Repositories** với custom methods
+- **2 Services** với comprehensive business logic
+- **2 Controllers** với full REST operations
+- **15 Permissions** phân quyền chi tiết  
+- **20 API endpoints** đầy đủ chức năng
+- **Complete documentation** và error handling
 
 ### Exam Template Permissions
 - `EXAM_TEMPLATE_VIEW`: Xem danh sách exam template

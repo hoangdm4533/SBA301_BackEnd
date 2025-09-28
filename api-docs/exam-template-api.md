@@ -1,59 +1,159 @@
 # Exam Template Management API Documentation
 
 ## Overview
-The Exam Template Management API provides endpoints for creating and managing exam templates, including adding/removing questions and managing the publishing workflow.
+The Exam Template Management API provides endpoints for creating and managing exam templates with a complete workflow from draft to published state, including question management and approval processes.
+
+## Base URL
+```
+/api/exam-templates
+```
 
 ## Authentication
-All endpoints require authentication using JWT Bearer tokens.
+All endpoints require JWT authentication:
+```
+Authorization: Bearer <token>
+```
 
 ## Permissions
-The following permissions are required for different operations:
+Required permissions for different operations:
 - `EXAM_TEMPLATE_VIEW`: View exam templates
 - `EXAM_TEMPLATE_CREATE`: Create new exam templates
 - `EXAM_TEMPLATE_UPDATE`: Update existing exam templates
 - `EXAM_TEMPLATE_DELETE`: Delete exam templates
-- `EXAM_TEMPLATE_MANAGE_QUESTIONS`: Add/remove/reorder questions in exam templates
+- `EXAM_TEMPLATE_MANAGE_QUESTIONS`: Add/remove/reorder questions
 - `EXAM_TEMPLATE_PUBLISH`: Publish exam templates
 - `EXAM_TEMPLATE_APPROVE`: Approve exam templates
 
+## Exam Template Status Workflow
+
+1. **DRAFT** → **PUBLISHED** → **ARCHIVED**
+2. Templates can be approved at any stage
+3. Only DRAFT templates can be modified
+4. PUBLISHED templates cannot be deleted
+
 ## Endpoints
 
-### Create Exam Template
+### 1. Get All Exam Templates
+**GET** `/api/exam-templates`
+
+Retrieve all exam templates with pagination.
+
+**Required Permission:** `EXAM_TEMPLATE_VIEW`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 0)
+- `size` (optional): Page size (default: 10)
+- `sort` (optional): Sort criteria (format: `field,direction`)
+
+**Valid Sort Fields:**
+- `id`, `title`, `status`, `createdAt`, `updatedAt`, `level`
+
+**Example Request:**
+```http
+GET /api/exam-templates?page=0&size=5&sort=createdAt,desc
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "statusCode": 200,
+  "message": "Exam templates retrieved successfully",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "title": "Basic Mathematics Quiz",
+        "description": "Kiểm tra kiến thức toán học cơ bản",
+        "status": "PUBLISHED",
+        "levelId": 1,
+        "levelName": "Beginner",
+        "totalQuestions": 10,
+        "totalPoints": 100.0,
+        "duration": 30,
+        "createdBy": {
+          "id": 1,
+          "username": "admin"
+        },
+        "approvedBy": {
+          "id": 1,
+```
+
+### 2. Get Exam Template by ID
+**GET** `/api/exam-templates/{id}`
+
+Retrieve specific exam template by ID.
+
+**Required Permission:** `EXAM_TEMPLATE_VIEW`
+
+**Response:** `200 OK`
+```json
+{
+  "statusCode": 200,
+  "message": "Exam template retrieved successfully",
+  "data": {
+    "id": 1,
+    "title": "Basic Mathematics Quiz",
+    "description": "Kiểm tra kiến thức toán học cơ bản",
+    "status": "PUBLISHED",
+    "levelId": 1,
+    "levelName": "Beginner",
+    "totalQuestions": 10,
+    "totalPoints": 100.0,
+    "duration": 30,
+    "createdBy": {
+      "id": 1,
+      "username": "admin"
+    },
+    "createdAt": "2025-09-28T10:00:00",
+    "updatedAt": "2025-09-28T10:30:00"
+  }
+}
+```
+
+### 3. Create Exam Template
 **POST** `/api/exam-templates`
 
-Creates a new exam template.
+Create a new exam template.
 
 **Required Permission:** `EXAM_TEMPLATE_CREATE`
 
 **Request Body:**
 ```json
 {
-  "title": "string (required)",
-  "description": "string (optional)",
-  "levelId": "integer (required)",
-  "difficulty": "string (optional, values: EASY, MEDIUM, HARD)",
-  "duration": "integer (optional, min: 1) - duration in minutes",
-  "totalQuestions": "integer (optional, min: 1)",
-  "totalPoints": "double (optional, min: 0)"
+  "title": "Advanced Physics Quiz",
+  "description": "Comprehensive physics test",
+  "levelId": 4,
+  "duration": 60
 }
 ```
 
-**Response:** `201 Created`
+**Response:** `200 OK`
 ```json
 {
-  "success": true,
+  "statusCode": 200,
   "message": "Exam template created successfully",
   "data": {
-    "id": 1,
-    "title": "Basic Math Test",
-    "description": "A basic math test for beginners",
-    "levelId": 1,
-    "levelName": "Beginner",
-    "difficulty": "EASY",
+    "id": 16,
+    "title": "Advanced Physics Quiz", 
+    "description": "Comprehensive physics test",
     "status": "DRAFT",
-    "duration": 60,
+    "levelId": 4,
+    "levelName": "Advanced",
     "totalQuestions": 0,
     "totalPoints": 0.0,
+    "duration": 60,
+    "createdBy": {
+      "id": 2,
+      "username": "teacher1"
+    },
+    "createdAt": "2025-09-28T16:45:00",
+    "updatedAt": "2025-09-28T16:45:00"
+  }
+}
+```
+
+For more detailed API documentation including all endpoints (Update, Delete, Question Management, Workflow Management, Error Responses, and Data Models), please refer to the complete documentation file.
     "createdBy": "teacher1",
     "updatedBy": "teacher1",
     "approvedBy": null,
