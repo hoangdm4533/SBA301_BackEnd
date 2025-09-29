@@ -32,15 +32,16 @@ Retrieve all levels with pagination support.
 
 **Query Parameters:**
 - `page` (optional): Page number (default: 0)
-- `size` (optional): Page size (default: 10)
-- `sort` (optional): Sort criteria (format: `field,direction`)
+- `size` (optional): Page size (default: 20)
+- `sortBy` (optional): Sort field (default: "minScore")
+- `sortDir` (optional): Sort direction "asc" or "desc" (default: "asc")
 
 **Valid Sort Fields:**
 - `id`, `name`, `minScore`, `maxScore`, `createdAt`, `updatedAt`
 
 **Example Request:**
 ```http
-GET /api/levels?page=0&size=5&sort=minScore,asc
+GET /api/levels?page=0&size=5&sortBy=minScore&sortDir=asc
 Authorization: Bearer <token>
 ```
 
@@ -252,9 +253,28 @@ Delete a level (only if no exam templates are using it).
 ```json
 {
   "statusCode": 400,
-  "message": "Invalid sort parameter. Please use format: sort=fieldName or sort=fieldName,desc. Valid fields for Level: id, name, minScore, maxScore, createdAt, updatedAt",
+  "message": "Invalid sort parameter. Please use format: sortBy=fieldName&sortDir=asc|desc. Valid fields for Level: id, name, minScore, maxScore, createdAt, updatedAt",
   "data": null
 }
+```
+
+## 📋 Pagination Parameters
+
+Level APIs use individual query parameters:
+
+### Parameters
+- `page` (optional): Page number, 0-based (default: 0)
+- `size` (optional): Page size (default: 20)
+- `sortBy` (optional): Field to sort by (default: "minScore")
+- `sortDir` (optional): Sort direction "asc" or "desc" (default: "asc")
+
+### Valid Sort Fields
+- `id`, `name`, `minScore`, `maxScore`, `createdAt`, `updatedAt`
+
+### Example Usage
+```http
+GET /api/levels?page=0&size=10&sortBy=name&sortDir=asc
+GET /api/levels?page=1&size=5&sortBy=minScore&sortDir=desc
 ```
 
 ## Data Models

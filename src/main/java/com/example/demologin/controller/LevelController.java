@@ -50,8 +50,11 @@ public class LevelController {
     @ApiResponse(message = "Levels retrieved successfully")
     @Operation(summary = "Get all levels", description = "Retrieve all levels with pagination")
     public Object getAllLevels(
-            @Parameter(description = "Pagination information") Pageable pageable) {
-        return levelService.getAllLevels(pageable);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "minScore") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return levelService.getAllLevels(page, size, sortBy, sortDir);
     }
 
     @GetMapping("/active")

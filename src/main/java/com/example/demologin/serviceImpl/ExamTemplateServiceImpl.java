@@ -12,7 +12,9 @@ import com.example.demologin.service.ExamTemplateService;
 import com.example.demologin.utils.AccountUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,20 +120,26 @@ public class ExamTemplateServiceImpl implements ExamTemplateService {
     }
 
     @Override
-    public Page<ExamTemplateResponse> getAllExamTemplates(Pageable pageable) {
+    public Page<ExamTemplateResponse> getAllExamTemplates(int page, int size, String sortBy, String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return examTemplateRepository.findAll(pageable)
                 .map(this::mapToResponse);
     }
 
     @Override
-    public Page<ExamTemplateResponse> getExamTemplatesByLevel(Long levelId, Pageable pageable) {
+    public Page<ExamTemplateResponse> getExamTemplatesByLevel(Long levelId, int page, int size, String sortBy, String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return examTemplateRepository.findByLevelIdAndStatus(levelId, "PUBLISHED", pageable)
                 .map(this::mapToResponse);
     }
 
     @Override
-    public Page<ExamTemplateResponse> getExamTemplatesByStatus(String status, Pageable pageable) {
-        return examTemplateRepository.findAll(pageable)
+    public Page<ExamTemplateResponse> getExamTemplatesByStatus(String status, int page, int size, String sortBy, String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return examTemplateRepository.findByStatus(status, pageable)
                 .map(this::mapToResponse);
     }
 

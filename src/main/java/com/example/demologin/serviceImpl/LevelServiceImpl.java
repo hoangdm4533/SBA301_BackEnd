@@ -10,7 +10,9 @@ import com.example.demologin.service.LevelService;
 import com.example.demologin.utils.AccountUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -85,7 +87,9 @@ public class LevelServiceImpl implements LevelService {
     }
 
     @Override
-    public Page<LevelResponse> getAllLevels(Pageable pageable) {
+    public Page<LevelResponse> getAllLevels(int page, int size, String sortBy, String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return levelRepository.findAll(pageable)
                 .map(this::mapToResponse);
     }
