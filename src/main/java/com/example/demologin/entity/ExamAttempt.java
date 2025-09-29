@@ -22,6 +22,10 @@ public class ExamAttempt {
     private Exam exam;
 
     @ManyToOne
+    @JoinColumn(name = "exam_template_id")
+    private ExamTemplate examTemplate;
+
+    @ManyToOne
     @JoinColumn(name = "student_id")
     private User student;
 
