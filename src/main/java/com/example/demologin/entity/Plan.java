@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "plans")
 public class Plan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
