@@ -21,6 +21,11 @@ public class ApiResponseAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Object result = joinPoint.proceed();
 
+        // If the method already returns ResponseEntity, don't wrap it
+        if (org.springframework.http.ResponseEntity.class.isAssignableFrom(method.getReturnType())) {
+            return result;
+        }
+
         HttpStatus status = detectStatus(method);
 
         // Nếu method trả void hoặc null -> tự wrap luôn
