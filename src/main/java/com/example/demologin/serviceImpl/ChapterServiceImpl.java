@@ -2,6 +2,7 @@ package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.request.chapter.ChapterRequest;
 import com.example.demologin.dto.response.ChapterResponse;
+import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.entity.Chapter;
 import com.example.demologin.entity.LessonPlan;
 import com.example.demologin.repository.ChapterRepository;
@@ -12,6 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -68,9 +72,18 @@ public class ChapterServiceImpl implements ChapterService {
     }
 
     @Override
-    public Page<ChapterResponse> getAll(Pageable pageable) {
-        return chapterRepository.findAll(pageable)
+    public PageResponse<ChapterResponse> getAllPaged(Pageable pageable) {
+        Page<ChapterResponse> mappedPage = chapterRepository.findAll(pageable)
                 .map(this::mapToResponse);
+        return new PageResponse<>(mappedPage);
+    }
+
+    @Override
+    public List<ChapterResponse> getAll() {
+        return chapterRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     private ChapterResponse mapToResponse(Chapter chapter) {

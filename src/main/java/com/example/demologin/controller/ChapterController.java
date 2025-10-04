@@ -2,13 +2,17 @@ package com.example.demologin.controller;
 
 import com.example.demologin.dto.request.chapter.ChapterRequest;
 import com.example.demologin.dto.response.ChapterResponse;
+import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.service.ChapterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -43,9 +47,19 @@ public class ChapterController {
         return chapterService.getById(id);
     }
 
-    @GetMapping
     @Operation(summary = "Get all chapters (paged)", description = "Lấy danh sách chương có phân trang")
-    public Page<ChapterResponse> getAll(Pageable pageable) {
-        return chapterService.getAll(pageable);
+    @GetMapping
+    public PageResponse<ChapterResponse> getAllPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return chapterService.getAllPaged(pageable);
+    }
+
+    @Operation(summary = "Get all chapters (no pagination)", description = "Lấy toàn bộ danh sách chương (không phân trang)")
+    @GetMapping()
+    public List<ChapterResponse> getAll() {
+        return chapterService.getAll();
     }
 }
