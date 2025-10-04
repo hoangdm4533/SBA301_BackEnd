@@ -3,21 +3,21 @@ package com.example.demologin.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.*;
-
+@Entity
+@Table(name = "lessons")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "levels")
-public class Level {
+public class Lesson {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
-    private Double score;
+    private String lessonName;
+
+    @ManyToOne
+    @JoinColumn(name = "chapter_id")
+    private Chapter chapter;
 }

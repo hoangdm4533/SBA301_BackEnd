@@ -3,6 +3,8 @@ package com.example.demologin.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,13 +17,14 @@ public class Chapter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "lesson_plan_id")
-    private LessonPlan lessonPlan;
-
-    @Column(length = 100)
     private String name;
-
     private Integer orderNo;
+
+    @ManyToOne
+    @JoinColumn(name = "grade_id")
+    private Grade grade;
+
+    @OneToMany(mappedBy = "chapter")
+    private List<Lesson> lessons;
 }
 

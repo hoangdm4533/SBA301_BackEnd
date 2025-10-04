@@ -17,9 +17,13 @@ public class StudentAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String essayAnswer;
+    private Double score;
+    private LocalDateTime gradedAt;
+
     @ManyToOne
-    @JoinColumn(name = "attempt_id")
-    private ExamAttempt attempt;
+    @JoinColumn(name = "exam_attemp_id")
+    private ExamAttempt examAttempt;
 
     @ManyToOne
     @JoinColumn(name = "question_id")
@@ -29,14 +33,7 @@ public class StudentAnswer {
     @JoinColumn(name = "option_id")
     private Option option;
 
-    @Column(columnDefinition = "TEXT")
-    private String essayAnswer;
-
-    private Double score;
-
     @ManyToOne
-    @JoinColumn(name = "graded_by")
-    private User gradedBy;
-
-    private LocalDateTime gradedAt;
+    @JoinColumn(name = "user_id")
+    private User user;
 }

@@ -2,25 +2,23 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
+@Entity
+@Table(name = "matrix")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "subscriptions")
-public class Subscription {
+public class Matrix {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String status;
+    private String level;
+    private Integer totalQuestion;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -28,8 +26,6 @@ public class Subscription {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "plan_id")
-    private Plan plan;
+    @OneToMany(mappedBy = "matrix")
+    private List<MatrixDetail> details;
 }
-

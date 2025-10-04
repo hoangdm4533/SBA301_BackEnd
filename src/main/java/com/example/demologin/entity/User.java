@@ -10,10 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +46,20 @@ public class User implements UserDetails {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+    @OneToMany(mappedBy = "user")
+    private List<Subscription> subscriptions;
+
+    @OneToMany(mappedBy = "user")
+    private List<Transaction> transactions;
+
+    @OneToMany(mappedBy = "user")
+    private List<ExamAttempt> examAttempts;
+
+    @OneToMany(mappedBy = "user")
+    private List<Subject> subjects;
+
+    @OneToMany(mappedBy = "user")
+    private List<Matrix> matrices;
 
 
     private int tokenVersion;
@@ -219,6 +230,46 @@ public class User implements UserDetails {
     
     public void setClassEntity(ClassEntity classEntity) {
         this.classEntity = classEntity;
+    }
+
+    public List<Subscription> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(List<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
+    }
+
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<Transaction> transactions) {
+        this.transactions = transactions;
+    }
+
+    public List<ExamAttempt> getExamAttempts() {
+        return examAttempts;
+    }
+
+    public void setExamAttempts(List<ExamAttempt> examAttempts) {
+        this.examAttempts = examAttempts;
+    }
+
+    public List<Subject> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(List<Subject> subjects) {
+        this.subjects = subjects;
+    }
+
+    public List<Matrix> getMatrices() {
+        return matrices;
+    }
+
+    public void setMatrices(List<Matrix> matrices) {
+        this.matrices = matrices;
     }
 
     @Override
