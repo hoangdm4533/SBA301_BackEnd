@@ -77,12 +77,12 @@ public class ExamDataInitializer {
     }
 
     private void createQuestionsForGrade(Grade grade, User teacher, LocalDateTime now) {
-        // Câu hỏi Toán học
+        // Câu hỏi Toán học - Beginner
         Question mathQuestion1 = Question.builder()
             .teacher(teacher)
             .questionText("Tính: 15 + 27 = ?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("EASY")
+            .difficulty("Beginner")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -95,7 +95,7 @@ public class ExamDataInitializer {
             .teacher(teacher)
             .questionText("Một hình chữ nhật có chiều dài 8cm, chiều rộng 5cm. Tính diện tích?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("MEDIUM")
+            .difficulty("Intermediate")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -104,12 +104,40 @@ public class ExamDataInitializer {
         questionRepository.save(mathQuestion2);
         createOptionsForQuestion(mathQuestion2, List.of("40 cm²", "39 cm²", "41 cm²", "38 cm²"), 0);
 
-        // Câu hỏi Tiếng Việt
+        // Câu hỏi Toán nâng cao - Advanced
+        Question mathQuestion3 = Question.builder()
+            .teacher(teacher)
+            .questionText("Giải phương trình: 2x² + 5x - 3 = 0")
+            .type("MULTIPLE_CHOICE")
+            .difficulty("Advanced")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(mathQuestion3);
+        createOptionsForQuestion(mathQuestion3, List.of("x = 1/2 hoặc x = -3", "x = 1 hoặc x = -3", "x = -1/2 hoặc x = 3", "x = 2 hoặc x = -1"), 0);
+
+        // Câu hỏi Toán chuyên sâu - Expert
+        Question mathQuestion4 = Question.builder()
+            .teacher(teacher)
+            .questionText("Tính tích phân: ∫(0 to π) sin(x)dx")
+            .type("MULTIPLE_CHOICE")
+            .difficulty("Expert")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(mathQuestion4);
+        createOptionsForQuestion(mathQuestion4, List.of("2", "1", "π", "0"), 0);
+
+        // Câu hỏi Tiếng Việt - Beginner
         Question vietnameseQuestion1 = Question.builder()
             .teacher(teacher)
             .questionText("Từ nào sau đây là danh từ?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("EASY")
+            .difficulty("Beginner")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -122,7 +150,7 @@ public class ExamDataInitializer {
             .teacher(teacher)
             .questionText("Câu nào sau đây là câu cảm thán?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("MEDIUM")
+            .difficulty("Intermediate")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -132,12 +160,40 @@ public class ExamDataInitializer {
         createOptionsForQuestion(vietnameseQuestion2, 
             List.of("Trời hôm nay đẹp quá!", "Hôm nay trời đẹp.", "Trời có đẹp không?", "Hãy nhìn trời."), 0);
 
-        // Câu hỏi Khoa học
+        // Câu hỏi Văn học - Advanced
+        Question vietnameseQuestion3 = Question.builder()
+            .teacher(teacher)
+            .questionText("Tác phẩm 'Truyện Kiều' của Nguyễn Du thuộc thể loại nào?")
+            .type("MULTIPLE_CHOICE")
+            .difficulty("Advanced")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(vietnameseQuestion3);
+        createOptionsForQuestion(vietnameseQuestion3, List.of("Truyện thơ", "Tiểu thuyết", "Kịch", "Tản văn"), 0);
+
+        // Câu hỏi Ngữ văn chuyên sâu - Expert
+        Question vietnameseQuestion4 = Question.builder()
+            .teacher(teacher)
+            .questionText("Phân tích tác dụng của việc sử dụng điệp từ trong thơ Nguyễn Du")
+            .type("ESSAY")
+            .difficulty("Expert")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(vietnameseQuestion4);
+        // Câu hỏi ESSAY không cần tạo options
+
+        // Câu hỏi Khoa học - Beginner
         Question scienceQuestion1 = Question.builder()
             .teacher(teacher)
             .questionText("Nước sôi ở nhiệt độ bao nhiêu độ C?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("EASY")
+            .difficulty("Beginner")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -150,7 +206,7 @@ public class ExamDataInitializer {
             .teacher(teacher)
             .questionText("Cơ quan nào của cây làm nhiệm vụ quang hợp?")
             .type("MULTIPLE_CHOICE")
-            .difficulty("MEDIUM")
+            .difficulty("Intermediate")
             .createdAt(now)
             .updatedAt(now)
             .grades(List.of(grade))
@@ -158,6 +214,34 @@ public class ExamDataInitializer {
         
         questionRepository.save(scienceQuestion2);
         createOptionsForQuestion(scienceQuestion2, List.of("Lá", "Thân", "Rễ", "Hoa"), 0);
+
+        // Câu hỏi Vật lý - Advanced
+        Question scienceQuestion3 = Question.builder()
+            .teacher(teacher)
+            .questionText("Tần số dao động của con lắc đơn phụ thuộc vào yếu tố nào?")
+            .type("MULTIPLE_CHOICE")
+            .difficulty("Advanced")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(scienceQuestion3);
+        createOptionsForQuestion(scienceQuestion3, List.of("Chiều dài dây và gia tốc trọng trường", "Khối lượng và chiều dài", "Biên độ dao động", "Nhiệt độ môi trường"), 0);
+
+        // Câu hỏi Hóa học chuyên sâu - Expert  
+        Question scienceQuestion4 = Question.builder()
+            .teacher(teacher)
+            .questionText("Viết phương trình cân bằng và giải thích cơ chế phản ứng SN2")
+            .type("ESSAY")
+            .difficulty("Expert")
+            .createdAt(now)
+            .updatedAt(now)
+            .grades(List.of(grade))
+            .build();
+        
+        questionRepository.save(scienceQuestion4);
+        // Câu hỏi ESSAY không cần tạo options
     }
 
     private void createOptionsForQuestion(Question question, List<String> optionTexts, int correctIndex) {

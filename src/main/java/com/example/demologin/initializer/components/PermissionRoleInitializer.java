@@ -49,12 +49,52 @@ public class PermissionRoleInitializer {
 
     private static final String USER_VIEW_OWN_LOGIN_HISTORY = "USER_VIEW_OWN_LOGIN_HISTORY";
 
+    // Grade permissions
+    private static final String GRADE_VIEW = "GRADE_VIEW";
+    private static final String GRADE_CREATE = "GRADE_CREATE";
+    private static final String GRADE_UPDATE = "GRADE_UPDATE";
+    private static final String GRADE_DELETE = "GRADE_DELETE";
+
+    // Level permissions
+    private static final String LEVEL_VIEW = "LEVEL_VIEW";
+    private static final String LEVEL_CREATE = "LEVEL_CREATE";
+    private static final String LEVEL_UPDATE = "LEVEL_UPDATE";
+    private static final String LEVEL_DELETE = "LEVEL_DELETE";
+
+    // Exam Template permissions
+    private static final String EXAM_TEMPLATE_VIEW = "EXAM_TEMPLATE_VIEW";
+    private static final String EXAM_TEMPLATE_CREATE = "EXAM_TEMPLATE_CREATE";
+    private static final String EXAM_TEMPLATE_UPDATE = "EXAM_TEMPLATE_UPDATE";
+    private static final String EXAM_TEMPLATE_DELETE = "EXAM_TEMPLATE_DELETE";
+    private static final String EXAM_TEMPLATE_MANAGE_QUESTIONS = "EXAM_TEMPLATE_MANAGE_QUESTIONS";
+    private static final String EXAM_TEMPLATE_PUBLISH = "EXAM_TEMPLATE_PUBLISH";
+    private static final String EXAM_TEMPLATE_APPROVE = "EXAM_TEMPLATE_APPROVE";
+
+    // Exam Taking permissions (for students/members)
+    private static final String EXAM_TAKE = "EXAM_TAKE";
+    private static final String EXAM_VIEW_AVAILABLE = "EXAM_VIEW_AVAILABLE";
+    private static final String EXAM_VIEW_RESULTS = "EXAM_VIEW_RESULTS";
+    private static final String EXAM_VIEW_HISTORY = "EXAM_VIEW_HISTORY";
+
     @Transactional
     public void initializePermissionsAndRoles() {
         log.info("🔑 Initializing system permissions and roles...");
 
+        // Check if exam permissions exist, if not, add them
         if (permissionRepository.count() > 0) {
-            log.info("ℹ️ Permissions already exist, skipping initialization");
+            log.info("ℹ️ Permissions exist, checking for new exam permissions...");
+
+            // Check if exam permissions exist
+            boolean examPermissionsExist = permissionRepository.findByCode(EXAM_VIEW_AVAILABLE).isPresent();
+
+            if (!examPermissionsExist) {
+                log.info("🔄 Adding missing exam permissions...");
+                addExamPermissions();
+                updateMemberRoleWithExamPermissions();
+                log.info("✅ Added exam permissions to existing system");
+            } else {
+                log.info("ℹ️ Exam permissions already exist, skipping initialization");
+            }
             return;
         }
 
@@ -85,7 +125,34 @@ public class PermissionRoleInitializer {
                 new Permission(LOG_VIEW_ACTIVITY, "Xem user activity logs"),
                 new Permission(ADMIN_ACTIVITY_LOG_EXPORT, "Export user activity logs"),
                 new Permission(LOG_DELETE, "Xóa user activity logs"),
-                new Permission(USER_VIEW_OWN_LOGIN_HISTORY, "Xem lịch sử đăng nhập của bản thân")
+                new Permission(USER_VIEW_OWN_LOGIN_HISTORY, "Xem lịch sử đăng nhập của bản thân"),
+                
+                // Grade permissions
+                new Permission(GRADE_VIEW, "Xem danh sách grade"),
+                new Permission(GRADE_CREATE, "Tạo grade mới"),
+                new Permission(GRADE_UPDATE, "Cập nhật grade"),
+                new Permission(GRADE_DELETE, "Xóa grade"),
+                
+                // Level permissions
+                new Permission(LEVEL_VIEW, "Xem danh sách level"),
+                new Permission(LEVEL_CREATE, "Tạo level mới"),
+                new Permission(LEVEL_UPDATE, "Cập nhật level"),
+                new Permission(LEVEL_DELETE, "Xóa level"),
+                
+                // Exam Template permissions
+                new Permission(EXAM_TEMPLATE_VIEW, "Xem danh sách exam template"),
+                new Permission(EXAM_TEMPLATE_CREATE, "Tạo exam template mới"),
+                new Permission(EXAM_TEMPLATE_UPDATE, "Cập nhật exam template"),
+                new Permission(EXAM_TEMPLATE_DELETE, "Xóa exam template"),
+                new Permission(EXAM_TEMPLATE_MANAGE_QUESTIONS, "Quản lý câu hỏi trong exam template"),
+                new Permission(EXAM_TEMPLATE_PUBLISH, "Publish exam template"),
+                new Permission(EXAM_TEMPLATE_APPROVE, "Approve exam template"),
+
+                // Exam Taking permissions
+                new Permission(EXAM_TAKE, "Làm bài thi"),
+                new Permission(EXAM_VIEW_AVAILABLE, "Xem danh sách bài thi có sẵn"),
+                new Permission(EXAM_VIEW_RESULTS, "Xem kết quả bài thi"),
+                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài")
         );
 
         permissionRepository.saveAll(permissions);
@@ -104,12 +171,16 @@ public class PermissionRoleInitializer {
         // Admin: full quyền
         Set<Permission> adminPerms = new HashSet<>(permMap.values());
 
-        // Member: quyền giới hạn
+        // Member: quyền giới hạn + exam taking permissions
         Set<Permission> memberPerms = Set.of(
                 permMap.get(USER_TOKEN_MANAGEMENT),
                 permMap.get(TOKEN_INVALIDATE_OWN),
                 permMap.get(TOKEN_VIEW_OWN),
-                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY)
+                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY),
+                permMap.get(EXAM_TAKE),
+                permMap.get(EXAM_VIEW_AVAILABLE),
+                permMap.get(EXAM_VIEW_RESULTS),
+                permMap.get(EXAM_VIEW_HISTORY)
         );
 
         roleRepository.save(Role.builder()
@@ -123,5 +194,52 @@ public class PermissionRoleInitializer {
                 .build());
 
         log.debug("✅ Created {} roles", roleRepository.count());
+    }
+
+    private void addExamPermissions() {
+        log.debug("📋 Adding missing exam permissions...");
+
+        List<Permission> examPermissions = Arrays.asList(
+                new Permission(EXAM_TAKE, "Làm bài thi"),
+                new Permission(EXAM_VIEW_AVAILABLE, "Xem danh sách bài thi có sẵn"),
+                new Permission(EXAM_VIEW_RESULTS, "Xem kết quả bài thi"),
+                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài")
+        );
+
+        permissionRepository.saveAll(examPermissions);
+        log.debug("✅ Added {} exam permissions", examPermissions.size());
+    }
+
+    private void updateMemberRoleWithExamPermissions() {
+        log.debug("👑 Updating MEMBER role with exam permissions...");
+
+        Optional<Role> memberRoleOpt = roleRepository.findByName("MEMBER");
+        if (memberRoleOpt.isPresent()) {
+            Role memberRole = memberRoleOpt.get();
+
+            // Get the new exam permissions
+            List<Permission> examPermissions = Arrays.asList(
+                    permissionRepository.findByCode(EXAM_TAKE).orElse(null),
+                    permissionRepository.findByCode(EXAM_VIEW_AVAILABLE).orElse(null),
+                    permissionRepository.findByCode(EXAM_VIEW_RESULTS).orElse(null),
+                    permissionRepository.findByCode(EXAM_VIEW_HISTORY).orElse(null)
+            );
+
+            // Filter out null permissions
+            examPermissions = examPermissions.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            // Add exam permissions to existing permissions
+            Set<Permission> currentPermissions = new HashSet<>(memberRole.getPermissions());
+            currentPermissions.addAll(examPermissions);
+
+            memberRole.setPermissions(currentPermissions);
+            roleRepository.save(memberRole);
+
+            log.debug("✅ Updated MEMBER role with {} exam permissions", examPermissions.size());
+        } else {
+            log.warn("⚠️ MEMBER role not found, cannot update with exam permissions");
+        }
     }
 }

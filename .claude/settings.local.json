@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist)",
+      "Bash(jps:*)",
+      "Bash(curl:*)",
+      "Bash(docker:*)",
+      "Bash(cmd /c:*)",
+      "Bash(Get-Process -Name \"java\")",
+      "Bash(Where-Object {$_ainWindowTitle -eq \"\" -and $_rocessName -eq \"java\"})",
+      "Bash(Stop-Process -Force)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

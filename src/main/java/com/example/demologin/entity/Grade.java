@@ -11,6 +11,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "grades")
 public class Grade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

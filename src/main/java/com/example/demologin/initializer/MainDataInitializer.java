@@ -8,6 +8,9 @@ import com.example.demologin.initializer.components.ChapterDataInitializer;
 import com.example.demologin.initializer.components.DefaultUserInitializer;
 import com.example.demologin.initializer.components.EducationDataInitializer;
 import com.example.demologin.initializer.components.ExamDataInitializer;
+import com.example.demologin.initializer.components.ExamQuestionDataInitializer;
+import com.example.demologin.initializer.components.ExamTemplateDataInitializer;
+import com.example.demologin.initializer.components.LevelDataInitializer;
 import com.example.demologin.initializer.components.PermissionRoleInitializer;
 import com.example.demologin.initializer.components.PlanDataInitializer;
 
@@ -26,8 +29,11 @@ import lombok.extern.slf4j.Slf4j;
  * 3. PlanDataInitializer - Creates subscription plans
  * 4. EducationDataInitializer - Creates grades, classes, and lesson plans
  * 5. ChapterDataInitializer - Creates chapters for lesson plans
- * 6. ExamDataInitializer - Creates questions, options, and exams
- * 7. Future initializers can be added here with proper ordering
+ * 6. LevelDataInitializer - Creates exam levels
+ * 7. ExamDataInitializer - Creates questions, options, and exams
+ * 8. ExamTemplateDataInitializer - Creates exam templates with questions
+ * 9. ExamQuestionDataInitializer - Links questions to exam templates
+ * 10. Future initializers can be added here with proper ordering
  */
 @Component
 @RequiredArgsConstructor
@@ -40,7 +46,10 @@ public class MainDataInitializer implements CommandLineRunner {
     private final PlanDataInitializer planDataInitializer;
     private final EducationDataInitializer educationDataInitializer;
     private final ChapterDataInitializer chapterDataInitializer;
+    private final LevelDataInitializer levelDataInitializer;
     private final ExamDataInitializer examDataInitializer;
+    private final ExamTemplateDataInitializer examTemplateDataInitializer;
+    private final ExamQuestionDataInitializer examQuestionDataInitializer;
 
     @Override
     public void run(String... args) throws Exception {
@@ -72,14 +81,29 @@ public class MainDataInitializer implements CommandLineRunner {
             chapterDataInitializer.initializeChapters();
             log.info("✅ Chapters initialization completed");
             
-            // Step 6: Initialize Exam Data
-            log.info("📝 Step 6: Initializing Exam Data (Questions, Options, Exams)...");
+            // Step 6: Initialize Level Data
+            log.info("📊 Step 6: Initializing Level Data...");
+            levelDataInitializer.initializeLevels();
+            log.info("✅ Level Data initialization completed");
+            
+            // Step 7: Initialize Exam Data
+            log.info("📝 Step 7: Initializing Exam Data (Questions, Options, Exams)...");
             examDataInitializer.initializeExamData();
             log.info("✅ Exam Data initialization completed");
             
+            // Step 8: Initialize Exam Templates
+            log.info("📋 Step 8: Initializing Exam Templates...");
+            examTemplateDataInitializer.initializeExamTemplates();
+            log.info("✅ Exam Templates initialization completed");
+            
+            // Step 9: Initialize Exam Questions (Links)
+            log.info("🔗 Step 9: Initializing Exam Question Links...");
+            examQuestionDataInitializer.initialize();
+            log.info("✅ Exam Question Links initialization completed");
+            
             // Future initialization steps can be added here
             // Example:
-            // log.info("📊 Step 7: Initializing System Settings...");
+            // log.info("📊 Step 10: Initializing System Settings...");
             // systemSettingsInitializer.initializeSettings();
             
             log.info("🎉 Main Data Initialization Process completed successfully!");

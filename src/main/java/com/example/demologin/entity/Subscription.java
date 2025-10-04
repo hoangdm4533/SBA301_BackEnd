@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "subscriptions")
 public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

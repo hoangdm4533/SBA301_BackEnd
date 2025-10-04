@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "exam_attempts")
 public class ExamAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +21,10 @@ public class ExamAttempt {
     @ManyToOne
     @JoinColumn(name = "exam_id")
     private Exam exam;
+
+    @ManyToOne
+    @JoinColumn(name = "exam_template_id")
+    private ExamTemplate examTemplate;
 
     @ManyToOne
     @JoinColumn(name = "student_id")

@@ -4,7 +4,10 @@ import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.AuthenticatedEndpoint;
 import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.dto.request.user.CreateUserRequest;
+import com.example.demologin.dto.request.user.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
+import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.mapper.UserMapper;
@@ -12,8 +15,14 @@ import com.example.demologin.service.UserService;
 import com.example.demologin.utils.AccountUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +52,33 @@ public class UserController {
     public Object getCurrentUserProfile() {
         User currentUser = accountUtils.getCurrentUser();
         return  UserResponse.toUserResponse(currentUser);
+    }
+
+    @GetMapping("/{id}")
+    public MemberResponse get(@PathVariable Long id) {
+        return userService.getById(id);
+    }
+
+    @PostMapping
+    public MemberResponse create(@Valid @RequestBody CreateUserRequest req) {
+        return userService.create(req);
+    }
+
+    @PutMapping("/{id}")
+    public MemberResponse update(@PathVariable Long id,
+                                 @Valid @RequestBody UpdateUserRequest req) {
+        return userService.update(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
+        userService.delete(id); // ném EntityNotFoundException nếu không tồn tại
+        return ResponseEntity.ok(
+                new ResponseObject(
+                        HttpStatus.OK.value(),
+                        "Delete user successfully",
+                        Map.of("id", id)
+                )
+        );
     }
 }
