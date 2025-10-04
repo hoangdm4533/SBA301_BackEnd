@@ -47,7 +47,7 @@ public class Exam {
 
     @ManyToMany
     @JoinTable(
-            name = "exam_questions",
+            name = "exam_question_assignments",
             joinColumns = @JoinColumn(name = "exam_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )

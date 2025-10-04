@@ -54,8 +54,7 @@ public class ExamTemplate {
     private LocalDateTime updatedAt;
     private LocalDateTime approvedAt;
 
-    @OneToMany(mappedBy = "examTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
+    @OneToMany(mappedBy = "examTemplate", fetch = FetchType.LAZY)
     private List<ExamQuestion> examQuestions = new ArrayList<>();
 
     @PrePersist
