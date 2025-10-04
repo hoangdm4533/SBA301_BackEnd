@@ -31,5 +31,9 @@ public class Subscription {
     @ManyToOne
     @JoinColumn(name = "plan_id")
     private Plan plan;
+
+    @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Transaction> transactions = new HashSet<>();
 }
 

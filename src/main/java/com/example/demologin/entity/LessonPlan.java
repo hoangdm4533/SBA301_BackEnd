@@ -22,6 +22,7 @@ public class LessonPlan {
     private String content;
     private String filePath;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "grade_id")

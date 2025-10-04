@@ -30,7 +30,6 @@ public class PlanServiceImpl implements PlanService {
                 .price(request.getPrice())
                 .durationDays(request.getDurationDays())
                 .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         return mapToResponse(planRepository.save(plan));
@@ -45,7 +44,6 @@ public class PlanServiceImpl implements PlanService {
         plan.setDescription(request.getDescription());
         plan.setPrice(request.getPrice());
         plan.setDurationDays(request.getDurationDays());
-        plan.setUpdatedAt(LocalDateTime.now());
 
         return mapToResponse(planRepository.save(plan));
     }
@@ -88,7 +86,6 @@ public class PlanServiceImpl implements PlanService {
                 .price(plan.getPrice())
                 .durationDays(plan.getDurationDays())
                 .createdAt(plan.getCreatedAt())
-                .updatedAt(plan.getUpdatedAt())
                 .build();
     }
 }

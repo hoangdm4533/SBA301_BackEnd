@@ -10,6 +10,7 @@ import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanService;
 import com.example.demologin.service.ObjectStorageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,33 +21,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class LessonPlanServiceImpl implements LessonPlanService {
     private final LessonPlanRepository lessonPlanRepo;
-    private final UserRepository userRepo;
+//    private final UserRepository userRepo;
     private final GradeRepository gradeRepo;
     private final ObjectStorageService storageService; // Sử dụng MinIO
 
-    public LessonPlanServiceImpl(LessonPlanRepository lessonPlanRepo,
-                                 UserRepository userRepo,
-                                 GradeRepository gradeRepo,
-                                 ObjectStorageService storageService) {
-        this.lessonPlanRepo = lessonPlanRepo;
-        this.userRepo = userRepo;
-        this.gradeRepo = gradeRepo;
-        this.storageService = storageService;
-
-    }
 
     @Override
     public LessonPlanResponse createLessonPlan(LessonPlanRequest req) {
-        User teacher = userRepo.findById(req.getTeacherId())
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+//        User teacher = userRepo.findById(req.getTeacherId())
+//                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
         Grade grade = gradeRepo.findById(req.getGradeId())
                 .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
 
         // 1. Tạo lesson plan (chưa có filePath)
         LessonPlan plan = LessonPlan.builder()
-                .teacher(teacher)
+//                .teacher(teacher)
                 .grade(grade)
                 .title(req.getTitle())
                 .content(null) // content sẽ được lưu trong MinIO
@@ -81,8 +73,8 @@ public class LessonPlanServiceImpl implements LessonPlanService {
                 .title(plan.getTitle())
                 .createdAt(plan.getCreatedAt())
                 .updatedAt(plan.getUpdatedAt())
-                .gradeName(plan.getTeacher().getFullName())
-                .teacherName(plan.getGrade().getName())
+                .gradeNumber(plan.getGrade().getGradeNumber())
+//                .teacherName(plan.getGrade().get())
                 .build();
     }
 

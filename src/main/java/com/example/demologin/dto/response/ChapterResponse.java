@@ -9,8 +9,7 @@ import lombok.*;
 @Builder
 public class ChapterResponse {
     private Long id;
-    private Long lessonPlanId;
-    private String lessonPlanName;
+    private Integer gradeNumber;
     private String name;
     private Integer orderNo;
 }

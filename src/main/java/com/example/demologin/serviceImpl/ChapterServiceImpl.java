@@ -4,8 +4,10 @@ import com.example.demologin.dto.request.chapter.ChapterRequest;
 import com.example.demologin.dto.response.ChapterResponse;
 import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.entity.Chapter;
+import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.LessonPlan;
 import com.example.demologin.repository.ChapterRepository;
+import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.service.ChapterService;
 import lombok.RequiredArgsConstructor;
@@ -23,15 +25,15 @@ import java.util.stream.Collectors;
 public class ChapterServiceImpl implements ChapterService {
 
     private final ChapterRepository chapterRepository;
-    private final LessonPlanRepository lessonPlanRepository;
+    private final GradeRepository gradeRepository;
 
     @Override
     public ChapterResponse create(ChapterRequest request) {
-        LessonPlan lessonPlan = lessonPlanRepository.findById(request.getLessonPlanId())
+        Grade grade = gradeRepository.findById(request.getGradeId())
                 .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found"));
 
         Chapter chapter = Chapter.builder()
-                .lessonPlan(lessonPlan)
+                .grade(grade)
                 .name(request.getName())
                 .orderNo(request.getOrderNo())
                 .build();
@@ -44,10 +46,10 @@ public class ChapterServiceImpl implements ChapterService {
         Chapter chapter = chapterRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
 
-        if (request.getLessonPlanId() != null) {
-            LessonPlan lessonPlan = lessonPlanRepository.findById(request.getLessonPlanId())
+        if (request.getGradeId() != null) {
+            Grade grade = gradeRepository.findById(request.getGradeId())
                     .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found"));
-            chapter.setLessonPlan(lessonPlan);
+            chapter.setGrade(grade);
         }
 
         chapter.setName(request.getName());
@@ -89,8 +91,7 @@ public class ChapterServiceImpl implements ChapterService {
     private ChapterResponse mapToResponse(Chapter chapter) {
         return ChapterResponse.builder()
                 .id(chapter.getId())
-                .lessonPlanId(chapter.getLessonPlan() != null ? chapter.getLessonPlan().getId() : null)
-                .lessonPlanName(chapter.getLessonPlan() != null ? chapter.getLessonPlan().getTitle() : null)
+                .gradeNumber(chapter.getGrade() != null ? chapter.getGrade().getGradeNumber() : null)
                 .name(chapter.getName())
                 .orderNo(chapter.getOrderNo())
                 .build();
