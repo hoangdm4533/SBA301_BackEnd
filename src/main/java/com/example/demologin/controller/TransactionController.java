@@ -47,13 +47,13 @@ public class TransactionController {
     }
 
     @Operation(summary = "Get all transactions")
-    @GetMapping("/all")
+    @GetMapping()
     public List<TransactionResponse> getAll() {
         return transactionService.getAll();
     }
 
     @Operation(summary = "Get paginated transactions")
-    @GetMapping
+    @GetMapping("paged")
     public PageResponse<TransactionResponse> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size

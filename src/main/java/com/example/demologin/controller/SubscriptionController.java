@@ -47,7 +47,7 @@ public class SubscriptionController {
     }
 
     @Operation(summary = "Get subscriptions with pagination and optional filters")
-    @GetMapping
+    @GetMapping("paged")
     public PageResponse<SubscriptionResponse> getPaged(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long planId,

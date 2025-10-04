@@ -59,7 +59,7 @@ public class LessonPlanController {
     // ----------------------------
     // GET ALL (no pagination)
     // ----------------------------
-    @GetMapping("/all")
+    @GetMapping()
     @Operation(summary = "Get all lesson plans", description = "Return a list of all lesson plans (no pagination).")
     public ResponseEntity<List<LessonPlanResponse>> getAll() {
         List<LessonPlanResponse> response = lessonPlanService.getAllLessonPlans();
@@ -69,7 +69,7 @@ public class LessonPlanController {
     // ----------------------------
     // GET PAGEABLE (with pagination + sort)
     // ----------------------------
-    @GetMapping
+    @GetMapping("paged")
     @Operation(summary = "Get paginated lesson plans", description = "Return lesson plans with pagination and sorting options.")
     public Page<LessonPlanResponse> getPaged(
             @Parameter(description = "Page number, starts from 0") @RequestParam(defaultValue = "0") int page,

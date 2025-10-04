@@ -48,7 +48,7 @@ public class ChapterController {
     }
 
     @Operation(summary = "Get all chapters (paged)", description = "Lấy danh sách chương có phân trang")
-    @GetMapping
+    @GetMapping("paged")
     public PageResponse<ChapterResponse> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size

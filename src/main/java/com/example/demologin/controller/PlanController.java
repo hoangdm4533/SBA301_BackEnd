@@ -52,7 +52,7 @@ public class PlanController {
         return planService.getAll();
     }
 
-    @GetMapping
+    @GetMapping("paged")
     @Operation(summary = "Lấy danh sách Plan (phân trang)", description = "Trả về danh sách các gói học có phân trang")
     public PageResponse<PlanResponse> getAll(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "10") int size) {

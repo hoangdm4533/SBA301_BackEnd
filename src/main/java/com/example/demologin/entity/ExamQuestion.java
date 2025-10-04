@@ -18,14 +18,14 @@ public class ExamQuestion {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exam_template_id", nullable = false)
+    @JoinColumn(name = "exam_template_id")
     private ExamTemplate examTemplate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @Column(nullable = false)
+    @Column(name = "question_order")
     private Integer questionOrder; // Thứ tự câu hỏi trong đề
 
     private Double points; // Điểm của câu hỏi này trong đề

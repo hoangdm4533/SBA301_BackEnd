@@ -101,7 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
     private TransactionResponse mapToResponse(Transaction transaction) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
-                .userId(transaction.getUser() != null ? transaction.getUser().getId() : null)
+                .userId(transaction.getUser() != null ? transaction.getUser().getUserId() : null)
                 .subscriptionId(transaction.getSubscription() != null ? transaction.getSubscription().getId() : null)
                 .amount(transaction.getAmount())
                 .paymentMethod(transaction.getPaymentMethod())
