@@ -24,10 +24,6 @@ public class UserMapper {
         r.setLocked(u.isLocked());
         r.setVerify(u.isVerify());
         r.setRoles(u.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
-        if (u.getClassEntity() != null) {
-            r.setClassId(u.getClassEntity().getId());
-            r.setClassName(u.getClassEntity().getName());
-        }
         return r;
     }
     public static User toEntity(UserRequest userRequest) {
@@ -38,7 +34,7 @@ public class UserMapper {
                 userRequest.getEmail()
         );
         user.setStatus(UserStatus.ACTIVE); // Default status
-        
+
         return user;
     }
 

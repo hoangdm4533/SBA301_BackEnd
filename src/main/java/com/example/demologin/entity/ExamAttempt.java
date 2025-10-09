@@ -18,24 +18,20 @@ public class ExamAttempt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private LocalDateTime startedAt;
+    private LocalDateTime finishedAt;
+    private Double score;
+    private String gradedBy;
+
     @ManyToOne
     @JoinColumn(name = "exam_id")
     private Exam exam;
 
     @ManyToOne
-    @JoinColumn(name = "exam_template_id")
-    private ExamTemplate examTemplate;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id")
-    private User student;
-
-    private LocalDateTime startedAt;
-    private LocalDateTime finishedAt;
-
-    private Double score;
-
-    @OneToMany(mappedBy = "attempt")
-    private List<StudentAnswer> answers = new ArrayList<>();
+    @OneToMany(mappedBy = "examAttempt")
+    private List<StudentAnswer> studentAnswers;
 }
 

@@ -21,7 +21,7 @@ public class GradeServiceImpl implements GradeService {
     private GradeResponse mapToResponse(Grade grade) {
         return GradeResponse.builder()
                 .id(grade.getId())
-                .name(grade.getName())
+                .gradeNumber(grade.getGradeNumber())
                 .description(grade.getDescription())
                 .build();
     }
@@ -29,7 +29,7 @@ public class GradeServiceImpl implements GradeService {
     @Override
     public GradeResponse createGrade(GradeRequest request) {
         Grade grade = Grade.builder()
-                .name(request.getName())
+                .gradeNumber(request.getGradeNumber())
                 .description(request.getDescription())
                 .build();
         Grade saved = gradeRepository.save(grade);
@@ -56,7 +56,7 @@ public class GradeServiceImpl implements GradeService {
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Grade not found with id " + id));
 
-        grade.setName(request.getName());
+        grade.setGradeNumber(request.getGradeNumber());
         grade.setDescription(request.getDescription());
 
         Grade updated = gradeRepository.save(grade);

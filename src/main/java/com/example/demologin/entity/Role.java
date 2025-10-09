@@ -30,5 +30,8 @@ public class Role {
     )
 //    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
-
+    private String description;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

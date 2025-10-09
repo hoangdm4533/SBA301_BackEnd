@@ -3,11 +3,9 @@ package com.example.demologin.serviceImpl;
 import com.example.demologin.dto.request.user.CreateUserRequest;
 import com.example.demologin.dto.request.user.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
-import com.example.demologin.entity.ClassEntity;
 import com.example.demologin.entity.Role;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.UserStatus;
-import com.example.demologin.repository.ClassEntityRepository;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.mapper.UserMapper;
@@ -29,7 +27,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
-    private final ClassEntityRepository classEntityRepository;
     private final PasswordEncoder passwordEncoder;
 
 
@@ -73,12 +70,7 @@ public class UserServiceImpl implements UserService {
         }
         u.setRoles(roles);
 
-        // Class (optional)
-        if (req.getClassId() != null) {
-            ClassEntity c = classEntityRepository.findById(req.getClassId())
-                    .orElseThrow(() -> new EntityNotFoundException("Class not found"));
-            u.setClassEntity(c);
-        }
+
 
         return userMapper.toUserResponse(userRepository.save(u));
     }
@@ -114,11 +106,6 @@ public class UserServiceImpl implements UserService {
             u.setRoles(roles);
         }
 
-        if (req.getClassId() != null) {
-            ClassEntity c = classEntityRepository.findById(req.getClassId())
-                    .orElseThrow(() -> new EntityNotFoundException("Class not found"));
-            u.setClassEntity(c);
-        }
 
         return userMapper.toUserResponse(userRepository.save(u));
     }

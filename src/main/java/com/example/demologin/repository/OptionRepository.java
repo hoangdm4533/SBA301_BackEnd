@@ -6,6 +6,5 @@ import java.util.List;
 
 public interface OptionRepository extends JpaRepository<Option, Long> {
     void deleteByQuestion_Id(Long questionId);
-
 }
 

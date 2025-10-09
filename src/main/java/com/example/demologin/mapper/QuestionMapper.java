@@ -11,31 +11,24 @@ import java.util.List;
 
 @Component
 public class QuestionMapper {
-
     public QuestionResponse toResponse(Question q) {
-        List<OptionResponse> optionRes = q.getOptions().stream()
+        List<OptionResponse> optionRes = (q.getOptions() == null ? List.of()
+                : q.getOptions().stream()
                 .map(o -> OptionResponse.builder()
                         .id(o.getId())
                         .optionText(o.getOptionText())
                         .isCorrect(o.getIsCorrect())
                         .build())
-                .toList();
-
-        List<Long> gradeIds = q.getGrades().stream()
-                .map(g -> g.getId())
-                .toList();
+                .toList());
 
         return QuestionResponse.builder()
                 .id(q.getId())
-                .teacherId(q.getTeacher() != null ? q.getTeacher().getUserId() : null)
                 .questionText(q.getQuestionText())
-                .type(q.getType())
-                .difficulty(q.getDifficulty())
+                .type(q.getType() != null ? q.getType().getDescription() : null)
                 .formula(q.getFormula())
                 .createdAt(q.getCreatedAt())
                 .updatedAt(q.getUpdatedAt())
                 .options(optionRes)
-                .gradeIds(gradeIds)
                 .build();
     }
 

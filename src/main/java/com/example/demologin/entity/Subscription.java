@@ -18,6 +18,12 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -26,16 +32,8 @@ public class Subscription {
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-
-    @Column(length = 20)
-    private String status;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "subscription")
-    private List<Transaction> transactions = new ArrayList<>();
+    @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Transaction> transactions = new HashSet<>();
 }
 

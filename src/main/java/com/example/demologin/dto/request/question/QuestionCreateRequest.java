@@ -9,12 +9,9 @@ import java.util.List;
 @Getter
 @Setter
 public class QuestionCreateRequest {
-    private Long teacherId;                 // optional, nếu lấy từ security thì có thể bỏ
     @NotBlank
     private String questionText;
-    private String type;                    // MCQ, FILL, ...
-    private String difficulty;              // EASY, MEDIUM, HARD
-    private String formula;                 // optional
-    private List<OptionRequest> options;        // cho MCQ
-    private List<Long> gradeIds;
+    private String type;                 // ví dụ: "MCQ", "ESSAY" (map sang QuestionType.description)
+    private String formula;
+    private List<OptionRequest> options; // cho MCQ
 }

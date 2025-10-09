@@ -18,19 +18,13 @@ public class Plan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100)
     private String name;
-
-    @Column(columnDefinition = "TEXT")
     private String description;
-
     private Double price;
     private Integer durationDays;
-
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "plan")
-    private List<Subscription> subscriptions = new ArrayList<>();
+    private List<Subscription> subscriptions;
 }
 
