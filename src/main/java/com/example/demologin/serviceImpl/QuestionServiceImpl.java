@@ -3,15 +3,9 @@ package com.example.demologin.serviceImpl;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
-import com.example.demologin.entity.Grade;
-import com.example.demologin.entity.Option;
-import com.example.demologin.entity.Question;
-import com.example.demologin.entity.User;
+import com.example.demologin.entity.*;
 import com.example.demologin.mapper.QuestionMapper;
-import com.example.demologin.repository.GradeRepository;
-import com.example.demologin.repository.OptionRepository;
-import com.example.demologin.repository.QuestionRepository;
-import com.example.demologin.repository.UserRepository;
+import com.example.demologin.repository.*;
 import com.example.demologin.service.QuestionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +24,7 @@ import java.util.List;
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepo;
     private final OptionRepository optionRepo;
-    private final GradeRepository gradeRepo;
-    private final UserRepository userRepo;      // để lấy teacher nếu cần
+    private final QuestionTypeRepository questionTypeRepo;
     private final QuestionMapper mapper;
 
     @Override
@@ -51,43 +44,31 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public QuestionResponse create(QuestionCreateRequest req) {
-        // build base
         Question q = new Question();
-        if (req.getTeacherId() != null) {
-            User t = userRepo.findById(req.getTeacherId())
-                    .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
-            q.setTeacher(t);
-        }
         q.setQuestionText(req.getQuestionText());
-        q.setType(req.getType());
-        q.setDifficulty(req.getDifficulty());
         q.setFormula(req.getFormula());
         q.setCreatedAt(LocalDateTime.now());
         q.setUpdatedAt(q.getCreatedAt());
 
-        // lưu trước để có ID
-        final Question saved = questionRepo.save(q);  // dùng biến mới, final
+        // map type (String -> QuestionType) theo description (case-insensitive)
+        if (req.getType() != null && !req.getType().isBlank()) {
+            QuestionType qt = questionTypeRepo.findByDescriptionIgnoreCase(req.getType().trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid question type: " + req.getType()));
+            q.setType(qt);
+        } else {
+            q.setType(null);
+        }
+
+        final Question saved = questionRepo.save(q);
 
         // options
         if (req.getOptions() != null && !req.getOptions().isEmpty()) {
             List<Option> options = req.getOptions().stream()
-                    .map(o -> mapper.buildOption(saved, o))  // dùng 'saved' trong lambda
+                    .map(o -> mapper.buildOption(saved, o))
                     .toList();
             optionRepo.saveAll(options);
-            saved.getOptions().addAll(options);
+            saved.setOptions(options);
         }
-
-        // grades (ManyToMany)
-        if (req.getGradeIds() != null) {
-            List<Grade> grades = gradeRepo.findAllById(req.getGradeIds());
-            if (grades.size() != req.getGradeIds().size()) {
-                throw new IllegalArgumentException("Some gradeIds are invalid");
-            }
-            saved.setGrades(grades);
-        }
-
-        // entity 'saved' đang được quản lý; gọi save lần nữa cũng được nhưng không bắt buộc
-        questionRepo.save(saved);
 
         return mapper.toResponse(saved);
     }
@@ -98,32 +79,31 @@ public class QuestionServiceImpl implements QuestionService {
                 .orElseThrow(() -> new EntityNotFoundException("Question not found"));
 
         if (req.getQuestionText() != null) q.setQuestionText(req.getQuestionText());
-        if (req.getType() != null) q.setType(req.getType());
-        if (req.getDifficulty() != null) q.setDifficulty(req.getDifficulty());
         if (req.getFormula() != null) q.setFormula(req.getFormula());
+
+        if (req.getType() != null) {
+            if (req.getType().isBlank()) {
+                q.setType(null);
+            } else {
+                QuestionType qt = questionTypeRepo.findByDescriptionIgnoreCase(req.getType().trim())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid question type: " + req.getType()));
+                q.setType(qt);
+            }
+        }
+
         q.setUpdatedAt(LocalDateTime.now());
 
         // replace options nếu client gửi list
         if (req.getOptions() != null) {
             optionRepo.deleteByQuestion_Id(q.getId());
-            q.getOptions().clear();
-
+            q.setOptions(List.of());
             if (!req.getOptions().isEmpty()) {
                 List<Option> options = req.getOptions().stream()
                         .map(o -> mapper.buildOption(q, o))
                         .toList();
                 optionRepo.saveAll(options);
-                q.getOptions().addAll(options);
+                q.setOptions(options);
             }
-        }
-
-        // replace grades nếu client gửi list
-        if (req.getGradeIds() != null) {
-            List<Grade> grades = gradeRepo.findAllById(req.getGradeIds());
-            if (grades.size() != req.getGradeIds().size()) {
-                throw new IllegalArgumentException("Some gradeIds are invalid");
-            }
-            q.setGrades(grades);
         }
 
         return mapper.toResponse(q);
@@ -134,10 +114,7 @@ public class QuestionServiceImpl implements QuestionService {
         Question q = questionRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Question not found"));
 
-        // Xoá options trước (vì @OneToMany hiện chưa bật cascade/orphanRemoval)
         optionRepo.deleteByQuestion_Id(q.getId());
-
-        // Xoá question (Hibernate sẽ xoá dòng join-table question_grades)
         questionRepo.delete(q);
     }
 }

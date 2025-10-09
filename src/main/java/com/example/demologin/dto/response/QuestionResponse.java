@@ -12,13 +12,10 @@ import java.util.List;
 @Builder
 public class QuestionResponse {
     private Long id;
-    private Long teacherId;
     private String questionText;
     private String type;
-    private String difficulty;
     private String formula;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<OptionResponse> options;
-    private List<Long> gradeIds;
 }

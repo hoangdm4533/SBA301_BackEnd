@@ -10,10 +10,6 @@ import java.util.List;
 public class QuestionUpdateRequest {
     private String questionText;
     private String type;
-    private String difficulty;
     private String formula;
-
-    // Nếu gửi null => không đổi; nếu gửi list => replace toàn bộ
     private List<OptionRequest> options;
-    private List<Long> gradeIds;
 }
