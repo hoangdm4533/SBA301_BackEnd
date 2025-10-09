@@ -75,9 +75,7 @@ public class User implements UserDetails {
     @Column(name = "is_locked", nullable = false)
     private boolean locked = false;
 
-    @ManyToOne
-    @JoinColumn(name = "class_id")
-    private ClassEntity classEntity;
+
 
     // Constructors
     public User() {}
@@ -224,13 +222,7 @@ public class User implements UserDetails {
         this.roles = roles;
     }
 
-    public ClassEntity getClassEntity() {
-        return classEntity;
-    }
-    
-    public void setClassEntity(ClassEntity classEntity) {
-        this.classEntity = classEntity;
-    }
+
 
     public List<Subscription> getSubscriptions() {
         return subscriptions;

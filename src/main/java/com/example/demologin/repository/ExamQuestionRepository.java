@@ -1,7 +1,7 @@
 package com.example.demologin.repository;
 
 import com.example.demologin.entity.ExamQuestion;
-import com.example.demologin.entity.ExamTemplate;
+import com.example.demologin.entity.Exam;
 import com.example.demologin.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,26 +12,26 @@ import java.util.Optional;
 
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long> {
     
-    List<ExamQuestion> findByExamTemplateOrderByQuestionOrder(ExamTemplate examTemplate);
+    // Tìm kiếm theo exam
+    List<ExamQuestion> findByExam(Exam exam);
     
+    // Tìm kiếm theo question
     List<ExamQuestion> findByQuestion(Question question);
     
-    @Query("SELECT eq FROM ExamQuestion eq WHERE eq.examTemplate.id = :examTemplateId ORDER BY eq.questionOrder ASC")
-    List<ExamQuestion> findByExamTemplateIdOrderByQuestionOrder(@Param("examTemplateId") Long examTemplateId);
+    // Tìm kiếm theo exam và question
+    Optional<ExamQuestion> findByExamAndQuestion(Exam exam, Question question);
     
-    Optional<ExamQuestion> findByExamTemplateAndQuestion(ExamTemplate examTemplate, Question question);
+    // Kiểm tra question đã có trong exam chưa
+    boolean existsByExamAndQuestion(Exam exam, Question question);
     
-    Optional<ExamQuestion> findByExamTemplateAndQuestionOrder(ExamTemplate examTemplate, Integer questionOrder);
+    // Đếm số câu hỏi trong exam
+    @Query("SELECT COUNT(eq) FROM ExamQuestion eq WHERE eq.exam = :exam")
+    Integer countByExam(@Param("exam") Exam exam);
     
-    boolean existsByExamTemplateAndQuestion(ExamTemplate examTemplate, Question question);
+    // Tính tổng điểm của exam
+    @Query("SELECT COALESCE(SUM(eq.score), 0) FROM ExamQuestion eq WHERE eq.exam = :exam")
+    Double sumScoreByExam(@Param("exam") Exam exam);
     
-    boolean existsByExamTemplateAndQuestionOrder(ExamTemplate examTemplate, Integer questionOrder);
-    
-    long countByExamTemplate(ExamTemplate examTemplate);
-    
-    @Query("SELECT COALESCE(SUM(eq.points), 0) FROM ExamQuestion eq WHERE eq.examTemplate.id = :examTemplateId")
-    Double sumPointsByExamTemplateId(@Param("examTemplateId") Long examTemplateId);
-    
-    @Query("SELECT MAX(eq.questionOrder) FROM ExamQuestion eq WHERE eq.examTemplate.id = :examTemplateId")
-    Integer findMaxQuestionOrderByExamTemplateId(@Param("examTemplateId") Long examTemplateId);
+    // Xóa tất cả questions trong exam
+    void deleteByExam(Exam exam);
 }
