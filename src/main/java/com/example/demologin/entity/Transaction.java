@@ -1,5 +1,6 @@
 package com.example.demologin.entity;
 
+import com.example.demologin.enums.TransactionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,8 @@ public class Transaction {
 
     private Double amount;
     private String paymentMethod;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
 
     @Column(unique = true)
     private String transactionRef;

@@ -6,6 +6,7 @@ import com.example.demologin.dto.response.TransactionResponse;
 import com.example.demologin.entity.Subscription;
 import com.example.demologin.entity.Transaction;
 import com.example.demologin.entity.User;
+import com.example.demologin.enums.TransactionStatus;
 import com.example.demologin.repository.SubscriptionRepository;
 import com.example.demologin.repository.TransactionRepository;
 import com.example.demologin.repository.UserRepository;
@@ -38,7 +39,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .subscription(subscription)
                 .amount(request.getAmount())
                 .paymentMethod(request.getPaymentMethod())
-                .status(request.getStatus())
+                .status(TransactionStatus.valueOf(request.getStatus()))
                 .transactionRef(request.getTransactionRef())
                 .createdAt(request.getCreatedAt() != null ? request.getCreatedAt() : java.time.LocalDateTime.now())
                 .build();
@@ -63,7 +64,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         transaction.setAmount(request.getAmount());
         transaction.setPaymentMethod(request.getPaymentMethod());
-        transaction.setStatus(request.getStatus());
+        transaction.setStatus(TransactionStatus.valueOf(request.getStatus()));
         transaction.setTransactionRef(request.getTransactionRef());
         transaction.setCreatedAt(request.getCreatedAt());
 
@@ -105,7 +106,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .subscriptionId(transaction.getSubscription() != null ? transaction.getSubscription().getId() : null)
                 .amount(transaction.getAmount())
                 .paymentMethod(transaction.getPaymentMethod())
-                .status(transaction.getStatus())
+                .status(String.valueOf(transaction.getStatus()))
                 .transactionRef(transaction.getTransactionRef())
                 .createdAt(transaction.getCreatedAt())
                 .build();
