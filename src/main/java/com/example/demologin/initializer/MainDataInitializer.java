@@ -5,6 +5,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.example.demologin.initializer.components.DefaultUserInitializer;
+import com.example.demologin.initializer.components.ExamDataInitializer;
 import com.example.demologin.initializer.components.PermissionRoleInitializer;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class MainDataInitializer implements CommandLineRunner {
 
     private final PermissionRoleInitializer permissionRoleInitializer;
     private final DefaultUserInitializer defaultUserInitializer;
+    private final ExamDataInitializer examDataInitializer;
 
     @Override
     public void run(String... args) throws Exception {
@@ -51,6 +53,11 @@ public class MainDataInitializer implements CommandLineRunner {
             log.info("👥 Step 2: Initializing Default Users...");
             defaultUserInitializer.initializeDefaultUsers();
             log.info("✅ Default Users initialization completed");
+            
+            // Step 3: Initialize Exams
+            log.info("📝 Step 3: Initializing Exams...");
+            examDataInitializer.initializeExams();
+            log.info("✅ Exams initialization completed");
             
             // Future initialization steps can be added here
             // Example:
