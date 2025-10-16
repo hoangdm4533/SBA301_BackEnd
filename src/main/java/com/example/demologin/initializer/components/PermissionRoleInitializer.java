@@ -76,6 +76,26 @@ public class PermissionRoleInitializer {
     private static final String EXAM_VIEW_RESULTS = "EXAM_VIEW_RESULTS";
     private static final String EXAM_VIEW_HISTORY = "EXAM_VIEW_HISTORY";
 
+    private static final String QUESTION_VIEW   = "QUESTION_VIEW";
+    private static final String QUESTION_CREATE = "QUESTION_CREATE";
+    private static final String QUESTION_UPDATE = "QUESTION_UPDATE";
+    private static final String QUESTION_DELETE = "QUESTION_DELETE";
+
+    // Exam permissions (admin quản trị đề thi)
+    private static final String EXAM_CREATE = "EXAM_CREATE";
+    private static final String EXAM_UPDATE = "EXAM_UPDATE";
+    private static final String EXAM_DELETE = "EXAM_DELETE";
+    private static final String EXAM_QUESTION_ADD = "EXAM_QUESTION_ADD";
+    private static final String EXAM_QUESTION_REMOVE = "EXAM_QUESTION_REMOVE";
+    private static final String EXAM_PUBLISH = "EXAM_PUBLISH";
+    private static final String EXAM_ARCHIVE = "EXAM_ARCHIVE";
+
+    // Attempt/grade (admin)
+    private static final String EXAM_ATTEMPT_MANAGE = "EXAM_ATTEMPT_MANAGE";
+    private static final String EXAM_GRADE = "EXAM_GRADE";
+
+
+
     @Transactional
     public void initializePermissionsAndRoles() {
         log.info("🔑 Initializing system permissions and roles...");
@@ -152,7 +172,24 @@ public class PermissionRoleInitializer {
                 new Permission(EXAM_TAKE, "Làm bài thi"),
                 new Permission(EXAM_VIEW_AVAILABLE, "Xem danh sách bài thi có sẵn"),
                 new Permission(EXAM_VIEW_RESULTS, "Xem kết quả bài thi"),
-                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài")
+                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài"),
+
+                new Permission(QUESTION_VIEW,   "Xem câu hỏi"),
+                new Permission(QUESTION_CREATE, "Tạo câu hỏi"),
+                new Permission(QUESTION_UPDATE, "Cập nhật câu hỏi"),
+                new Permission(QUESTION_DELETE, "Xóa câu hỏi"),
+
+                new Permission(EXAM_CREATE, "Tạo bài thi"),
+                new Permission(EXAM_UPDATE, "Cập nhật bài thi"),
+                new Permission(EXAM_DELETE, "Xóa bài thi"),
+                new Permission(EXAM_QUESTION_ADD, "Thêm câu hỏi vào bài thi"),
+                new Permission(EXAM_QUESTION_REMOVE, "Gỡ câu hỏi khỏi bài thi"),
+                new Permission(EXAM_PUBLISH, "Publish bài thi"),
+                new Permission(EXAM_ARCHIVE, "Archive bài thi"),
+                new Permission(EXAM_ATTEMPT_MANAGE, "Quản lý bài làm (attempt)"),
+                new Permission(EXAM_GRADE, "Chấm bài thi")
+
+
         );
 
         permissionRepository.saveAll(permissions);

@@ -1,11 +1,9 @@
 package com.example.demologin.initializer;
 
+import com.example.demologin.initializer.components.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import com.example.demologin.initializer.components.DefaultUserInitializer;
-import com.example.demologin.initializer.components.PermissionRoleInitializer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +35,12 @@ public class MainDataInitializer implements CommandLineRunner {
     private final PermissionRoleInitializer permissionRoleInitializer;
     private final DefaultUserInitializer defaultUserInitializer;
 
+    private final QuestionTypeDataInitializer questionTypeDataInitializer;
+    private final LevelDataInitializer levelDataInitializer;
+    private final QuestionDataInitializer questionDataInitializer;
+
+    private final ExamDataInitializer examDataInitializer;
+
     @Override
     public void run(String... args) throws Exception {
         log.info("🚀 Starting Main Data Initialization Process...");
@@ -51,6 +55,12 @@ public class MainDataInitializer implements CommandLineRunner {
             log.info("👥 Step 2: Initializing Default Users...");
             defaultUserInitializer.initializeDefaultUsers();
             log.info("✅ Default Users initialization completed");
+
+            questionTypeDataInitializer.initializeQuestionTypes();
+            levelDataInitializer.initializeLevels();
+            questionDataInitializer.initializeQuestions();
+
+            examDataInitializer.initializeExams();
             
             // Future initialization steps can be added here
             // Example:

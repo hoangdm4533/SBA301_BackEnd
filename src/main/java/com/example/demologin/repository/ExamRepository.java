@@ -30,4 +30,14 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     
     // Đếm exam theo level và status (để thay thế cho ExamTemplate)
     long countByStatus(String status);
+
+
+    @Query("""
+       select e from Exam e
+       where lower(e.title) like lower(concat('%', :kw, '%'))
+          or lower(e.description) like lower(concat('%', :kw, '%'))
+       """)
+    Page<Exam> search(@Param("kw") String keyword, Pageable pageable);
+
+    Page<Exam> findByStatusIgnoreCase(String status, Pageable pageable); // dùng cho "PUBLISHED"
 }

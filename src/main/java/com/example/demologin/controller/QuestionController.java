@@ -1,5 +1,6 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -15,46 +16,46 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/questions")
+@RequestMapping("/api/questions")
 public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping
-    public Page<QuestionResponse> list(@RequestParam(defaultValue="0") int page,
-                                       @RequestParam(defaultValue="20") int size) {
-        return questionService.list(page, size);
+    @SecuredEndpoint("QUESTION_VIEW")
+    public ResponseEntity<ResponseObject> list(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "20") int size) {
+        Page<QuestionResponse> data = questionService.list(page, size);
+        return ResponseEntity.ok(new ResponseObject(200, "Questions retrieved successfully", data));
     }
 
     @GetMapping("/{id}")
-    public QuestionResponse get(@PathVariable Long id) {
-        return questionService.get(id);
+    @SecuredEndpoint("QUESTION_VIEW")
+    public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
+        QuestionResponse data = questionService.get(id);
+        return ResponseEntity.ok(new ResponseObject(200, "Question retrieved successfully", data));
     }
 
     @PostMapping
-    public QuestionResponse create(@Valid @RequestBody QuestionCreateRequest req) {
-        return questionService.create(req);
+    @SecuredEndpoint("QUESTION_CREATE")
+    public ResponseEntity<ResponseObject> create(@Valid @RequestBody QuestionCreateRequest req) {
+        QuestionResponse data = questionService.create(req);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseObject(201, "Question created successfully", data));
     }
 
     @PatchMapping("/{id}") // partial update
-    public QuestionResponse update(@PathVariable Long id,
-                                   @RequestBody QuestionUpdateRequest req) {
-        return questionService.update(id, req);
+    @SecuredEndpoint("QUESTION_UPDATE")
+    public ResponseEntity<ResponseObject> update(@PathVariable Long id,
+                                                 @RequestBody QuestionUpdateRequest req) {
+        QuestionResponse data = questionService.update(id, req);
+        return ResponseEntity.ok(new ResponseObject(200, "Question updated successfully", data));
     }
 
     @DeleteMapping("/{id}")
+    @   SecuredEndpoint("QUESTION_DELETE")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
-        try {
-            questionService.delete(id);
-            return ResponseEntity.ok(
-                    new ResponseObject(200, "Deleted question successfully", id)
-            );
-        } catch (EntityNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseObject(404, ex.getMessage(), null));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseObject(500, "An unexpected error occurred", null));
-        }
+        questionService.delete(id);
+        return ResponseEntity.ok(new ResponseObject(200, "Question deleted successfully", id));
     }
 
 }
