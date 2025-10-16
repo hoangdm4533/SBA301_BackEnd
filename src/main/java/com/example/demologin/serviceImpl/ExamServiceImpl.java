@@ -48,12 +48,19 @@ public class ExamServiceImpl implements ExamService {
     }
 
     private ExamQuestionResponse mapExamQuestionToResponse(ExamQuestion examQuestion) {
+        Question q = examQuestion.getQuestion();
+
+        String questionTypeDesc = null;
+        if (q != null && q.getType() != null) {
+            questionTypeDesc = q.getType().getDescription();
+        }
+
         return ExamQuestionResponse.builder()
                 .id(examQuestion.getId())
                 .examId(examQuestion.getExam().getId())
-                .questionId(examQuestion.getQuestion().getId())
-                .questionText(examQuestion.getQuestion().getQuestionText())
-                .questionType(examQuestion.getQuestion().getType().toString())
+                .questionId(q != null ? q.getId() : null)
+                .questionText(q != null ? q.getQuestionText() : null)
+                .questionType(questionTypeDesc)   // <<== đổi sang String mô tả
                 .score(examQuestion.getScore())
                 .build();
     }
