@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-public class UpdateUserRequest {
+public class AdminUpdateUserRequest {
 
     @Size(max = 50)
     private String username;
@@ -27,4 +27,13 @@ public class UpdateUserRequest {
 
     @Size(min = 6, max = 100)
     private String newPassword;
+
+    // Admin-only
+    private UserStatus status;
+    private Boolean locked;
+    private Boolean verify;
+    private Set<String> roles;
+
+    @Size(max = 500)
+    private String reason;
 }

@@ -1,5 +1,6 @@
 package com.example.demologin.serviceImpl;
 
+import com.example.demologin.dto.request.user.AdminUpdateUserRequest;
 import com.example.demologin.dto.request.user.CreateUserRequest;
 import com.example.demologin.dto.request.user.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
@@ -18,7 +19,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -76,36 +79,77 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public MemberResponse update(Long id, UpdateUserRequest req) {
+    public Object updateSelf(Long currentUserId, UpdateUserRequest req) {
+        User u = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // --- CHECK UNIQUE USERNAME ---
+        if (req.getUsername() != null && !req.getUsername().isBlank()) {
+            if (userRepository.existsByUsernameAndUserIdNot(req.getUsername(), currentUserId)) {
+                throw new IllegalArgumentException("Username already in use by another user");
+            }
+            u.setUsername(req.getUsername());
+        }
+
+        if (req.getEmail() != null &&
+                userRepository.existsByEmailAndUserIdNot(req.getEmail(), currentUserId)) {
+            throw new IllegalArgumentException("Email already in use by another user");
+        }
+
+        if (req.getFullName() != null) u.setFullName(req.getFullName());
+        if (req.getEmail() != null)    u.setEmail(req.getEmail());
+        if (req.getGender() != null)   u.setGender(req.getGender());
+
+        if (req.getNewPassword() != null && !req.getNewPassword().isBlank()) {
+            u.setPassword(passwordEncoder.encode(req.getNewPassword()));
+            u.incrementTokenVersion();
+        }
+
+        return userMapper.toUserResponse(userRepository.save(u));
+    }
+
+    @Override
+    public Object updateAdmin(Long id, AdminUpdateUserRequest req) {
         User u = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        // --- CHECK UNIQUE USERNAME ---
+        if (req.getUsername() != null && !req.getUsername().isBlank()) {
+            if (userRepository.existsByUsernameAndUserIdNot(req.getUsername(), id)) {
+                throw new IllegalArgumentException("Username already in use by another user");
+            }
+            u.setUsername(req.getUsername());
+        }
+
         if (req.getEmail() != null &&
-                userRepository.existsByEmailAndUserIdNot(req.getEmail(), id))
+                userRepository.existsByEmailAndUserIdNot(req.getEmail(), id)) {
             throw new IllegalArgumentException("Email already in use by another user");
+        }
 
         if (req.getFullName() != null) u.setFullName(req.getFullName());
-        if (req.getEmail() != null) u.setEmail(req.getEmail());
-        if (req.getGender() != null) u.setGender(req.getGender());
+        if (req.getEmail() != null)    u.setEmail(req.getEmail());
+        if (req.getGender() != null)   u.setGender(req.getGender());
+
+        if (req.getNewPassword() != null && !req.getNewPassword().isBlank()) {
+            u.setPassword(passwordEncoder.encode(req.getNewPassword()));
+            u.incrementTokenVersion();
+        }
+
+        // --- ADMIN-ONLY FIELDS ---
         if (req.getStatus() != null) u.setStatus(req.getStatus());
         if (req.getLocked() != null) u.setLocked(req.getLocked());
         if (req.getVerify() != null) u.setVerify(req.getVerify());
 
-        if (req.getNewPassword() != null && !req.getNewPassword().isBlank()) {
-            u.setPassword(passwordEncoder.encode(req.getNewPassword()));
-            u.incrementTokenVersion(); // buộc logout các phiên cũ nếu bạn dùng token version
-        }
-
         if (req.getRoles() != null) {
-            Set<Role> roles = new HashSet<>();
-            for (String name : req.getRoles()) {
-                Role r = roleRepository.findByName(name)
-                        .orElseThrow(() -> new EntityNotFoundException("Role not found: " + name));
-                roles.add(r);
+            List<Role> found = roleRepository.findAllByNameIn(req.getRoles());
+            Set<String> foundNames = found.stream().map(Role::getName).collect(Collectors.toSet());
+            Set<String> requested = new HashSet<>(req.getRoles());
+            requested.removeAll(foundNames);
+            if (!requested.isEmpty()) {
+                throw new IllegalArgumentException("Unknown roles: " + String.join(", ", requested));
             }
-            u.setRoles(roles);
+            u.setRoles(new HashSet<>(found));
         }
-
 
         return userMapper.toUserResponse(userRepository.save(u));
     }

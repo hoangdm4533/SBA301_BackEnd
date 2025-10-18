@@ -34,4 +34,8 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long
     
     // Xóa tất cả questions trong exam
     void deleteByExam(Exam exam);
+
+    boolean existsByExam_IdAndQuestion_Id(Long examId, Long questionId);
+    void deleteByExam_IdAndQuestion_Id(Long examId, Long questionId);
+    List<ExamQuestion> findByExam_Id(Long examId);
 }

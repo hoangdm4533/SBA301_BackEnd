@@ -4,6 +4,7 @@ import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.AuthenticatedEndpoint;
 import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.dto.request.user.AdminUpdateUserRequest;
 import com.example.demologin.dto.request.user.CreateUserRequest;
 import com.example.demologin.dto.request.user.UpdateUserRequest;
 import com.example.demologin.dto.response.MemberResponse;
@@ -26,7 +27,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/users")
 @Tag(name = "User Management", description = "APIs for managing users (admin only)")
 public class UserController {
 
@@ -55,28 +56,49 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public MemberResponse get(@PathVariable Long id) {
-        return userService.getById(id);
+    @SecuredEndpoint("USER_MANAGE")
+    public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
+        var data = userService.getById(id);
+        return ResponseEntity.ok(new ResponseObject(200, "User retrieved successfully", data));
     }
 
     @PostMapping
-    public MemberResponse create(@Valid @RequestBody CreateUserRequest req) {
-        return userService.create(req);
+    @SecuredEndpoint("USER_MANAGE")
+    public ResponseEntity<ResponseObject> create(@Valid @RequestBody CreateUserRequest req) {
+        var data = userService.create(req);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseObject(201, "User created successfully", data));
+    }
+
+    @PutMapping("/me")
+    @AuthenticatedEndpoint
+    @Operation(summary = "Update my profile",
+            description = "User updates own profile (no status/locked/verify/roles)")
+    public ResponseEntity<ResponseObject> updateMyProfile(@Valid @RequestBody UpdateUserRequest req) {
+        // Lưu ý: nếu User entity có getter là getId() thì đổi sang getId()
+        Long currentUserId = accountUtils.getCurrentUser().getUserId();
+        var data = userService.updateSelf(currentUserId, req);
+        return ResponseEntity.ok(new ResponseObject(200, "Profile updated successfully", data));
     }
 
     @PutMapping("/{id}")
-    public MemberResponse update(@PathVariable Long id,
-                                 @Valid @RequestBody UpdateUserRequest req) {
-        return userService.update(id, req);
+    @SecuredEndpoint("USER_MANAGE")
+    @Operation(summary = "Admin update user", description = "Admin only")
+    public ResponseEntity<ResponseObject> update(@PathVariable Long id,
+                                                 @Valid @RequestBody AdminUpdateUserRequest req) {
+        var data = userService.updateAdmin(id, req);
+        return ResponseEntity.ok(new ResponseObject(200, "User updated successfully", data));
     }
 
     @DeleteMapping("/{id}")
+    @SecuredEndpoint("USER_MANAGE")
+    @Operation(summary = "Delete user", description = "Admin only")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
-        userService.delete(id); // ném EntityNotFoundException nếu không tồn tại
+        userService.delete(id);
         return ResponseEntity.ok(
                 new ResponseObject(
                         HttpStatus.OK.value(),
-                        "Delete user successfully",
+                        "User deleted successfully",
                         Map.of("id", id)
                 )
         );
