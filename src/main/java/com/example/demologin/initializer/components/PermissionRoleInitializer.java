@@ -115,6 +115,7 @@ public class PermissionRoleInitializer {
             } else {
                 log.info("ℹ️ Exam permissions already exist, skipping initialization");
             }
+            ensureMemberHasFullPermissions();
             return;
         }
 
@@ -209,16 +210,18 @@ public class PermissionRoleInitializer {
         Set<Permission> adminPerms = new HashSet<>(permMap.values());
 
         // Member: quyền giới hạn + exam taking permissions
-        Set<Permission> memberPerms = Set.of(
-                permMap.get(USER_TOKEN_MANAGEMENT),
-                permMap.get(TOKEN_INVALIDATE_OWN),
-                permMap.get(TOKEN_VIEW_OWN),
-                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY),
-                permMap.get(EXAM_TAKE),
-                permMap.get(EXAM_VIEW_AVAILABLE),
-                permMap.get(EXAM_VIEW_RESULTS),
-                permMap.get(EXAM_VIEW_HISTORY)
-        );
+//        Set<Permission> memberPerms = Set.of(
+//                permMap.get(USER_TOKEN_MANAGEMENT),
+//                permMap.get(TOKEN_INVALIDATE_OWN),
+//                permMap.get(TOKEN_VIEW_OWN),
+//                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY),
+//                permMap.get(EXAM_TAKE),
+//                permMap.get(EXAM_VIEW_AVAILABLE),
+//                permMap.get(EXAM_VIEW_RESULTS),
+//                permMap.get(EXAM_VIEW_HISTORY)
+//        );
+        Set<Permission> memberPerms = new HashSet<>(permMap.values());
+
 
         roleRepository.save(Role.builder()
                 .name("ADMIN")
@@ -278,5 +281,18 @@ public class PermissionRoleInitializer {
         } else {
             log.warn("⚠️ MEMBER role not found, cannot update with exam permissions");
         }
+    }
+
+    private void ensureMemberHasFullPermissions() {
+        // Lấy/khởi tạo role MEMBER
+        Role member = roleRepository.findByName("MEMBER")
+                .orElseGet(() -> roleRepository.save(Role.builder().name("MEMBER").build()));
+
+        // Set toàn bộ permissions cho MEMBER
+        Set<Permission> fullPerms = new HashSet<>(permissionRepository.findAll());
+        member.setPermissions(fullPerms);
+        roleRepository.save(member);
+
+        log.debug("✅ Ensured MEMBER has {} permissions (full access)", fullPerms.size());
     }
 }
