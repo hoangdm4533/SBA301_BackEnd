@@ -24,7 +24,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/exams")
-@Tag(name = "Exam Management", description = "APIs for members to view and take exams")
+@Tag(name = "Exam Management", description = "APIs for admin to view and take exams")
 @RequiredArgsConstructor
 public class ExamAdminController {
     private final ExamService examService;

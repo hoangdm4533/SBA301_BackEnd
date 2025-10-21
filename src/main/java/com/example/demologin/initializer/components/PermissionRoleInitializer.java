@@ -93,6 +93,8 @@ public class PermissionRoleInitializer {
     // Attempt/grade (admin)
     private static final String EXAM_ATTEMPT_MANAGE = "EXAM_ATTEMPT_MANAGE";
     private static final String EXAM_GRADE = "EXAM_GRADE";
+    private static final String EXAM_RESULT_VIEW = "EXAM_RESULT_VIEW";
+
 
 
 
@@ -188,9 +190,8 @@ public class PermissionRoleInitializer {
                 new Permission(EXAM_PUBLISH, "Publish bài thi"),
                 new Permission(EXAM_ARCHIVE, "Archive bài thi"),
                 new Permission(EXAM_ATTEMPT_MANAGE, "Quản lý bài làm (attempt)"),
-                new Permission(EXAM_GRADE, "Chấm bài thi")
-
-
+                new Permission(EXAM_GRADE, "Chấm bài thi"),
+                new Permission(EXAM_RESULT_VIEW, "Xem kết quả và bài làm của học sinh")
         );
 
         permissionRepository.saveAll(permissions);

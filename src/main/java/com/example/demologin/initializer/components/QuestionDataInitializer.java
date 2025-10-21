@@ -91,7 +91,7 @@ public class QuestionDataInitializer {
                 .level(medium)
                 .build();
         q4.setOptions(List.of(
-                new Option(null, q4, "\\frac{19}{12}", true),
+                    new Option(null, q4, "\\frac{19}{12}", true),
                 new Option(null, q4, "\\frac{1}{2}", false),
                 new Option(null, q4, "\\frac{7}{8}", false)
         ));
