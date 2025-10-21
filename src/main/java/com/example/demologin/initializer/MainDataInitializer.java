@@ -38,6 +38,9 @@ public class MainDataInitializer implements CommandLineRunner {
     private final QuestionTypeDataInitializer questionTypeDataInitializer;
     private final LevelDataInitializer levelDataInitializer;
     private final QuestionDataInitializer questionDataInitializer;
+    private final PlanDataInitializer planDataInitializer;
+    private final EducationDataInitializer educationDataInitializer;
+    private final AttemptDataInitializer attemptDataInitializer;
 
     private final ExamDataInitializer examDataInitializer;
 
@@ -56,11 +59,22 @@ public class MainDataInitializer implements CommandLineRunner {
             defaultUserInitializer.initializeDefaultUsers();
             log.info("✅ Default Users initialization completed");
 
+            // Step 3: Plans and Subscriptions
+            log.info("💳 Step 3: Initializing Plans and Subscriptions...");
+            planDataInitializer.initializePlansAndSubscriptions();
+
+            // Step 4: Education hierarchy
+            log.info("📚 Step 4: Initializing Education hierarchy...");
+            educationDataInitializer.initializeEducation();
+
+            // Step 5+: Question metadata and questions
             questionTypeDataInitializer.initializeQuestionTypes();
             levelDataInitializer.initializeLevels();
             questionDataInitializer.initializeQuestions();
 
+            // Exams and attempts
             examDataInitializer.initializeExams();
+            attemptDataInitializer.initializeAttempts();
             
             // Future initialization steps can be added here
             // Example:

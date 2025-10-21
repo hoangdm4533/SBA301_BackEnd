@@ -96,7 +96,107 @@ public class QuestionDataInitializer {
                 new Option(null, q4, "\\frac{7}{8}", false)
         ));
 
-        questionRepository.saveAll(List.of(q1, q2, q3));
+        // Q5: MCQ_SINGLE (đảm bảo có ít nhất 5 câu hỏi cho exam seeder)
+        Question q5 = Question.builder()
+                .questionText("Which planet is known as the Red Planet?")
+                .type(mcqSingle)
+                .level(easy)
+                .build();
+        q5.setOptions(List.of(
+                new Option(null, q5, "Earth", false),
+                new Option(null, q5, "Mars", true),
+                new Option(null, q5, "Venus", false),
+                new Option(null, q5, "Jupiter", false)
+        ));
+
+        // Q6: MCQ_MULTI
+        Question q6 = Question.builder()
+                .questionText("Select all prime numbers.")
+                .type(mcqMulti)
+                .level(easy)
+                .build();
+        q6.setOptions(List.of(
+                new Option(null, q6, "2", true),
+                new Option(null, q6, "4", false),
+                new Option(null, q6, "5", true),
+                new Option(null, q6, "9", false)
+        ));
+
+        // Q7: TRUE_FALSE
+        Question q7 = Question.builder()
+                .questionText("Water boils at 100°C at sea level.")
+                .type(trueFalse)
+                .level(easy)
+                .build();
+        q7.setOptions(List.of(
+                new Option(null, q7, "True", true),
+                new Option(null, q7, "False", false)
+        ));
+
+        // Q8: MCQ_SINGLE
+        Question q8 = Question.builder()
+                .questionText("Which continent is the largest by area?")
+                .type(mcqSingle)
+                .level(easy)
+                .build();
+        q8.setOptions(List.of(
+                new Option(null, q8, "Africa", false),
+                new Option(null, q8, "Asia", true),
+                new Option(null, q8, "Europe", false),
+                new Option(null, q8, "Antarctica", false)
+        ));
+
+        // Q9: MCQ_SINGLE
+        Question q9 = Question.builder()
+                .questionText("Who wrote 'Romeo and Juliet'?")
+                .type(mcqSingle)
+                .level(easy)
+                .build();
+        q9.setOptions(List.of(
+                new Option(null, q9, "Charles Dickens", false),
+                new Option(null, q9, "William Shakespeare", true),
+                new Option(null, q9, "Mark Twain", false),
+                new Option(null, q9, "Jane Austen", false)
+        ));
+
+        // Q10: MCQ_MULTI
+        Question q10 = Question.builder()
+                .questionText("Select all mammals.")
+                .type(mcqMulti)
+                .level(easy)
+                .build();
+        q10.setOptions(List.of(
+                new Option(null, q10, "Dolphin", true),
+                new Option(null, q10, "Shark", false),
+                new Option(null, q10, "Bat", true),
+                new Option(null, q10, "Crocodile", false)
+        ));
+
+        // Q11: TRUE_FALSE
+        Question q11 = Question.builder()
+                .questionText("The chemical symbol for gold is Au.")
+                .type(trueFalse)
+                .level(medium)
+                .build();
+        q11.setOptions(List.of(
+                new Option(null, q11, "True", true),
+                new Option(null, q11, "False", false)
+        ));
+
+        // Q12: MCQ_SINGLE
+        Question q12 = Question.builder()
+                .questionText("What is the capital of Japan?")
+                .type(mcqSingle)
+                .level(easy)
+                .build();
+        q12.setOptions(List.of(
+                new Option(null, q12, "Kyoto", false),
+                new Option(null, q12, "Tokyo", true),
+                new Option(null, q12, "Osaka", false),
+                new Option(null, q12, "Nagoya", false)
+        ));
+
+        questionRepository.saveAll(List.of(q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12));
         log.info("✅ Seeded {} questions.", questionRepository.count());
     }
 }

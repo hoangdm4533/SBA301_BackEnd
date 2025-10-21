@@ -39,16 +39,18 @@ public class ExamDataInitializer {
         Exam exam1 = Exam.builder()
                 .title("Math Basics – Draft")
                 .description("Simple arithmetic and number properties")
-                .status("DRAFT") // sẽ dùng API publish sau
+                .status("DRAFT")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
         exam1 = examRepository.save(exam1);
 
-        // Gán 3 câu đầu vào exam 1
-        addQuestion(exam1, questions.get(0), 1.0);
+        // Gán 5 câu đầu vào exam 1 nếu có
+        if (!questions.isEmpty()) addQuestion(exam1, questions.get(0), 1.0);
         if (questions.size() > 1) addQuestion(exam1, questions.get(1), 1.0);
         if (questions.size() > 2) addQuestion(exam1, questions.get(2), 1.0);
+        if (questions.size() > 3) addQuestion(exam1, questions.get(3), 1.0);
+        if (questions.size() > 4) addQuestion(exam1, questions.get(4), 1.0);
 
         // Exam 2 - PUBLISHED
         Exam exam2 = Exam.builder()
@@ -60,12 +62,28 @@ public class ExamDataInitializer {
                 .build();
         exam2 = examRepository.save(exam2);
 
-        // Gán 3 câu
-        addQuestion(exam2, questions.get(0), 1.0);
-        if (questions.size() > 3) addQuestion(exam2, questions.get(3), 1.0);
-        if (questions.size() > 4) addQuestion(exam2, questions.get(4), 1.0);
+        // Gán 4 câu khác cho exam 2
+        if (questions.size() > 5) addQuestion(exam2, questions.get(5), 1.0);
+        if (questions.size() > 6) addQuestion(exam2, questions.get(6), 1.0);
+        if (questions.size() > 7) addQuestion(exam2, questions.get(7), 1.0);
+        if (questions.size() > 8) addQuestion(exam2, questions.get(8), 1.0);
 
-        log.info("✅ Seeded sample exams: {}, total exams now: {}", 2, examRepository.count());
+        // Exam 3 - ARCHIVED
+        Exam exam3 = Exam.builder()
+                .title("Science & Geography – Archived")
+                .description("Archived sample exam")
+                .status("ARCHIVED")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        exam3 = examRepository.save(exam3);
+
+        // Gán thêm một vài câu cho exam 3
+        if (questions.size() > 9) addQuestion(exam3, questions.get(9), 1.0);
+        if (questions.size() > 10) addQuestion(exam3, questions.get(10), 1.0);
+        if (questions.size() > 11) addQuestion(exam3, questions.get(11), 1.0);
+
+        log.info("✅ Seeded sample exams: {}, total exams now: {}", 3, examRepository.count());
     }
 
     private void addQuestion(Exam exam, Question question, double score) {
