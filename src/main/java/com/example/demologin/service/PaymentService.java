@@ -7,4 +7,5 @@ public interface PaymentService {
     PaymentResponse createCheckoutSession(Long userId, PaymentRequest request) throws Exception;
     void handlePaymentSuccess(String sessionId) throws Exception;
     void handlePaymentFailure(String transactionRef, String reason);
+
 }

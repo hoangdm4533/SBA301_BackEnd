@@ -43,6 +43,7 @@ public class MainDataInitializer implements CommandLineRunner {
     private final AttemptDataInitializer attemptDataInitializer;
 
     private final ExamDataInitializer examDataInitializer;
+    private final UserInitializer userInitializer;
 
     @Override
     public void run(String... args) throws Exception {
@@ -80,6 +81,9 @@ public class MainDataInitializer implements CommandLineRunner {
             // Example:
             // log.info("📊 Step 10: Initializing System Settings...");
             // systemSettingsInitializer.initializeSettings();
+
+            log.info("Initializing users ...");
+            userInitializer.initializeUsers();
             
             log.info("🎉 Main Data Initialization Process completed successfully!");
             

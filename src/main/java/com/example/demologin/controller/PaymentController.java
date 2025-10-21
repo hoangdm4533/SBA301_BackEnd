@@ -5,6 +5,7 @@ import com.example.demologin.dto.request.payment.PaymentRequest;
 import com.example.demologin.dto.response.PaymentResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.service.PaymentService;
+import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
@@ -85,4 +86,27 @@ public class PaymentController {
             }
         }
     }
+
+
+    @PostMapping("/verify-session")
+    public void verifySession(@RequestParam String sessionId) throws Exception {
+
+        // Lấy session từ Stripe
+        Session session = Session.retrieve(sessionId);
+
+        String transactionRef = session.getMetadata().get("transactionRef");
+        String status;
+
+        // Kiểm tra payment status từ Stripe
+        if ("complete".equals(session.getPaymentStatus())) {
+            // Thanh toán thành công → gọi service xử lý
+            paymentService.handlePaymentSuccess(sessionId);
+            status = "SUCCESS";
+        } else {
+            // Thanh toán thất bại → gọi service xử lý failure
+            paymentService.handlePaymentFailure(transactionRef, "payment_failed");
+            status = "FAILED";
+        }
+    }
+
 }
