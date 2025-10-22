@@ -87,11 +87,13 @@ public class LessonPlanServiceImpl implements LessonPlanService {
                 .orElseThrow(() -> new IllegalArgumentException("Lesson Plan not found"));
 
         try {
+            lessonPlanEditRepo.deleteByLessonPlanId(lessonPlanId);
+
             // 1. Xóa file khỏi MinIO (nếu có)
             if (plan.getFilePath() != null) {
                 storageService.deleteDocument(plan.getFilePath());
             }
-            lessonPlanEditRepo.deleteByLessonPlan(plan);
+
 
             // 2. Xóa record khỏi DB
             lessonPlanRepo.delete(plan);
