@@ -8,6 +8,7 @@ import com.example.demologin.service.LessonPlanCompactionService;
 import com.example.demologin.service.LessonPlanService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +18,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/lesson-plans")
+@RequiredArgsConstructor
 public class LessonPlanController {
     private final LessonPlanService lessonPlanService;
     private final LessonPlanCompactionService compactionService;
 
-    public LessonPlanController(LessonPlanService lessonPlanService, LessonPlanCompactionService compactionService) {
-        this.lessonPlanService = lessonPlanService;
-        this.compactionService = compactionService;
-    }
+//    public LessonPlanController(LessonPlanService lessonPlanService, LessonPlanCompactionService compactionService) {
+//        this.lessonPlanService = lessonPlanService;
+//        this.compactionService = compactionService;
+//    }
 
     @PostMapping
 //    @SecuredEndpoint("LESSON_PLAN_CREATE")

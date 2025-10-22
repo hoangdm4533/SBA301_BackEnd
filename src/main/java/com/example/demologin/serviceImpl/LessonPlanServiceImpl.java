@@ -4,8 +4,10 @@ import com.example.demologin.dto.request.lesson_plan.LessonPlanRequest;
 import com.example.demologin.dto.response.LessonPlanResponse;
 import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.LessonPlan;
+import com.example.demologin.entity.LessonPlanEdit;
 import com.example.demologin.entity.User;
 import com.example.demologin.repository.GradeRepository;
+import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanService;
@@ -27,6 +29,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 //    private final UserRepository userRepo;
     private final GradeRepository gradeRepo;
     private final ObjectStorageService storageService; // Sử dụng MinIO
+    private final LessonPlanEditRepository lessonPlanEditRepo;
 
 
     @Override
@@ -88,6 +91,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
             if (plan.getFilePath() != null) {
                 storageService.deleteDocument(plan.getFilePath());
             }
+            lessonPlanEditRepo.deleteByLessonPlan(plan);
 
             // 2. Xóa record khỏi DB
             lessonPlanRepo.delete(plan);
