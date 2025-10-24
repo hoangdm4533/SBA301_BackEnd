@@ -12,6 +12,7 @@ import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
     private final PaymentService paymentService;
 
@@ -93,12 +95,13 @@ public class PaymentController {
 
         // Lấy session từ Stripe
         Session session = Session.retrieve(sessionId);
-
+        log.info("Session retrieved: {}", session.toJson());
         String transactionRef = session.getMetadata().get("transactionRef");
+        log.info("Session payment status {}", session.getPaymentStatus());
         String status;
 
         // Kiểm tra payment status từ Stripe
-        if ("complete".equals(session.getPaymentStatus())) {
+        if ("paid".equals(session.getPaymentStatus())) {
             // Thanh toán thành công → gọi service xử lý
             paymentService.handlePaymentSuccess(sessionId);
             status = "SUCCESS";
