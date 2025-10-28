@@ -2,6 +2,7 @@ package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.request.exam.ExamRequest;
 import com.example.demologin.dto.request.exam.AddQuestionToExamRequest;
+import com.example.demologin.dto.response.ExamAttemptRow;
 import com.example.demologin.dto.response.ExamResponse;
 import com.example.demologin.dto.response.ExamQuestionResponse;
 import com.example.demologin.entity.*;
@@ -29,6 +30,8 @@ public class ExamServiceImpl implements ExamService {
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final QuestionRepository questionRepository;
+    private final ExamAttemptRepository examAttemptRepository;
+    private final UserRepository userRepository;
 
     private ExamResponse mapToResponse(Exam exam) {
         List<ExamQuestionResponse> questions = examQuestionRepository.findByExam(exam)
@@ -240,5 +243,46 @@ public class ExamServiceImpl implements ExamService {
     public Page<ExamResponse> getPublishedExams(Pageable pageable) {
         return examRepository.findPublishedExams(pageable)
                 .map(this::mapToResponse);
+    }
+
+    private ExamAttemptRow toRow(ExamAttempt a) {
+        return ExamAttemptRow.builder()
+                .attemptId(a.getId())
+                .examId(a.getExam().getId())
+                .examTitle(a.getExam().getTitle())
+                .studentId(a.getUser().getUserId())
+                .studentName(a.getUser().getFullName())
+                .studentUsername(a.getUser().getUsername())
+                .studentEmail(a.getUser().getEmail())
+                .score(a.getScore())
+                .gradedBy(a.getGradedBy())
+                .startedAt(a.getStartedAt())
+                .finishedAt(a.getFinishedAt())
+                .status(null) // nếu có trường status trong Attempt thì set vào
+                .build();
+    }
+
+    @Override
+    public Page<ExamAttemptRow> listAttemptsOfExam(Long examId, int page, int size,
+                                                   String keyword, LocalDateTime from, LocalDateTime to) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
+
+        Page<ExamAttempt> p = examAttemptRepository.searchForTeacher(
+                exam.getId(), (keyword == null || keyword.isBlank()) ? null : keyword, from, to,
+                PageRequest.of(page, size, Sort.by("finishedAt").descending())
+        );
+        return p.map(this::toRow);
+    }
+
+    @Override
+    public Page<ExamAttemptRow> listAttemptsOfStudent(Long studentId, int page, int size) {
+        if (!userRepository.existsById(studentId)) {
+            throw new NotFoundException("Không tìm thấy học sinh với id " + studentId);
+        }
+        Page<ExamAttempt> p = examAttemptRepository.findByUser_UserId(
+                studentId, PageRequest.of(page, size, Sort.by("finishedAt").descending())
+        );
+        return p.map(this::toRow);
     }
 }

@@ -44,6 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
     Plan plan = planRepository.findById(request.getPlanId())
             .orElseThrow(() -> new RuntimeException("Plan not found"));
 
+
     // 2️⃣ Cấu hình Stripe key theo chế độ
         String apiKey = "sandbox".equalsIgnoreCase(request.getPaymentMode())
                 ? stripeSecretKeyTest
@@ -73,7 +74,7 @@ public class PaymentServiceImpl implements PaymentService {
                             .setQuantity(1L)
                             .setPriceData(
                                     SessionCreateParams.LineItem.PriceData.builder()
-                                            .setCurrency("usd")
+                                            .setCurrency("vnd")
                                             .setUnitAmount((long) (plan.getPrice() * 100)) // cents
                                             .setProductData(
                                                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
@@ -131,4 +132,6 @@ public void handlePaymentFailure(String transactionRef, String reason) {
         transactionRepository.save(tx);
     });
 }
+
+
 }

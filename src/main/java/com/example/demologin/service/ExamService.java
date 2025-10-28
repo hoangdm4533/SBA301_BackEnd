@@ -2,11 +2,13 @@ package com.example.demologin.service;
 
 import com.example.demologin.dto.request.exam.ExamRequest;
 import com.example.demologin.dto.request.exam.AddQuestionToExamRequest;
+import com.example.demologin.dto.response.ExamAttemptRow;
 import com.example.demologin.dto.response.ExamResponse;
 import com.example.demologin.dto.response.ExamQuestionResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ExamService {
@@ -34,4 +36,9 @@ public interface ExamService {
     
     // Exam cho học sinh
     Page<ExamResponse> getPublishedExams(Pageable pageable);
+
+    Page<ExamAttemptRow> listAttemptsOfExam(Long examId, int page, int size,
+                                            String keyword, LocalDateTime from, LocalDateTime to);
+
+    Page<ExamAttemptRow> listAttemptsOfStudent(Long studentId, int page, int size);
 }
