@@ -101,7 +101,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
             
             // Role validation
-            com.example.demologin.entity.Role memberRole = roleRepository.findByName("MEMBER")
+            com.example.demologin.entity.Role memberRole = roleRepository.findByName("STUDENT")
                 .orElseThrow(() -> new NotFoundException("Role MEMBER not found"));
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
             roles.add(memberRole);
