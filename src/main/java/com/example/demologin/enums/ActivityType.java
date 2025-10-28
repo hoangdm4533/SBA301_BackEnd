@@ -25,6 +25,11 @@ public enum ActivityType {
     SYSTEM_LOGIN,
     SYSTEM_LOGOUT,
     
+    // Essay activities
+    ESSAY_STARTED,
+    ESSAY_SUBMITTED,
+    ESSAY_GRADED,
+    
     // Other
     OTHER
 }

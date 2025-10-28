@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
@@ -20,4 +21,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                               @Param("planId") Long planId,
                               @Param("status") String status,
                               Pageable pageable);
+    
+    boolean existsByUserUserIdAndStatusAndEndDateAfter(Long userId, String status, LocalDateTime date);
 }
