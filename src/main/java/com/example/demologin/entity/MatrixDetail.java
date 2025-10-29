@@ -20,6 +20,8 @@ public class MatrixDetail {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+//    private String status;
+
     @ManyToOne
     @JoinColumn(name = "level_id")
     private Level level;
@@ -27,6 +29,7 @@ public class MatrixDetail {
     @ManyToOne
     @JoinColumn(name = "matrix_id")
     private Matrix matrix;
+
 
     @ManyToOne
     @JoinColumn(name = "lesson_id")

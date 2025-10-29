@@ -44,6 +44,7 @@ public class MainDataInitializer implements CommandLineRunner {
 
     private final ExamDataInitializer examDataInitializer;
     private final UserInitializer userInitializer;
+    private final LessonDataInitializer lessonDataInitializer;
 
     @Override
     public void run(String... args) throws Exception {
@@ -76,6 +77,7 @@ public class MainDataInitializer implements CommandLineRunner {
             // Exams and attempts
             examDataInitializer.initializeExams();
             attemptDataInitializer.initializeAttempts();
+            lessonDataInitializer.initializeLessons();
             
             // Future initialization steps can be added here
             // Example:
