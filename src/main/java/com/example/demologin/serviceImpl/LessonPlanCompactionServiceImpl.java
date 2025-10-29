@@ -72,27 +72,47 @@ public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionServ
      */
     private String applyEdits(String baseContent, List<LessonPlanEdit> edits) {
         StringBuilder result = new StringBuilder(baseContent);
+        ObjectMapper mapper = new ObjectMapper();
+
         for (LessonPlanEdit edit : edits) {
             try {
-                ObjectMapper mapper = new ObjectMapper();
                 JsonNode node = mapper.readTree(edit.getOperation());
-                String op = node.get("operation").asText();
-                String text = node.get("text").asText();
+                String action = node.get("action").asText(); // đúng key là "action"
 
-                switch (op) {
-                    case "append" -> result.append(text);
-                    case "replace" -> {
-                        result.setLength(0);
-                        result.append(text);
+                switch (action) {
+                    case "insert" -> {
+                        int pos = node.has("pos") ? node.get("pos").asInt() : result.length();
+                        String ch = node.has("char") ? node.get("char").asText() : "";
+
+                        // Bảo vệ giới hạn
+                        if (pos < 0) pos = 0;
+                        if (pos > result.length()) pos = result.length();
+
+                        result.insert(pos, ch);
                     }
-                    default -> System.out.println("Unknown operation: " + op);
+
+                    case "delete" -> {
+                        int start = node.has("start") ? node.get("start").asInt() : -1;
+                        int end = node.has("end") ? node.get("end").asInt() : -1;
+
+                        if (start >= 0 && end > start && end <= result.length()) {
+                            result.delete(start, end);
+                        } else {
+                            System.err.println("Invalid delete range for edit: " + edit.getId());
+                        }
+                    }
+
+                    default -> System.err.println("Unknown action: " + action);
                 }
             } catch (Exception ex) {
-                System.err.println("Skip invalid edit: " + edit.getId());
+                System.err.println("Skip invalid edit: " + edit.getId() + " due to error: " + ex.getMessage());
             }
         }
+
         return result.toString();
     }
+
+
 
     private LessonPlanResponse mapToResponse(LessonPlan plan) {
         LessonPlanResponse dto = new LessonPlanResponse();

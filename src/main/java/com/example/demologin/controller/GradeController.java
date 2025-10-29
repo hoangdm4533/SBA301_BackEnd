@@ -35,7 +35,7 @@ public class GradeController {
     }
 
     @GetMapping("/{id}")
-    @SecuredEndpoint("GRADE_VIEW")
+//    @SecuredEndpoint("GRADE_VIEW")
     @ApiResponse(message = "Grade retrieved successfully")
     @Operation(summary = "Get grade by ID", description = "Retrieve a grade by its ID")
     public ResponseEntity<GradeResponse> getById(
@@ -44,7 +44,7 @@ public class GradeController {
     }
 
     @GetMapping
-    @SecuredEndpoint("GRADE_VIEW")
+//    @SecuredEndpoint("GRADE_VIEW")
     @ApiResponse(message = "Grades retrieved successfully")
     @Operation(summary = "Get all grades", description = "Retrieve all grades")
     public ResponseEntity<List<GradeResponse>> getAll() {

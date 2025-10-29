@@ -1,84 +1,91 @@
 package com.example.demologin.config;
 
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.listener.ConnectListener;
+import com.corundumstudio.socketio.listener.DisconnectListener;
+import com.corundumstudio.socketio.listener.DataListener;
 import com.example.demologin.dto.request.lesson_plan.LessonPlanEditRequest;
 import com.example.demologin.dto.response.LessonPlanEditResponse;
 import com.example.demologin.service.LessonPlanCompactionService;
 import com.example.demologin.service.LessonPlanEditService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class LessonPlanWebSocketHandler extends TextWebSocketHandler {
-    // Lưu các kết nối đang mở theo lessonPlanId
-    private final Map<Long, Set<WebSocketSession>> sessionsByLessonPlan = new ConcurrentHashMap<>();
+public class LessonPlanWebSocketHandler {
 
+    private final SocketIOServer server;
     private final LessonPlanEditService editService;
     private final LessonPlanCompactionService compactionService;
 
-    public LessonPlanWebSocketHandler(LessonPlanEditService editService,
+    // Lưu client theo lessonPlanId
+    private final Map<Long, Set<SocketIOClient>> clientsByLessonPlan = new ConcurrentHashMap<>();
+
+    public LessonPlanWebSocketHandler(SocketIOServer server,
+                                      LessonPlanEditService editService,
                                       LessonPlanCompactionService compactionService) {
+        this.server = server;
         this.editService = editService;
         this.compactionService = compactionService;
+        initListeners();
+        this.server.start();
     }
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        Long lessonPlanId = getLessonPlanId(session);
-        sessionsByLessonPlan.computeIfAbsent(lessonPlanId, k -> ConcurrentHashMap.newKeySet())
-                .add(session);
-        System.out.println("User joined lessonPlanId=" + lessonPlanId + ", current=" + sessionsByLessonPlan.get(lessonPlanId).size());
+    private void initListeners() {
+        server.addConnectListener(onConnected());
+        server.addDisconnectListener(onDisconnected());
+        server.addEventListener("editLessonPlan", LessonPlanEditRequest.class, onEditLessonPlan());
     }
 
-    @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        LessonPlanEditRequest req = mapper.readValue(message.getPayload(), LessonPlanEditRequest.class);
-
-        LessonPlanEditResponse saved = editService.saveEdit(req);
-
-        Long lessonPlanId = req.getLessonPlanId();
-        TextMessage broadcast = new TextMessage(mapper.writeValueAsString(saved));
-
-        for (WebSocketSession s : sessionsByLessonPlan.getOrDefault(lessonPlanId, Set.of())) {
-            if (s.isOpen() && !s.getId().equals(session.getId())) {
-                s.sendMessage(broadcast);
+    private ConnectListener onConnected() {
+        return client -> {
+            String lessonPlanIdStr = client.getHandshakeData().getSingleUrlParam("lessonPlanId");
+            if (lessonPlanIdStr == null) {
+                client.disconnect();
+                return;
             }
-        }
+            Long lessonPlanId = Long.valueOf(lessonPlanIdStr);
+
+            clientsByLessonPlan.computeIfAbsent(lessonPlanId, k -> ConcurrentHashMap.newKeySet())
+                    .add(client);
+
+            System.out.println("Client joined lessonPlanId=" + lessonPlanId);
+        };
     }
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        Long lessonPlanId = getLessonPlanId(session);
-        Set<WebSocketSession> sessions = sessionsByLessonPlan.getOrDefault(lessonPlanId, Set.of());
-        sessions.remove(session);
+    private DisconnectListener onDisconnected() {
+        return client -> {
+            String lessonPlanIdStr = client.getHandshakeData().getSingleUrlParam("lessonPlanId");
+            if (lessonPlanIdStr == null) return;
 
-        System.out.println("User left lessonPlanId=" + lessonPlanId + ", remaining=" + sessions.size());
+            Long lessonPlanId = Long.valueOf(lessonPlanIdStr);
+            Set<SocketIOClient> clients = clientsByLessonPlan.getOrDefault(lessonPlanId, Set.of());
+            clients.remove(client);
 
-        // Nếu tất cả user rời khỏi thì trigger compaction
-        if (sessions.isEmpty()) {
-            System.out.println("No more users editing. Triggering compaction for lessonPlanId=" + lessonPlanId);
-            compactionService.compactLessonPlan(lessonPlanId);
-            sessionsByLessonPlan.remove(lessonPlanId);
-        }
-    }
+            System.out.println("Client left lessonPlanId=" + lessonPlanId + ", remaining=" + clients.size());
 
-    private Long getLessonPlanId(WebSocketSession session) {
-        String query = Objects.requireNonNull(session.getUri()).getQuery(); // ví dụ: lessonPlanId=1
-        for (String param : query.split("&")) {
-            String[] kv = param.split("=");
-            if (kv.length == 2 && kv[0].equals("lessonPlanId")) {
-                return Long.valueOf(kv[1]);
+            if (clients.isEmpty()) {
+                System.out.println("Trigger compaction for lessonPlanId=" + lessonPlanId);
+                compactionService.compactLessonPlan(lessonPlanId);
+                clientsByLessonPlan.remove(lessonPlanId);
             }
-        }
-        throw new IllegalArgumentException("lessonPlanId not provided in WebSocket URL");
+        };
+    }
+
+    private DataListener<LessonPlanEditRequest> onEditLessonPlan() {
+        return (client, data, ackSender) -> {
+            LessonPlanEditResponse saved = editService.saveEdit(data);
+
+            Long lessonPlanId = data.getLessonPlanId();
+            // Gửi broadcast cho tất cả client khác trong cùng lessonPlan
+            for (SocketIOClient c : clientsByLessonPlan.getOrDefault(lessonPlanId, Set.of())) {
+                if (!c.getSessionId().equals(client.getSessionId())) {
+                    c.sendEvent("lessonPlanUpdated", saved);
+                }
+            }
+        };
     }
 }
