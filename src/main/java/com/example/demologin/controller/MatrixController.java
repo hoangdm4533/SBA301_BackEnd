@@ -31,20 +31,20 @@ public class MatrixController {
     }
 
     @GetMapping("/{id}")
-    @ApiResponse(message = "Matrix retrieved successfully")
+//    @ApiResponse(message = "Matrix retrieved successfully")
     public MatrixResponse getMatrixById(@PathVariable Long id) {
         return matrixService.getMatrixById(id);
     }
 
     @PutMapping("/{id}")
-    @ApiResponse(message = "Matrix updated successfully")
+//    @ApiResponse(message = "Matrix updated successfully")
     public MatrixResponse updateMatrix(@PathVariable Long id,
                                                        @RequestBody MatrixRequest request) {
         return matrixService.updateMatrix(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @ApiResponse(message = "Matrix deleted successfully")
+//    @ApiResponse(message = "Matrix deleted successfully")
     public ResponseEntity<Void> deleteMatrix(@PathVariable Long id) {
         matrixService.deleteMatrix(id);
         return ResponseEntity.ok().build();
