@@ -55,7 +55,7 @@ public class MainDataInitializer implements CommandLineRunner {
             log.info("📋 Step 1: Initializing Permissions and Roles...");
             permissionRoleInitializer.initializePermissionsAndRoles();
             log.info("✅ Permissions and Roles initialization completed");
-            
+
             // Step 2: Initialize Default Users
             log.info("👥 Step 2: Initializing Default Users...");
             defaultUserInitializer.initializeDefaultUsers();
@@ -69,24 +69,23 @@ public class MainDataInitializer implements CommandLineRunner {
             log.info("📚 Step 4: Initializing Education hierarchy...");
             educationDataInitializer.initializeEducation();
 
-            // Step 5+: Question metadata and questions
+            // Step 5: Lessons must come before questions
+            log.info("🧩 Step 5: Initializing Lessons...");
+            lessonDataInitializer.initializeLessons();
+
+            // Step 6: Question metadata and questions
+            log.info("🧠 Step 6: Initializing Question metadata and Questions...");
             questionTypeDataInitializer.initializeQuestionTypes();
             levelDataInitializer.initializeLevels();
             questionDataInitializer.initializeQuestions();
 
-            // Exams and attempts
+            // Step 7: Exams and attempts
             examDataInitializer.initializeExams();
             attemptDataInitializer.initializeAttempts();
-            lessonDataInitializer.initializeLessons();
-            
-            // Future initialization steps can be added here
-            // Example:
-            // log.info("📊 Step 10: Initializing System Settings...");
-            // systemSettingsInitializer.initializeSettings();
 
-            log.info("Initializing users ...");
+            log.info("👤 Step 8: Initializing Users...");
             userInitializer.initializeUsers();
-            
+
             log.info("🎉 Main Data Initialization Process completed successfully!");
             
         } catch (Exception e) {

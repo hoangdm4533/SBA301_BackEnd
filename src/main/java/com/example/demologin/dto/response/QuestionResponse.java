@@ -15,7 +15,22 @@ public class QuestionResponse {
     private String questionText;
     private String type;
     private String formula;
+
+    private Long lessonId;          // tiện cho FE
+    private String lessonName;
+
+    private Long chapterId;         // suy ra từ lesson.getChapter()
+    private String chapterName;
+
+    private Long gradeId;           // suy ra từ lesson.getChapter().getGrade()
+    private Integer gradeNumber;
+
+    private Long levelId;
+    private String levelCode;       // "EASY/MEDIUM/HARD"
+    private Double levelScore;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     private List<OptionResponse> options;
 }
