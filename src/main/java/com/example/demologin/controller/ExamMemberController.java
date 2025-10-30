@@ -57,16 +57,14 @@ public class ExamMemberController {
         return ResponseEntity.ok(new ResponseObject(200, "Attempt submitted & graded", data));
     }
 
-    // Lịch sử bài làm của tôi
     @GetMapping("/my/attempts")
     @AuthenticatedEndpoint
     @SecuredEndpoint("EXAM_VIEW_HISTORY")
     @PageResponse
-    public ResponseEntity<ResponseObject> myAttempts(
+    public Page<AttemptSummary> myAttempts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<AttemptSummary> data = examTakingService.myAttempts(page, size);
-        return ResponseEntity.ok(new ResponseObject(200, "My attempts retrieved", data));
+        return examTakingService.myAttempts(page, size);
     }
 }

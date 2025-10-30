@@ -8,8 +8,13 @@ import java.time.Instant;
 public class AttemptSummary {
     private Long attemptId;
     private Long examId;
-    private String examTitle;
-    private Double score;
-    private String status;      // IN_PROGRESS | GRADED
-    private Instant submittedAt;
+    private String title;
+    private double score;      // điểm đạt
+    private double maxScore;   // điểm tối đa
+    private int totalQuestions;
+    private Instant startedAt;
+    private Instant finishedAt;
+    public String getScoreDisplay() {
+        return String.format("%.2f/%.2f", score, maxScore);
+    }
 }

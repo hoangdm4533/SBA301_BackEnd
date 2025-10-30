@@ -183,14 +183,11 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void delete(Long id) {
-        // 1️⃣ Gỡ liên kết exam_questions để tránh lỗi FK
+        // Gỡ liên kết exam_questions để tránh lỗi FK
         questionRepo.unlinkAllExamsOfQuestion(id);
 
-        // 2️⃣ Kiểm tra tồn tại
         Question q = questionRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Question not found: " + id));
-
-        // 3️⃣ Xoá luôn question (cascade sẽ lo Option)
         questionRepo.delete(q);
     }
 }

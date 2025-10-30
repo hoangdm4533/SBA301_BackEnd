@@ -16,4 +16,5 @@ public interface ExamTakingService {
     ExamStartResponse startAttempt(Long examId);
     ExamSubmitResponse submitAttempt(Long attemptId, ExamSubmitRequest req);
     Page<AttemptSummary> myAttempts(int page, int size);
+
 }
