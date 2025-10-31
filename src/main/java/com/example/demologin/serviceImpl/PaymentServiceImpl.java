@@ -32,8 +32,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${stripe.api.key.test}")
     private String stripeSecretKeyTest;
 
-//    @Value("${stripe.api.key.live}")
-//    private String stripeSecretKeyLive;
+
     @Override
     @Transactional
     public PaymentResponse createCheckoutSession(Long userId, PaymentRequest request) throws Exception {
@@ -46,9 +45,6 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     // 2️⃣ Cấu hình Stripe key theo chế độ
-//        String apiKey = "sandbox".equalsIgnoreCase(request.getPaymentMode())
-//                ? stripeSecretKeyTest
-//                : stripeSecretKeyLive;
         Stripe.apiKey = stripeSecretKeyTest;
 
     // 3️⃣ Tạo Transaction pending
