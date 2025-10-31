@@ -43,12 +43,12 @@ public class QuestionController {
                 .body(new ResponseObject(201, "Question created successfully", data));
     }
 
-    @PatchMapping("/{id}") // partial update
+    @PutMapping("/{id}")
     @SecuredEndpoint("QUESTION_UPDATE")
-    public ResponseEntity<ResponseObject> update(@PathVariable Long id,
-                                                 @RequestBody QuestionUpdateRequest req) {
-        QuestionResponse data = questionService.update(id, req);
-        return ResponseEntity.ok(new ResponseObject(200, "Question updated successfully", data));
+    public ResponseEntity<QuestionResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody QuestionUpdateRequest req) {
+        return ResponseEntity.ok(questionService.update(id, req));
     }
 
     @DeleteMapping("/{id}")

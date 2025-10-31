@@ -11,5 +11,10 @@ public class QuestionUpdateRequest {
     private String questionText;
     private String type;
     private String formula;
+
+    private Long lessonId;
+    private Long levelId;
+    private String levelCode;
+
     private List<OptionRequest> options;
 }

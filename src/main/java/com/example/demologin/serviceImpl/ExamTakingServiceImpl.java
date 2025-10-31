@@ -7,6 +7,7 @@
     import com.example.demologin.entity.*;
     import com.example.demologin.exception.exceptions.ForbiddenException;
     import com.example.demologin.exception.exceptions.NotFoundException;
+    import com.example.demologin.mapper.ExamAttemptMapper;
     import com.example.demologin.repository.*;
     import com.example.demologin.service.ExamTakingService;
     import com.example.demologin.utils.AccountUtils;
@@ -34,6 +35,7 @@
         private final OptionRepository optionRepository;
         private final AccountUtils accountUtils;
         private final ExamRepository examRepository;
+        private final ExamAttemptMapper examAttemptMapper;
 
 
         @Override
@@ -60,10 +62,10 @@
         @Override
         public ExamStartResponse startAttempt(Long examId) {
             Exam exam = examRepository.findById(examId)
-                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Exam not found: " + examId));
+                    .orElseThrow(() -> new EntityNotFoundException("Exam not found: " + examId));
 
             if (exam.getStatus() == null || !exam.getStatus().equalsIgnoreCase("PUBLISHED")) {
-                throw new com.example.demologin.exception.exceptions.ForbiddenException("Exam is not published");
+                throw new ForbiddenException("Exam is not published");
             }
 
             User currentUser = accountUtils.getCurrentUser();
@@ -74,41 +76,37 @@
             attempt.setStartedAt(LocalDateTime.now());
             attempt = examAttemptRepository.save(attempt);
 
+            // Lấy câu hỏi của đề + map về QuestionView (không lộ đáp án)
             List<ExamQuestion> eqs = examQuestionRepository.findByExam(exam);
 
-            List<QuestionView> questions = eqs.stream().map(eq -> {
+            List<QuestionView> questionViews = eqs.stream().map(eq -> {
                 Question q = eq.getQuestion();
 
-                // Map options (KHÔNG đụng tới qv ở đây)
                 List<OptionView> optionViews = (q.getOptions() == null ? List.<Option>of() : q.getOptions())
                         .stream()
                         .map(o -> {
                             OptionView ov = new OptionView();
                             ov.setId(o.getId());
-                            ov.setContent(o.getOptionText()); // đổi nếu field khác
+                            ov.setContent(o.getOptionText()); // 🔁 nếu DTO bạn dùng 'content' thì đổi setContent(...)
                             return ov;
                         })
                         .toList();
 
-                // Tạo qv sau khi đã có optionViews
                 QuestionView qv = new QuestionView();
                 qv.setId(q.getId());
-                qv.setText(q.getQuestionText()); // đổi nếu field khác
-                qv.setQuestionType(q.getType() != null ? q.getType().getDescription() : null);
+                qv.setText(q.getQuestionText()); // 🔁 nếu DTO bạn dùng 'text' thì đổi setText(...)
+                qv.setQuestionType(q.getType() != null ? q.getType().getDescription() : null); // 🔁 nếu DTO bạn dùng 'questionType' thì đổi tên setter
                 qv.setOptions(optionViews);
-                qv.setScore(eq.getScore()); // set score ở đây
+                qv.setScore(eq.getScore()); // gửi điểm từng câu để FE hiển thị nếu cần
                 return qv;
             }).toList();
 
-            ExamStartResponse resp = new ExamStartResponse();
-            resp.setAttemptId(attempt.getId());
-            resp.setExamId(exam.getId());
-            resp.setTitle(exam.getTitle());
-            resp.setTotalQuestions(questions.size());
-            resp.setStartedAt(attempt.getStartedAt().atZone(ZoneId.systemDefault()).toInstant());
-            resp.setMustSubmitBefore(null);
-            resp.setQuestions(questions);
-            return resp;
+            // ✅ Trả về qua mapper (đúng kiểu List<QuestionView>)
+            return examAttemptMapper.toStartResponse(
+                    attempt,
+                    questionViews.size(),
+                    questionViews
+            );
         }
 
         @Transactional
@@ -124,61 +122,80 @@
 
             Exam exam = attempt.getExam();
 
+            // Câu hỏi + điểm từng câu
             List<ExamQuestion> eqs = examQuestionRepository.findByExam(exam);
             Map<Long, ExamQuestion> examQuestionsByQid = eqs.stream()
                     .collect(Collectors.toMap(eq -> eq.getQuestion().getId(), Function.identity()));
 
-            int totalQuestions = (req.getAnswers() == null) ? 0 : req.getAnswers().size();
-            int totalCorrect = 0;
+            int totalQuestions = eqs.size();
+            int totalCorrect   = 0;
+            double totalScore  = 0.0;
+            double maxScore    = eqs.stream()
+                    .map(ExamQuestion::getScore)
+                    .map(s -> s == null ? 1.0 : s.doubleValue())
+                    .reduce(0.0, Double::sum);
 
             if (req.getAnswers() != null) {
                 for (AnswerPayload ans : req.getAnswers()) {
                     Long qid = ans.getQuestionId();
-                    if (!examQuestionsByQid.containsKey(qid)) continue;
+                    ExamQuestion eq = examQuestionsByQid.get(qid);
+                    if (eq == null) continue; // câu không thuộc đề
 
+                    // Đáp án đúng
                     List<Long> correctIds = optionRepository.findByQuestion_IdAndIsCorrectTrue(qid)
                             .stream().map(Option::getId).toList();
 
-                    List<Long> chosen = ans.getSelectedOptionIds() == null
+                    // Lựa chọn của user
+                    List<Long> chosen = (ans.getSelectedOptionIds() == null)
                             ? Collections.emptyList()
                             : ans.getSelectedOptionIds();
 
+                    // So sánh theo tập hợp
                     boolean isCorrect = new HashSet<>(chosen).equals(new HashSet<>(correctIds));
-                    if (isCorrect) totalCorrect++;
+                    if (isCorrect) {
+                        totalCorrect++;
+                        double qScore = eq.getScore() == null ? 1.0 : eq.getScore().doubleValue();
+                        totalScore += qScore;
+                    }
 
+                    // TODO: nếu có SHORT_ANSWER thì xử lý ans.getAnswerText() tại đây
                 }
             }
 
-            double score = (totalQuestions == 0) ? 0.0 : (totalCorrect * 1.0); // hoặc scale theo điểm từng câu
-
             attempt.setFinishedAt(LocalDateTime.now());
-            attempt.setScore(score);
+            attempt.setScore(totalScore);
             examAttemptRepository.save(attempt);
 
-            ExamSubmitResponse resp = new ExamSubmitResponse();
-            resp.setAttemptId(attempt.getId());
-            resp.setScore(score);
-            resp.setTotalCorrect(totalCorrect);
-            resp.setTotalQuestions(totalQuestions);
-            return resp;
+            // ✅ Trả về qua mapper
+            return examAttemptMapper.toSubmitResponse(
+                    attempt,
+                    maxScore,
+                    totalQuestions,
+                    totalCorrect
+            );
         }
 
         @Override
+        @Transactional
         public Page<AttemptSummary> myAttempts(int page, int size) {
-            User currentUser = accountUtils.getCurrentUser();
+            var currentUser = accountUtils.getCurrentUser();
             Pageable pageable = PageRequest.of(page, size);
 
-            Page<ExamAttempt> attempts = examAttemptRepository.findByUser(currentUser, pageable);
+            Page<ExamAttempt> attempts = examAttemptRepository.findByUser_UserId(currentUser.getUserId(), pageable);
 
-            return attempts.map(a -> {
-                AttemptSummary dto = new AttemptSummary();
-                dto.setAttemptId(a.getId());
-                dto.setExamId(a.getExam() != null ? a.getExam().getId() : null);
-                dto.setExamTitle(a.getExam() != null ? a.getExam().getTitle() : null);
-                dto.setScore(a.getScore());
-                dto.setSubmittedAt(a.getFinishedAt() != null ? a.getFinishedAt().atZone(ZoneId.systemDefault()).toInstant() : null);
-                return dto;
-            });
+            List<AttemptSummary> summaries = attempts.getContent().stream().map(attempt -> {
+                Exam exam = attempt.getExam();
+                List<ExamQuestion> eqs = examQuestionRepository.findByExam(exam);
+
+                double maxScore = eqs.stream()
+                        .map(ExamQuestion::getScore)
+                        .map(s -> s == null ? 1.0 : s.doubleValue())
+                        .reduce(0.0, Double::sum);
+
+                return examAttemptMapper.toMyAttemptResponse(attempt, maxScore, eqs.size());
+            }).toList();
+
+            return new PageImpl<>(summaries, pageable, attempts.getTotalElements());
         }
 
     }

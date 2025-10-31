@@ -30,4 +30,5 @@ public class Grade {
 
     @OneToMany(mappedBy = "grade")
     private List<Chapter> chapters;
+
 }
