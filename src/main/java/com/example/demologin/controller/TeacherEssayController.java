@@ -1,6 +1,8 @@
 package com.example.demologin.controller;
 
 import com.example.demologin.annotation.ApiResponse;
+import com.example.demologin.annotation.AuthenticatedEndpoint;
+import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.EssayQuestionRequest;
 import com.example.demologin.dto.request.TeacherGradingRequest;
@@ -30,8 +32,28 @@ public class TeacherEssayController {
     private final EssaySubmissionService submissionService;
     private final AccountUtils accountUtils;
 
+    @GetMapping("/questions")
+    @AuthenticatedEndpoint
+    @PageResponse
+    @ApiResponse(message = "Essay questions retrieved successfully")
+    @Operation(summary = "Get all essay questions", 
+               description = "Retrieve paginated list of all essay questions (teacher only)")
+    public ResponseEntity<ResponseObject> getAllQuestions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            Pageable pageable = Pageable.ofSize(size).withPage(page);
+            var questions = questionService.getAllActiveQuestions(pageable);
+            return ResponseEntity.ok(new ResponseObject(200, "Essay questions retrieved successfully", questions));
+        } catch (Exception e) {
+            log.error("Failed to get essay questions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseObject(500, e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/questions")
-    @SecuredEndpoint("TEACHER")
+    @AuthenticatedEndpoint
     @ApiResponse(message = "Essay question created successfully")
     @Operation(summary = "Create new essay question")
     public ResponseEntity<ResponseObject> createQuestion(@Valid @RequestBody EssayQuestionRequest request) {
@@ -48,7 +70,7 @@ public class TeacherEssayController {
     }
 
     @PostMapping("/grade")
-    @SecuredEndpoint("TEACHER")
+    @AuthenticatedEndpoint
     @ApiResponse(message = "Essay graded successfully")
     @Operation(summary = "Grade essay submission")
     public ResponseEntity<ResponseObject> gradeSubmission(@Valid @RequestBody TeacherGradingRequest request) {
@@ -67,7 +89,7 @@ public class TeacherEssayController {
     }
 
     @GetMapping("/submissions/pending")
-    @SecuredEndpoint("TEACHER")
+    @AuthenticatedEndpoint
     @ApiResponse(message = "Retrieved pending submissions")
     @Operation(summary = "Get pending submissions")
     public ResponseEntity<ResponseObject> getPendingSubmissions(Pageable pageable) {
@@ -82,7 +104,7 @@ public class TeacherEssayController {
     }
 
     @GetMapping("/submissions/{id}")
-    @SecuredEndpoint("TEACHER")
+    @AuthenticatedEndpoint
     @ApiResponse(message = "Retrieved submission details")
     @Operation(summary = "Get submission details")
     public ResponseEntity<ResponseObject> getSubmissionDetails(@PathVariable Long id) {

@@ -35,8 +35,11 @@ public class StudentEssayController {
     @AuthenticatedEndpoint
     @PageResponse
     @Operation(summary = "Get all active essay questions", description = "Premium students can view available essays")
-    public ResponseEntity<ResponseObject> getActiveQuestions(Pageable pageable) {
+    public ResponseEntity<ResponseObject> getActiveQuestions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
+            Pageable pageable = Pageable.ofSize(size).withPage(page);
             var questions = questionService.getAllActiveQuestions(pageable);
             return ResponseEntity.ok(new ResponseObject(200, "Success", questions));
         } catch (Exception e) {
