@@ -4,12 +4,16 @@ import com.example.demologin.dto.request.EssaySubmissionStartRequest;
 import com.example.demologin.dto.request.EssaySubmissionSubmitRequest;
 import com.example.demologin.dto.request.TeacherGradingRequest;
 import com.example.demologin.dto.response.EssaySubmissionResponse;
+import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.dto.response.PageResponse;
+import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.EssayQuestion;
 import com.example.demologin.entity.EssaySubmission;
+import com.example.demologin.entity.Role;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.enums.SubmissionStatus;
+import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.repository.EssayQuestionRepository;
 import com.example.demologin.repository.EssaySubmissionRepository;
 import com.example.demologin.repository.UserRepository;
@@ -29,6 +33,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -308,6 +313,12 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
             .status(submission.getStatus())
             .gradedAt(submission.getGradedAt())
             .isExpired(isExpired)
+            .user(toUserResponse(submission.getUser()))
             .build();
+    }
+    public UserResponse toUserResponse(User u) {
+        UserResponse r = new UserResponse();
+        r.setFullName(u.getFullName());
+        return r;
     }
 }

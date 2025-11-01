@@ -68,4 +68,6 @@ public class EssaySubmissionResponse {
 
     @JsonProperty("is_expired")
     private Boolean isExpired;
+
+    private UserResponse user;
 }
