@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class ExamAdminController {
     private final ExamService examService;
 
     @PostMapping
-    @SecuredEndpoint("EXAM_CREATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Tạo exam thành công")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody ExamRequest request) {
         ExamResponse data = examService.createExam(request);
@@ -39,7 +40,7 @@ public class ExamAdminController {
     }
 
     @GetMapping("/{id}")
-    @SecuredEndpoint("EXAM_UPDATE") // hoặc quyền xem riêng nếu bạn có
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Lấy thông tin exam thành công")
     public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
         ExamResponse data = examService.getExamById(id);
@@ -47,7 +48,7 @@ public class ExamAdminController {
     }
 
     @GetMapping
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> list(
             @RequestParam(defaultValue = "0") int page,
@@ -59,7 +60,7 @@ public class ExamAdminController {
     }
 
     @PutMapping("/{id}")
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Cập nhật exam thành công")
     public ResponseEntity<ResponseObject> update(@PathVariable Long id,
                                                  @Valid @RequestBody ExamRequest request) {
@@ -68,7 +69,7 @@ public class ExamAdminController {
     }
 
     @DeleteMapping("/{id}")
-    @SecuredEndpoint("EXAM_DELETE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Xóa exam thành công")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
         examService.deleteExam(id);
@@ -76,7 +77,7 @@ public class ExamAdminController {
     }
 
     @GetMapping("/exams?status=PUBLISHED")
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> byStatus(@PathVariable String status,
                                                    @RequestParam(defaultValue = "0") int page,
@@ -88,7 +89,7 @@ public class ExamAdminController {
     }
 
     @GetMapping("/search")
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> search(@RequestParam String keyword,
                                                  @RequestParam(defaultValue = "0") int page,
@@ -99,7 +100,7 @@ public class ExamAdminController {
     }
 
     @PostMapping("/{examId}/questions")
-    @SecuredEndpoint("EXAM_QUESTION_ADD")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Thêm câu hỏi vào exam thành công")
     public ResponseEntity<ResponseObject> addQuestion(@PathVariable Long examId,
                                                       @Valid @RequestBody AddQuestionToExamRequest request) {
@@ -109,7 +110,7 @@ public class ExamAdminController {
     }
 
     @DeleteMapping("{examId}/questions")
-    @SecuredEndpoint("EXAM_QUESTION_REMOVE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Xóa câu hỏi khỏi exam thành công")
     public ResponseEntity<ResponseObject> removeQuestion(@PathVariable Long examId,
                                                          @PathVariable Long questionId) {
@@ -119,7 +120,7 @@ public class ExamAdminController {
     }
 
     @GetMapping("/{examId}/questions")
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Lấy danh sách câu hỏi trong exam thành công")
     public ResponseEntity<ResponseObject> listQuestions(@PathVariable Long examId) {
         List<ExamQuestionResponse> data = examService.getQuestionsInExam(examId);
@@ -127,7 +128,7 @@ public class ExamAdminController {
     }
 
     @PutMapping("/{id}/publish")
-    @SecuredEndpoint("EXAM_PUBLISH")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Publish exam thành công")
     public ResponseEntity<ResponseObject> publish(@PathVariable Long id) {
         examService.publishExam(id);
@@ -135,7 +136,7 @@ public class ExamAdminController {
     }
 
     @PutMapping("/{id}/archive")
-    @SecuredEndpoint("EXAM_ARCHIVE")
+    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Archive exam thành công")
     public ResponseEntity<ResponseObject> archive(@PathVariable Long id) {
         examService.archiveExam(id);
@@ -143,7 +144,7 @@ public class ExamAdminController {
     }
 
     @GetMapping("/published")
-    @SecuredEndpoint("EXAM_UPDATE")
+    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> published(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size) {

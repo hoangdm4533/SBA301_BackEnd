@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -30,7 +31,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
     private final AccountUtils accountUtils;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logUserActivity(User user, ActivityType activityType, String details) {
         try {
             UserActivityLog activityLog = UserActivityLog.builder()
@@ -41,7 +42,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
                 .build();
 
             userActivityLogRepository.save(activityLog);
-            log.info("Logged activity for user {}: {} - {}", 
+            log.info("Logged activity for user {}: {} - {}",
                 user.getUsername(), activityType, details);
         } catch (Exception e) {
             log.error("Failed to log user activity: {}", e.getMessage());
