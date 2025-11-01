@@ -97,10 +97,6 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
         submission = submissionRepo.save(submission);
         log.info("Created new submission {} for user {} on question {}", submission.getId(), userId, question.getId());
 
-        // 5. Log activity
-        activityLogService.logUserActivity(user, ActivityType.ESSAY_STARTED, 
-            "Started essay question: " + question.getId());
-
         return mapToResponse(submission, question);
     }
 
