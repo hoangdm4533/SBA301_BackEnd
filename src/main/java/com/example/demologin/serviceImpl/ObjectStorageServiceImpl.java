@@ -53,6 +53,26 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
     }
 
     @Override
+    public String uploadImage(String objectName, byte[] imageData, String contentType) {
+        try (InputStream stream = new ByteArrayInputStream(imageData)) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .stream(stream, imageData.length, -1)
+                            .contentType(contentType)
+                            .build()
+            );
+            
+            // Return the URL to access the image
+            return String.format("http://localhost:9000/%s/%s", bucketName, objectName);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public String fetchDocument(String objectName) {
         try (InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder().bucket(bucketName).object(objectName).build())) {

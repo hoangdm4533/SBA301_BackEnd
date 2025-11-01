@@ -104,6 +104,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionRepository.deleteById(id);
     }
 
+    @Override
+    public boolean hasPremium(Long userId) {
+        return subscriptionRepository.existsByUserUserIdAndStatusAndEndDateAfter(
+            userId, "ACTIVE", LocalDateTime.now()
+        );
+    }
+
     private SubscriptionResponse mapToResponse(Subscription sub) {
         return SubscriptionResponse.builder()
                 .id(sub.getId())
