@@ -3,6 +3,7 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.grade.GradeRequest;
+import com.example.demologin.dto.response.ChapterResponse;
 import com.example.demologin.dto.response.GradeResponse;
 import com.example.demologin.service.GradeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,9 +28,10 @@ public class GradeController {
     }
 
     @PostMapping
-    @SecuredEndpoint("GRADE_CREATE")
+//    @SecuredEndpoint("GRADE_CREATE")
     @ApiResponse(message = "Grade created successfully")
     @Operation(summary = "Create new grade", description = "Create a new grade")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<GradeResponse> create(@Valid @RequestBody GradeRequest request) {
         GradeResponse response = gradeService.createGrade(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -38,6 +41,7 @@ public class GradeController {
 //    @SecuredEndpoint("GRADE_VIEW")
     @ApiResponse(message = "Grade retrieved successfully")
     @Operation(summary = "Get grade by ID", description = "Retrieve a grade by its ID")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<GradeResponse> getById(
             @Parameter(description = "Grade ID") @PathVariable Long id) {
         return ResponseEntity.ok(gradeService.getGradeById(id));
@@ -47,14 +51,16 @@ public class GradeController {
 //    @SecuredEndpoint("GRADE_VIEW")
     @ApiResponse(message = "Grades retrieved successfully")
     @Operation(summary = "Get all grades", description = "Retrieve all grades")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<List<GradeResponse>> getAll() {
         return ResponseEntity.ok(gradeService.getAllGrades());
     }
 
     @PutMapping("/{id}")
-    @SecuredEndpoint("GRADE_UPDATE")
+//    @SecuredEndpoint("GRADE_UPDATE")
     @ApiResponse(message = "Grade updated successfully")
     @Operation(summary = "Update grade", description = "Update an existing grade")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<GradeResponse> update(
             @Parameter(description = "Grade ID") @PathVariable Long id,
             @Valid @RequestBody GradeRequest request) {
@@ -62,12 +68,21 @@ public class GradeController {
     }
 
     @DeleteMapping("/{id}")
-    @SecuredEndpoint("GRADE_DELETE")
+//    @SecuredEndpoint("GRADE_DELETE")
     @ApiResponse(message = "Grade deleted successfully")
     @Operation(summary = "Delete grade", description = "Delete a grade")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Grade ID") @PathVariable Long id) {
         gradeService.deleteGrade(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @ApiResponse(message = "Get list chapters by grade id successfully")
+    @GetMapping("/{gradeId}/chapters")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
+    public ResponseEntity<List<ChapterResponse>> getChaptersByGrade(@PathVariable Long gradeId) {
+        List<ChapterResponse> chapters = gradeService.getChaptersByGradeId(gradeId);
+        return ResponseEntity.ok(chapters);
     }
 }

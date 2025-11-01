@@ -19,6 +19,10 @@ public class Lesson {
 
     private String lessonName;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String descriptions;
+
     @ManyToOne
     @JoinColumn(name = "chapter_id")
     private Chapter chapter;
