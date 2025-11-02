@@ -64,13 +64,13 @@ public class ChapterController {
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        // ✅ Nếu không có param page → trả toàn bộ danh sách
+        // Nếu không có param page → trả toàn bộ danh sách
         if (page == null) {
             List<ChapterResponse> chapters = chapterService.getAll();
             return ResponseEntity.ok(chapters);
         }
 
-        // ✅ Có param page → trả dữ liệu phân trang
+        // Có param page → trả dữ liệu phân trang
         Sort sortOrder = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sort).descending()
                 : Sort.by(sort).ascending();

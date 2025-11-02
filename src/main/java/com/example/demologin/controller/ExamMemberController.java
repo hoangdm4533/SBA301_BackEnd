@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +25,7 @@ public class ExamMemberController {
     // Danh sách bài thi có thể làm (PUBLISHED)
     @GetMapping("/available")
     @AuthenticatedEndpoint
-    @SecuredEndpoint("EXAM_VIEW_AVAILABLE")
+    @PreAuthorize("hasRole('STUDENT')")
     @PageResponse
     public ResponseEntity<ResponseObject> available(
             @RequestParam(defaultValue = "0") int page,
@@ -37,7 +38,7 @@ public class ExamMemberController {
     // Bắt đầu làm bài thi → tạo attempt, trả về đề (nếu bạn muốn ẩn đáp án đúng)
     @PostMapping("/{examId}/start")
     @AuthenticatedEndpoint
-    @SecuredEndpoint("EXAM_TAKE")
+    @PreAuthorize("hasRole('STUDENT')")
     @ApiResponse(message = "Bắt đầu làm bài thi thành công")
     public ResponseEntity<ResponseObject> start(@PathVariable Long examId) {
         ExamStartResponse data = examTakingService.startAttempt(examId);
@@ -47,7 +48,7 @@ public class ExamMemberController {
     // Nộp bài và chấm tự động
     @PostMapping("/attempts/{attemptId}/submit")
     @AuthenticatedEndpoint
-    @SecuredEndpoint("EXAM_TAKE")
+    @PreAuthorize("hasRole('STUDENT')")
     @ApiResponse(message = "Nộp bài & chấm điểm thành công")
     public ResponseEntity<ResponseObject> submit(
             @PathVariable Long attemptId,
@@ -59,7 +60,7 @@ public class ExamMemberController {
 
     @GetMapping("/my/attempts")
     @AuthenticatedEndpoint
-    @SecuredEndpoint("EXAM_VIEW_HISTORY")
+    @PreAuthorize("hasRole('STUDENT')")
     @PageResponse
     public Page<AttemptSummary> myAttempts(
             @RequestParam(defaultValue = "0") int page,

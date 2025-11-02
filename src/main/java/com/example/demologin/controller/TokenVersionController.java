@@ -23,8 +23,7 @@ import jakarta.validation.Valid;
     private final TokenVersionService tokenVersionService;
     
     @PostMapping("/invalidate-all")
-    @SecuredEndpoint("TOKEN_INVALIDATE_OWN")
-    @Operation(summary = "Invalidate all tokens for current user", 
+    @Operation(summary = "Invalidate all tokens for current user",
                description = "Increment token version to invalidate all existing tokens for the current user")
     @ApiResponse(message = "All tokens invalidated successfully")
     public Object invalidateAllCurrentUserTokens(
@@ -34,8 +33,7 @@ import jakarta.validation.Valid;
     }
     
     @PostMapping("/invalidate-user/{userId}")
-    @SecuredEndpoint("TOKEN_INVALIDATE_USER")
-    @Operation(summary = "Admin invalidate all tokens for user by ID", 
+    @Operation(summary = "Admin invalidate all tokens for user by ID",
                description = "Admin operation to increment token version and invalidate all tokens for specific user")
     @ApiResponse(message = "User tokens invalidated successfully")
     public Object invalidateUserTokensByUserId(
@@ -48,8 +46,7 @@ import jakarta.validation.Valid;
 
     
     @GetMapping("/current")
-    @SecuredEndpoint("TOKEN_VIEW_OWN")
-    @Operation(summary = "Get current user token version", 
+    @Operation(summary = "Get current user token version",
                description = "Get the current token version for the authenticated user")
     @ApiResponse(message = "Token version retrieved successfully")
     public Object getCurrentUserTokenVersion() {
@@ -57,8 +54,7 @@ import jakarta.validation.Valid;
     }
     
     @GetMapping("/user/{userId}")
-    @SecuredEndpoint("TOKEN_VIEW_USER")
-    @Operation(summary = "Get user token version by ID", 
+    @Operation(summary = "Get user token version by ID",
                description = "Admin operation to get token version for specific user by ID")
     @ApiResponse(message = "User token version retrieved successfully")
     public Object getUserTokenVersionByUserId(

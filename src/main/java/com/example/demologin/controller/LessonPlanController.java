@@ -23,15 +23,9 @@ public class LessonPlanController {
     private final LessonPlanService lessonPlanService;
     private final LessonPlanCompactionService compactionService;
 
-//    public LessonPlanController(LessonPlanService lessonPlanService, LessonPlanCompactionService compactionService) {
-//        this.lessonPlanService = lessonPlanService;
-//        this.compactionService = compactionService;
-//    }
 
     @PostMapping
-//    @SecuredEndpoint("LESSON_PLAN_CREATE")
     @SmartCache
-//    @SecuredEndpoint("LESSON_PLAN_CREATE")
     @Operation(summary = "Create new lesson plan",
             description = "Create a lesson plan")
     public LessonPlanResponse create(@RequestBody LessonPlanRequest req) {
@@ -39,7 +33,6 @@ public class LessonPlanController {
     }
 
     @PostMapping("/{lessonPlanId}/save")
-//    @SecuredEndpoint("LESSON_PLAN_COMPACT")
     public ResponseEntity<String> compactAndSave(@PathVariable Long lessonPlanId) {
         try {
             compactionService.compactLessonPlan(lessonPlanId);
@@ -54,7 +47,6 @@ public class LessonPlanController {
     // GET BY ID
     // ----------------------------
     @GetMapping("/{lessonPlanId}")
-//    @SecuredEndpoint("LESSON_PLAN_VIEW")
     @Operation(summary = "Get lesson plan by ID", description = "Retrieve a lesson plan and load content from MinIO if available.")
     public ResponseEntity<LessonPlanResponse> getById(@PathVariable Long lessonPlanId) {
         LessonPlanResponse response = lessonPlanService.findLessonPlanById(lessonPlanId);
@@ -65,7 +57,6 @@ public class LessonPlanController {
     // GET ALL (no pagination)
     // ----------------------------
     @GetMapping()
-//    @SecuredEndpoint("LESSON_PLAN_VIEW")
     @Operation(summary = "Get all lesson plans", description = "Return a list of all lesson plans (no pagination).")
     public ResponseEntity<List<LessonPlanResponse>> getAll() {
         List<LessonPlanResponse> response = lessonPlanService.getAllLessonPlans();
@@ -75,7 +66,6 @@ public class LessonPlanController {
     // ----------------------------
     // GET PAGEABLE (with pagination + sort)
     // ----------------------------
-//    @SecuredEndpoint("LESSON_PLAN_VIEW")
     @GetMapping("paged")
     @Operation(summary = "Get paginated lesson plans", description = "Return lesson plans with pagination and sorting options.")
     public Page<LessonPlanResponse> getPaged(
@@ -91,7 +81,6 @@ public class LessonPlanController {
     // ----------------------------
     // DELETE
     // ----------------------------
-//    @SecuredEndpoint("LESSON_PLAN_DELETE")
     @DeleteMapping("/{lessonPlanId}")
     @Operation(summary = "Delete lesson plan", description = "Delete a lesson plan and its MinIO file.")
     public ResponseEntity<String> delete(@PathVariable Long lessonPlanId) {
