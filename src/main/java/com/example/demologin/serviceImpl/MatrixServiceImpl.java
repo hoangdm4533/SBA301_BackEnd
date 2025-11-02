@@ -34,6 +34,7 @@ public class MatrixServiceImpl implements MatrixService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Matrix matrix = Matrix.builder()
+                .title(request.getTitle())
                 .totalQuestion(request.getTotalQuestion())
                 .totalScore(request.getTotalScore())
                 .user(user)
@@ -124,6 +125,7 @@ public class MatrixServiceImpl implements MatrixService {
 
         return MatrixResponse.builder()
                 .id(matrix.getId())
+                .title(matrix.getTitle())
                 .totalQuestion(matrix.getTotalQuestion())
                 .totalScore(matrix.getTotalScore())
                 .createdAt(matrix.getCreatedAt())

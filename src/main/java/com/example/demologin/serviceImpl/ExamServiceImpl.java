@@ -32,6 +32,7 @@ public class ExamServiceImpl implements ExamService {
     private final QuestionRepository questionRepository;
     private final ExamAttemptRepository examAttemptRepository;
     private final UserRepository userRepository;
+    private final MatrixRepository matrixRepository;
 
     private ExamResponse mapToResponse(Exam exam) {
         List<ExamQuestionResponse> questions = examQuestionRepository.findByExam(exam)
@@ -71,21 +72,29 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @Transactional
     public ExamResponse createExam(ExamRequest request) {
-        // Kiểm tra trùng lặp title
-        if (examRepository.existsByTitle(request.getTitle())) {
-            throw new ConflictException("Đã tồn tại exam với tiêu đề '" + request.getTitle() + "'");
-        }
-        
-        Exam exam = Exam.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .status(request.getStatus() != null ? request.getStatus() : "DRAFT")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        try{
+            // Kiểm tra trùng lặp title
+            if (examRepository.existsByTitle(request.getTitle())) {
+                throw new ConflictException("Đã tồn tại exam với tiêu đề '" + request.getTitle() + "'");
+            }
+            Matrix matrix = matrixRepository.findById(request.getMatrixId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy matrix" + request.getMatrixId()));
 
-        Exam saved = examRepository.save(exam);
-        return mapToResponse(saved);
+            Exam exam = Exam.builder()
+                    .title(request.getTitle())
+                    .description(request.getDescription())
+                    .status(request.getStatus() != null ? request.getStatus() : "DRAFT")
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .matrix(matrix)
+                    .build();
+
+            Exam saved = examRepository.save(exam);
+            return mapToResponse(saved);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -166,20 +175,52 @@ public class ExamServiceImpl implements ExamService {
     public ExamQuestionResponse addQuestionToExam(Long examId, AddQuestionToExamRequest request) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
-        
+
         Question question = questionRepository.findById(request.getQuestionId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy question với id " + request.getQuestionId()));
 
-        // Kiểm tra question đã có trong exam chưa
+        // Kiểm tra trùng câu hỏi
         if (examQuestionRepository.existsByExamAndQuestion(exam, question)) {
             throw new ConflictException("Question đã tồn tại trong exam này");
         }
 
+        // Lấy Level của question
+        Level level = question.getLevel();
+        if (level == null) {
+            throw new ConflictException("Question không có level hợp lệ");
+        }
+
+        // Lấy Matrix từ Exam
+        Matrix matrix = exam.getMatrix();
+        if (matrix == null) {
+            throw new ConflictException("Exam chưa được gắn Matrix");
+        }
+
+        // Tìm MatrixDetail tương ứng với Level đó
+        MatrixDetail matrixDetail = matrix.getDetails().stream()
+                .filter(md -> md.getLevel().getId().equals(level.getId()))
+                .findFirst()
+                .orElseThrow(() -> new ConflictException(
+                        "Không tìm thấy MatrixDetail cho Level " + level.getDescription()));
+
+        // Đếm số lượng câu hỏi trong exam theo level
+        long countByLevel = examQuestionRepository.countByExamAndQuestion_Level(exam, level);
+
+        if (countByLevel >= matrixDetail.getTotalQuestions()) {
+            throw new ConflictException(String.format(
+                    "Số câu hỏi Level '%s' đã đạt giới hạn (%d/%d)",
+                    level.getDescription(), countByLevel, matrixDetail.getTotalQuestions()
+            ));
+        }
+
+        // Tạo ExamQuestion mới
         ExamQuestion examQuestion = ExamQuestion.builder()
                 .exam(exam)
                 .question(question)
                 .score(request.getScore())
                 .build();
+
+        exam.addExamQuestion(examQuestion); // đảm bảo liên kết 2 chiều
 
         ExamQuestion saved = examQuestionRepository.save(examQuestion);
         return mapExamQuestionToResponse(saved);

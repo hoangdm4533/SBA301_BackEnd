@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 public class MatrixResponse {
     private Long id;
+    private String title;
     private Integer totalQuestion;
     private Double totalScore;
     private LocalDateTime createdAt;

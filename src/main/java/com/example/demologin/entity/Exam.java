@@ -30,5 +30,15 @@ public class Exam {
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
     private List<ExamQuestion> examQuestions;
+
+    public void addExamQuestion(ExamQuestion examQuestion) {
+        examQuestions.add(examQuestion);
+        examQuestion.setExam(this);
+    }
+
+    public void removeExamQuestion(ExamQuestion examQuestion) {
+        examQuestions.remove(examQuestion);
+        examQuestion.setExam(null);
+    }
 }
 

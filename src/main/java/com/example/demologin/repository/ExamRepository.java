@@ -1,6 +1,7 @@
 package com.example.demologin.repository;
 
 import com.example.demologin.entity.Exam;
+import com.example.demologin.entity.Level;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ExamRepository extends JpaRepository<Exam, Long> {
+
     
     // Tìm kiếm theo status
     Page<Exam> findByStatus(String status, Pageable pageable);
@@ -40,4 +42,6 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     Page<Exam> search(@Param("kw") String keyword, Pageable pageable);
 
     Page<Exam> findByStatusIgnoreCase(String status, Pageable pageable); // dùng cho "PUBLISHED"
+
+
 }

@@ -2,6 +2,7 @@ package com.example.demologin.repository;
 
 import com.example.demologin.entity.ExamQuestion;
 import com.example.demologin.entity.Exam;
+import com.example.demologin.entity.Level;
 import com.example.demologin.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -38,4 +39,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long
     boolean existsByExam_IdAndQuestion_Id(Long examId, Long questionId);
     void deleteByExam_IdAndQuestion_Id(Long examId, Long questionId);
     List<ExamQuestion> findByExam_Id(Long examId);
+
+//    boolean existsByExamAndQuestion(Exam exam, Question question);
+    long countByExamAndQuestion_Level(Exam exam, Level level);
 }

@@ -17,6 +17,7 @@ public class Matrix {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String title;
 
 //    private String level; matrix detail co level-id roi
     private Integer totalQuestion;
