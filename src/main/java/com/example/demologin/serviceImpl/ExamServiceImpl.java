@@ -264,9 +264,9 @@ public class ExamServiceImpl implements ExamService {
         if ("PUBLISHED".equalsIgnoreCase(exam.getStatus())) {
             throw new ConflictException("Exam này đã được publish trước đó");
         }
-//        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
-//            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
-//        }
+        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
+        }
 
         // Kiểm tra exam có câu hỏi chưa
         Integer questionCount = examQuestionRepository.countByExam(exam);
