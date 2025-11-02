@@ -49,11 +49,12 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public void delete(Long id) {
+    public boolean delete(Long id) {
         if (!planRepository.existsById(id)) {
             throw new IllegalArgumentException("Plan not found");
         }
         planRepository.deleteById(id);
+        return true;
     }
 
     @Override

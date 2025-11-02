@@ -15,7 +15,7 @@ public interface ChapterService {
 
     ChapterResponse update(Long id, ChapterRequest request);
 
-    void delete(Long id);
+    boolean delete(Long id);
 
     ChapterResponse getById(Long id);
 

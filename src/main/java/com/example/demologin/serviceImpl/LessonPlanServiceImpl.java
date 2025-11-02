@@ -4,12 +4,9 @@ import com.example.demologin.dto.request.lesson_plan.LessonPlanRequest;
 import com.example.demologin.dto.response.LessonPlanResponse;
 import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.LessonPlan;
-import com.example.demologin.entity.LessonPlanEdit;
-import com.example.demologin.entity.User;
 import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
-import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanService;
 import com.example.demologin.service.ObjectStorageService;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +79,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
     }
 
     @Override
-    public void deleteLessonPlan(Long lessonPlanId) {
+    public boolean deleteLessonPlan(Long lessonPlanId) {
         LessonPlan plan = lessonPlanRepo.findById(lessonPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson Plan not found"));
 
@@ -97,6 +94,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 
             // 2. Xóa record khỏi DB
             lessonPlanRepo.delete(plan);
+            return true;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete lesson plan", e);

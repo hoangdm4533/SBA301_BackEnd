@@ -91,12 +91,13 @@ public class MatrixServiceImpl implements MatrixService {
 
     @Override
     @Transactional
-    public void deleteMatrix(Long id) {
+    public boolean deleteMatrix(Long id) {
         Matrix matrix = matrixRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Matrix not found"));
         matrix.setStatus("INACTIVE");
         matrix.setUpdatedAt(LocalDateTime.now());
         matrixRepository.save(matrix);
+        return true;
     }
 
     private MatrixDetail createMatrixDetail(MatrixDetailRequest detail, Matrix matrix) {

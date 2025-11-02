@@ -98,10 +98,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteSubscription(Long id) {
+    public boolean deleteSubscription(Long id) {
         if (!subscriptionRepository.existsById(id))
             throw new RuntimeException("Subscription not found");
         subscriptionRepository.deleteById(id);
+        return true;
     }
 
     @Override

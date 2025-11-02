@@ -145,13 +145,14 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public void deleteExam(Long id) {
+    public boolean deleteExam(Long id) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
         
         // Xóa tất cả câu hỏi trong exam trước
         examQuestionRepository.deleteByExam(exam);
         examRepository.delete(exam);
+        return true;
     }
 
     @Override
@@ -228,7 +229,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public void removeQuestionFromExam(Long examId, Long questionId) {
+    public boolean removeQuestionFromExam(Long examId, Long questionId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
         
@@ -239,6 +240,7 @@ public class ExamServiceImpl implements ExamService {
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy question trong exam này"));
 
         examQuestionRepository.delete(examQuestion);
+        return true;
     }
 
     @Override
@@ -254,30 +256,50 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    public void publishExam(Long id) {
+    public boolean publishExam(Long id) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
-        
-        // Kiểm tra exam có câu hỏi không
+
+        // Kiểm tra trạng thái hiện tại
+        if ("PUBLISHED".equalsIgnoreCase(exam.getStatus())) {
+            throw new ConflictException("Exam này đã được publish trước đó");
+        }
+//        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+//            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
+//        }
+
+        // Kiểm tra exam có câu hỏi chưa
         Integer questionCount = examQuestionRepository.countByExam(exam);
-        if (questionCount == 0) {
+        if (questionCount == null || questionCount == 0) {
             throw new BadRequestException("Không thể publish exam không có câu hỏi");
         }
 
+        // Cập nhật trạng thái
         exam.setStatus("PUBLISHED");
         exam.setUpdatedAt(LocalDateTime.now());
+
+        // Dù @Transactional tự flush, vẫn nên save để đảm bảo commit rõ ràng
         examRepository.save(exam);
+
+        return true;
     }
+
 
     @Override
     @Transactional
-    public void archiveExam(Long id) {
+    public boolean archiveExam(Long id) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
-        
+
+        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+            throw new ConflictException("Exam này đã được lưu trữ (ARCHIVED) trước đó");
+        }
+
         exam.setStatus("ARCHIVED");
         exam.setUpdatedAt(LocalDateTime.now());
-        examRepository.save(exam);
+
+        // Không cần gọi save() — vì exam là entity managed trong Transaction
+        return true;
     }
 
     @Override

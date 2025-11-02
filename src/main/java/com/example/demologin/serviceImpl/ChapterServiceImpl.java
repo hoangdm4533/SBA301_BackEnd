@@ -6,11 +6,14 @@ import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.entity.Chapter;
 import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.LessonPlan;
+import com.example.demologin.exception.exceptions.ConflictException;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.ChapterRepository;
 import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.service.ChapterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -59,11 +62,17 @@ public class ChapterServiceImpl implements ChapterService {
     }
 
     @Override
-    public void delete(Long id) {
+    public boolean delete(Long id) {
         if (!chapterRepository.existsById(id)) {
-            throw new IllegalArgumentException("Chapter not found");
+            throw new NotFoundException("Không tìm thấy chương với id " + id);
         }
-        chapterRepository.deleteById(id);
+
+        try {
+            chapterRepository.deleteById(id);
+            return true;
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("Không thể xóa chapter do đang được sử dụng ở nơi khác");
+        }
     }
 
     @Override

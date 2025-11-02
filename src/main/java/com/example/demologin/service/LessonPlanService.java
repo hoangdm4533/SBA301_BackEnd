@@ -10,7 +10,7 @@ import java.util.List;
 public interface LessonPlanService {
     LessonPlanResponse createLessonPlan(LessonPlanRequest req);
     LessonPlanResponse mapToResponse(LessonPlan plan);
-    void deleteLessonPlan(Long lessonPlanId);
+    boolean deleteLessonPlan(Long lessonPlanId);
     LessonPlanResponse findLessonPlanById(Long lessonPlanId);
     List<LessonPlanResponse> getAllLessonPlans();
     Page<LessonPlanResponse> getLessonPlans(int page, int size, String sortBy, String sortDir);

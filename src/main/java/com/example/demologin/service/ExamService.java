@@ -19,7 +19,7 @@ public interface ExamService {
     List<ExamResponse> getAllExams();
     Page<ExamResponse> getAllExams(int page, int size, String sortBy, String sortDir);
     ExamResponse updateExam(Long id, ExamRequest request);
-    void deleteExam(Long id);
+    boolean deleteExam(Long id);
     
     // Tìm kiếm và lọc
     Page<ExamResponse> getExamsByStatus(String status, int page, int size, String sortBy, String sortDir);
@@ -27,12 +27,12 @@ public interface ExamService {
     
     // Quản lý câu hỏi trong exam
     ExamQuestionResponse addQuestionToExam(Long examId, AddQuestionToExamRequest request);
-    void removeQuestionFromExam(Long examId, Long questionId);
+    boolean removeQuestionFromExam(Long examId, Long questionId);
     List<ExamQuestionResponse> getQuestionsInExam(Long examId);
     
     // Quản lý trạng thái
-    void publishExam(Long id);
-    void archiveExam(Long id);
+    boolean publishExam(Long id);
+    boolean archiveExam(Long id);
     
     // Exam cho học sinh
     Page<ExamResponse> getPublishedExams(Pageable pageable);

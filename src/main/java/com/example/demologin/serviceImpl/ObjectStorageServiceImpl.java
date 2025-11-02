@@ -24,20 +24,21 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
         initBucket();
     }
     @Override
-    public void initBucket() {
+    public boolean initBucket() {
         try {
             log.info("Initializing bucket " + bucketName);
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
+            return true;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize bucket", e);
         }
     }
 
     @Override
-    public void uploadDocument(String objectName, String content) {
+    public boolean uploadDocument(String objectName, String content) {
         try (InputStream stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -47,6 +48,7 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
                             .contentType("text/plain")
                             .build()
             );
+            return true;
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload document", e);
         }
@@ -83,11 +85,12 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
     }
 
     @Override
-    public void deleteDocument(String objectName) {
+    public boolean deleteDocument(String objectName) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build()
             );
+            return true;
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete document", e);
         }

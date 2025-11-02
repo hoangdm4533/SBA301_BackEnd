@@ -11,5 +11,5 @@ public interface MatrixService {
     Page<MatrixResponse> getAllMatrices(Pageable pageable);
     MatrixResponse getMatrixById(Long id);
     MatrixResponse updateMatrix(Long id, MatrixRequest request);
-    void deleteMatrix(Long id);
+    boolean deleteMatrix(Long id);
 }
