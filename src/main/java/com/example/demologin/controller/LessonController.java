@@ -45,13 +45,13 @@ public class LessonController {
             @RequestParam(required = false, defaultValue = "id") String sort,
             @RequestParam(required = false, defaultValue = "asc") String direction
     ) {
-        // ✅ Nếu không có tham số page → trả full list
+        // Nếu không có tham số page → trả full list
         if (page == null) {
             List<LessonResponse> lessons = lessonService.getAllLessons();
             return ResponseEntity.ok(lessons);
         }
 
-        // ✅ Nếu có tham số page → trả dữ liệu phân trang
+        // Nếu có tham số page → trả dữ liệu phân trang
         Sort sortOrder = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sort).descending()
                 : Sort.by(sort).ascending();

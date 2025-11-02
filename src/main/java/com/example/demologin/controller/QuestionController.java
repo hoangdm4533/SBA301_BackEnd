@@ -21,7 +21,6 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping
-    @SecuredEndpoint("QUESTION_VIEW")
     public ResponseEntity<ResponseObject> list(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "20") int size) {
         Page<QuestionResponse> data = questionService.list(page, size);
@@ -29,14 +28,12 @@ public class QuestionController {
     }
 
     @GetMapping("/{id}")
-    @SecuredEndpoint("QUESTION_VIEW")
     public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
         QuestionResponse data = questionService.get(id);
         return ResponseEntity.ok(new ResponseObject(200, "Question retrieved successfully", data));
     }
 
     @PostMapping
-    @SecuredEndpoint("QUESTION_CREATE")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody QuestionCreateRequest req) {
         QuestionResponse data = questionService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -44,7 +41,6 @@ public class QuestionController {
     }
 
     @PutMapping("/{id}")
-    @SecuredEndpoint("QUESTION_UPDATE")
     public ResponseEntity<QuestionResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody QuestionUpdateRequest req) {
@@ -52,7 +48,6 @@ public class QuestionController {
     }
 
     @DeleteMapping("/{id}")
-    @   SecuredEndpoint("QUESTION_DELETE")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
         questionService.delete(id);
         return ResponseEntity.ok(new ResponseObject(200, "Question deleted successfully", id));

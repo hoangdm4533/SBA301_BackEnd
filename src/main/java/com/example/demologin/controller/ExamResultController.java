@@ -24,7 +24,6 @@ public class ExamResultController {
 
 
     @GetMapping("/{examId}/attempts")
-    @SecuredEndpoint("EXAM_RESULT_VIEW")
     @PageResponse
     @ApiResponse(message = "Lấy danh sách bài làm của học sinh thành công")
     public ResponseEntity<ResponseObject> listAttemptsOfExam(
@@ -44,7 +43,6 @@ public class ExamResultController {
     }
 
     @GetMapping("/students/{studentId}/attempts")
-    @SecuredEndpoint("EXAM_RESULT_VIEW")
     @PageResponse
     @ApiResponse(message = "Lấy lịch sử làm bài của học sinh thành công")
     public ResponseEntity<ResponseObject> attemptsOfStudent(

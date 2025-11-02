@@ -268,7 +268,9 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (Role role : this.roles) {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
+            // THÊM prefix ROLE_ vào tên role
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+
             if (role.getPermissions() != null) {
                 for (Permission perm : role.getPermissions()) {
                     authorities.add(new SimpleGrantedAuthority(perm.getCode()));

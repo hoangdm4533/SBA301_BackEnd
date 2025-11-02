@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
     public class PermissionController {
     private final PermissionService permissionService;
 
-    @SecuredEndpoint("PERMISSION_VIEW")
     @GetMapping
     @ApiResponse(message = "Permissions retrieved successfully")
     @Operation(summary = "Get all permissions", 
@@ -29,8 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
     @PutMapping("/{id}")
     @ApiResponse(message = "Permission updated successfully")
-    @SecuredEndpoint("PERMISSION_UPDATE")
-    @Operation(summary = "Update permission", 
+    @Operation(summary = "Update permission",
                description = "Update permission name and description")
     public Object update(
             @Parameter(description = "Permission ID") @PathVariable Long id,

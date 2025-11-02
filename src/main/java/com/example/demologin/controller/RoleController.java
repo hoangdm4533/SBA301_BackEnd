@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
     public class RoleController {
     private final RoleService roleService;
 
-    @SecuredEndpoint("ROLE_VIEW")
     @GetMapping
     @SmartCache
     @ApiResponse(message = "Roles retrieved successfully")
@@ -35,7 +34,6 @@ import org.springframework.web.bind.annotation.*;
 
     @PostMapping
     @ApiResponse(message = "Role created successfully")
-    @SecuredEndpoint("ROLE_CREATE")
     @SmartCache
     @Operation(summary = "Create new role", 
                description = "Create a new role with specified name and description")
@@ -46,8 +44,7 @@ import org.springframework.web.bind.annotation.*;
     @PutMapping("/{id}")
     @ApiResponse(message = "Role updated successfully")
     @SmartCache
-    @SecuredEndpoint("ROLE_UPDATE")
-    @Operation(summary = "Update role", 
+    @Operation(summary = "Update role",
                description = "Update role name and description")
     public Object update(
             @Parameter(description = "Role ID") @PathVariable Long id, 
@@ -58,8 +55,7 @@ import org.springframework.web.bind.annotation.*;
     @DeleteMapping("/{id}")
 //    @ApiResponse(message = "Role deleted successfully")
     @SmartCache
-    @SecuredEndpoint("ROLE_DELETE")
-    @Operation(summary = "Delete role", 
+    @Operation(summary = "Delete role",
                description = "Delete a role from the system")
     public ResponseObject delete(@PathVariable Long id) {
         roleService.delete(id);
@@ -68,7 +64,6 @@ import org.springframework.web.bind.annotation.*;
 
     @PutMapping("/{id}/permissions")
     @ApiResponse(message = "Role permissions updated successfully")
-    @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
     @SmartCache
     @Operation(summary = "Update role permissions", 
                description = "Update permissions assigned to a role")

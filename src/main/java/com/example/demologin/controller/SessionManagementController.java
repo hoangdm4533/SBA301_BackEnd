@@ -23,8 +23,7 @@ import org.springframework.web.bind.annotation.*;
     
     @UserActivity(activityType = ActivityType.LOGOUT, details = "User logout from current device")
     @PostMapping("/logout")
-    @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
-    @Operation(summary = "Logout from current device", 
+    @Operation(summary = "Logout from current device",
                description = "Logout user from current device only")
     @ApiResponse(message = "Logged out from current device successfully")
     public Object logoutCurrentDevice()
@@ -35,8 +34,7 @@ import org.springframework.web.bind.annotation.*;
     
     @UserActivity(activityType = ActivityType.LOGOUT, details = "User logout from all devices")
     @PostMapping("/logout-all")
-    @SecuredEndpoint("USER_TOKEN_MANAGEMENT")
-    @Operation(summary = "Logout from all devices", 
+    @Operation(summary = "Logout from all devices",
                description = "Logout user from all devices by invalidating all tokens")
     @ApiResponse(message = "Logged out from all devices successfully")
     public Object logoutFromAllDevices()
@@ -46,8 +44,7 @@ import org.springframework.web.bind.annotation.*;
     }
     
     @PostMapping("/force-logout/{userId}")
-    @SecuredEndpoint("ADMIN_USER_MANAGEMENT")
-    @Operation(summary = "Admin force logout user from all devices", 
+    @Operation(summary = "Admin force logout user from all devices",
                description = "Admin operation to force logout a specific user from all devices")
     @ApiResponse(message = "User forced logout successfully")
     public Object forceLogoutUser(

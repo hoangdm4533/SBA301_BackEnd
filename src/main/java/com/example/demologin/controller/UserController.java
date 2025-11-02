@@ -37,7 +37,6 @@ public class UserController {
     @GetMapping
     @PageResponse
     @ApiResponse(message = "Users retrieved successfully")
-    @SecuredEndpoint("USER_MANAGE")
     @Operation(summary = "Get all users (paginated)",
             description = "Retrieve paginated list of all users in the system (admin only)")
     public Object getAllUsers(
@@ -56,14 +55,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @SecuredEndpoint("USER_MANAGE")
     public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
         var data = userService.getById(id);
         return ResponseEntity.ok(new ResponseObject(200, "User retrieved successfully", data));
     }
 
     @PostMapping
-    @SecuredEndpoint("USER_MANAGE")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody CreateUserRequest req) {
         var data = userService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -82,7 +79,6 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @SecuredEndpoint("USER_MANAGE")
     @Operation(summary = "Admin update user", description = "Admin only")
     public ResponseEntity<ResponseObject> update(@PathVariable Long id,
                                                  @Valid @RequestBody AdminUpdateUserRequest req) {
@@ -91,7 +87,6 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @SecuredEndpoint("USER_MANAGE")
     @Operation(summary = "Delete user", description = "Admin only")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
         userService.delete(id);
