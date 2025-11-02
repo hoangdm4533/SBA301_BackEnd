@@ -54,13 +54,36 @@ public class LessonServiceImpl implements LessonService {
     public LessonResponse updateLesson(Long id, LessonRequest request) {
         Lesson lesson = lessonRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
-        Chapter chapter = chapterRepository.findById(request.getChapterId())
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
 
-        lesson.setLessonName(request.getLessonName());
-        lesson.setChapter(chapter);
+        boolean updated = false;
 
-        return lessonMapper.toResponse(lessonRepository.save(lesson));
+        // Cập nhật lessonName nếu thay đổi
+        if (request.getLessonName() != null && !request.getLessonName().equals(lesson.getLessonName())) {
+            lesson.setLessonName(request.getLessonName());
+            updated = true;
+        }
+
+        // Cập nhật descriptions nếu thay đổi
+        if (request.getDescriptions() != null && !request.getDescriptions().equals(lesson.getDescriptions())) {
+            lesson.setDescriptions(request.getDescriptions());
+            updated = true;
+        }
+
+        // Cập nhật chapter nếu thay đổi
+        if (request.getChapterId() != null &&
+                (lesson.getChapter() == null || !request.getChapterId().equals(lesson.getChapter().getId()))) {
+            Chapter chapter = chapterRepository.findById(request.getChapterId())
+                    .orElseThrow(() -> new RuntimeException("Chapter not found"));
+            lesson.setChapter(chapter);
+            updated = true;
+        }
+
+        // Chỉ save nếu có thay đổi
+        if (updated) {
+            lesson = lessonRepository.save(lesson);
+        }
+
+        return lessonMapper.toResponse(lesson);
     }
 
     @Override

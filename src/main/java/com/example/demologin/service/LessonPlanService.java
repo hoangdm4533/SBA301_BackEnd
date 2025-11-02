@@ -14,4 +14,5 @@ public interface LessonPlanService {
     LessonPlanResponse findLessonPlanById(Long lessonPlanId);
     List<LessonPlanResponse> getAllLessonPlans();
     Page<LessonPlanResponse> getLessonPlans(int page, int size, String sortBy, String sortDir);
+    LessonPlanResponse updateLessonPlan(Long lessonPlanId, LessonPlanRequest req);
 }

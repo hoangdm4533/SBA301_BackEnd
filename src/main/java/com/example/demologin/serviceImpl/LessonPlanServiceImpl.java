@@ -107,16 +107,16 @@ public class LessonPlanServiceImpl implements LessonPlanService {
                 .orElseThrow(() -> new IllegalArgumentException("Lesson Plan not found"));
 
         // Lấy content từ MinIO
-        String content = null;
-        if (plan.getFilePath() != null) {
-            try {
-                content = storageService.fetchDocument(plan.getFilePath());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to load lesson plan content from MinIO", e);
-            }
-        }
-
-        plan.setContent(content);
+//        String content = null;
+//        if (plan.getFilePath() != null) {
+//            try {
+//                content = storageService.fetchDocument(plan.getFilePath());
+//            } catch (Exception e) {
+//                throw new RuntimeException("Failed to load lesson plan content from MinIO", e);
+//            }
+//        }
+//
+//        plan.setContent(content);
         return mapToResponse(plan);
     }
 
@@ -138,5 +138,24 @@ public class LessonPlanServiceImpl implements LessonPlanService {
         Page<LessonPlan> planPage = lessonPlanRepo.findAll(pageable);
 
         return planPage.map(this::mapToResponse);
+    }
+
+    @Override
+    public LessonPlanResponse updateLessonPlan(Long lessonPlanId, LessonPlanRequest req) {
+        // 1. Lấy lesson plan theo ID
+        LessonPlan lessonPlan = lessonPlanRepo.findById(lessonPlanId)
+                .orElseThrow(() -> new RuntimeException("LessonPlan not found with id: " + lessonPlanId));
+
+        // 2. Cập nhật thông tin
+        lessonPlan.setGrade(gradeRepo.findById(req.getGradeId()).orElseThrow(() -> new RuntimeException("Khoông tìm thâấy grade")));
+        lessonPlan.setTitle(req.getTitle());
+        lessonPlan.setContent(req.getContent());
+        lessonPlan.setFilePath(req.getFilePath()); // có thể null
+
+        // 3. Lưu lại
+        LessonPlan response = lessonPlanRepo.save(lessonPlan);
+
+        // 4. Trả về response
+        return mapToResponse(response);
     }
 }

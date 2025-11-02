@@ -9,5 +9,6 @@ import lombok.*;
 @Builder
 public class LessonRequest {
     private String lessonName;
+    private String descriptions;
     private Long chapterId;
 }

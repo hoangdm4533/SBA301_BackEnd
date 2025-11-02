@@ -1,5 +1,6 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.annotation.SmartCache;
 import com.example.demologin.dto.request.lesson_plan.LessonPlanRequest;
@@ -82,6 +83,7 @@ public class LessonPlanController {
     // DELETE
     // ----------------------------
     @DeleteMapping("/{lessonPlanId}")
+    @ApiResponse(message = "Delete lesson plan successfully")
     @Operation(summary = "Delete lesson plan", description = "Delete a lesson plan and its MinIO file.")
     public ResponseEntity<String> delete(@PathVariable Long lessonPlanId) {
         try {
@@ -91,6 +93,22 @@ public class LessonPlanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to delete lesson plan " + lessonPlanId + ": " + e.getMessage());
         }
+    }
+
+
+    @Operation(summary = "Update a lesson plan by ID")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Lesson plan updated successfully"),
+//            @ApiResponse(responseCode = "404", description = "Lesson plan not found")
+//    })
+    @ApiResponse(message = "Update lesson successfully")
+    @PutMapping("/{id}")
+    public ResponseEntity<LessonPlanResponse> updateLessonPlan(
+            @PathVariable("id") Long lessonPlanId,
+            @RequestBody LessonPlanRequest request
+    ) {
+        LessonPlanResponse response = lessonPlanService.updateLessonPlan(lessonPlanId, request);
+        return ResponseEntity.ok(response);
     }
 
 

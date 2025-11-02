@@ -19,6 +19,8 @@ public class LessonPlan {
     private Long id;
 
     private String title;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
     private String filePath;
     private LocalDateTime createdAt;
