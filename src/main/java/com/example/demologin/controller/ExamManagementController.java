@@ -25,130 +25,124 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/exams")
-@Tag(name = "Exam Management", description = "APIs for admin to view and take exams")
+@Tag(name = "Exam Management", description = "APIs for admin and teacher to manage exams")
 @RequiredArgsConstructor
-public class ExamAdminController {
+@PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+public class ExamManagementController {
+
     private final ExamService examService;
 
     @PostMapping
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Tạo exam thành công")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody ExamRequest request) {
         ExamResponse data = examService.createExam(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseObject(201, "Exam created successfully", data));
+                .body(new ResponseObject(HttpStatus.CREATED.value(), "Exam created successfully", data));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Lấy thông tin exam thành công")
     public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
         ExamResponse data = examService.getExamById(id);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam retrieved successfully", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam retrieved successfully", data));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
         Page<ExamResponse> data = examService.getAllExams(page, size, sortBy, sortDir);
-        return ResponseEntity.ok(new ResponseObject(200, "Exams retrieved successfully", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exams retrieved successfully", data));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Cập nhật exam thành công")
     public ResponseEntity<ResponseObject> update(@PathVariable Long id,
                                                  @Valid @RequestBody ExamRequest request) {
         ExamResponse data = examService.updateExam(id, request);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam updated successfully", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam updated successfully", data));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Xóa exam thành công")
     public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
         examService.deleteExam(id);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam deleted successfully", Map.of("id", id)));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam deleted successfully", Map.of("id", id)));
     }
 
-    @GetMapping("/exams?status=PUBLISHED")
-    @PreAuthorize("hasRole('TEACHER')")
+    // Lọc theo trạng thái (ví dụ: DRAFT/PUBLISHED/ARCHIVED)
+    @GetMapping("/by-status")
     @PageResponse
-    public ResponseEntity<ResponseObject> byStatus(@PathVariable String status,
+    public ResponseEntity<ResponseObject> byStatus(@RequestParam String status,
                                                    @RequestParam(defaultValue = "0") int page,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "id") String sortBy,
                                                    @RequestParam(defaultValue = "asc") String sortDir) {
         Page<ExamResponse> data = examService.getExamsByStatus(status, page, size, sortBy, sortDir);
-        return ResponseEntity.ok(new ResponseObject(200, "Exams by status retrieved", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exams by status retrieved", data));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> search(@RequestParam String keyword,
                                                  @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<ExamResponse> data = examService.searchExams(keyword, pageable);
-        return ResponseEntity.ok(new ResponseObject(200, "Exams search results", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exams search results", data));
     }
 
     @PostMapping("/{examId}/questions")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Thêm câu hỏi vào exam thành công")
     public ResponseEntity<ResponseObject> addQuestion(@PathVariable Long examId,
                                                       @Valid @RequestBody AddQuestionToExamRequest request) {
         ExamQuestionResponse data = examService.addQuestionToExam(examId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseObject(201, "Question added to exam", data));
+                .body(new ResponseObject(HttpStatus.CREATED.value(), "Question added to exam", data));
     }
 
-    @DeleteMapping("{examId}/questions")
-    @PreAuthorize("hasRole('TEACHER')")
+    @DeleteMapping("/{examId}/questions/{questionId}")
     @ApiResponse(message = "Xóa câu hỏi khỏi exam thành công")
     public ResponseEntity<ResponseObject> removeQuestion(@PathVariable Long examId,
                                                          @PathVariable Long questionId) {
         examService.removeQuestionFromExam(examId, questionId);
-        return ResponseEntity.ok(new ResponseObject(200, "Question removed from exam",
-                Map.of("examId", examId, "questionId", questionId)));
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question removed from exam",
+                Map.of("examId", examId, "questionId", questionId)
+        ));
     }
 
     @GetMapping("/{examId}/questions")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Lấy danh sách câu hỏi trong exam thành công")
     public ResponseEntity<ResponseObject> listQuestions(@PathVariable Long examId) {
         List<ExamQuestionResponse> data = examService.getQuestionsInExam(examId);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam questions retrieved", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam questions retrieved", data));
     }
 
     @PutMapping("/{id}/publish")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Publish exam thành công")
     public ResponseEntity<ResponseObject> publish(@PathVariable Long id) {
         examService.publishExam(id);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam published successfully", Map.of("id", id)));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam published successfully", Map.of("id", id)));
     }
 
     @PutMapping("/{id}/archive")
-    @PreAuthorize("hasRole('TEACHER')")
     @ApiResponse(message = "Archive exam thành công")
     public ResponseEntity<ResponseObject> archive(@PathVariable Long id) {
         examService.archiveExam(id);
-        return ResponseEntity.ok(new ResponseObject(200, "Exam archived successfully", Map.of("id", id)));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Exam archived successfully", Map.of("id", id)));
     }
 
     @GetMapping("/published")
-    @PreAuthorize("hasRole('TEACHER')")
     @PageResponse
     public ResponseEntity<ResponseObject> published(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size) {
         Page<ExamResponse> data = examService.getPublishedExams(PageRequest.of(page, size));
-        return ResponseEntity.ok(new ResponseObject(200, "Published exams retrieved", data));
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Published exams retrieved", data));
     }
 }

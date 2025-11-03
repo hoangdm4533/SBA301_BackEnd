@@ -11,7 +11,6 @@ import com.example.demologin.dto.response.MemberResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.User;
-import com.example.demologin.mapper.UserMapper;
 import com.example.demologin.service.UserService;
 import com.example.demologin.utils.AccountUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,74 +28,108 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-@Tag(name = "User Management", description = "APIs for managing users (admin only)")
+@Tag(name = "User Management", description = "APIs for managing users (admin only) & user self profile")
+
 public class UserController {
 
     private final UserService userService;
     private final AccountUtils accountUtils;
 
+    // 🔹 Admin: get all users (paginated)
     @GetMapping
-    @PageResponse
     @ApiResponse(message = "Users retrieved successfully")
-    @Operation(summary = "Get all users (paginated)",
-            description = "Retrieve paginated list of all users in the system (admin only)")
-    public Object getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return userService.getAllUsers(page, size);
+    @Operation(summary = "Get all users (paginated)", description = "Retrieve all users (Admin only)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PageResponse
+    public ResponseEntity<ResponseObject> getAllUsers(int page, int size) {
+        Page<MemberResponse> data = userService.getAllUsers(page, size); // đổi UserResponse -> MemberResponse
+        return ResponseEntity.ok(new ResponseObject(200, "Users retrieved successfully", data));
     }
 
-    @ApiResponse(message = "Users retrieved successfully")
+    // 🔹 Self: get my profile
     @GetMapping("/me")
     @AuthenticatedEndpoint
-    @Operation(summary = "Get current user profile", description = "Retrieve profile of the authenticated user")
-    public Object getCurrentUserProfile() {
+    @ApiResponse(message = "Current user profile retrieved successfully")
+    @Operation(summary = "Get current user profile", description = "Retrieve the authenticated user's profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseObject> getCurrentUserProfile() {
         User currentUser = accountUtils.getCurrentUser();
-        return  UserResponse.toUserResponse(currentUser);
+        UserResponse data = UserResponse.toUserResponse(currentUser);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Current user profile retrieved successfully",
+                data
+        ));
     }
 
+    // 🔹 Admin: get user by id
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject> get(@PathVariable Long id) {
+    @ApiResponse(message = "User retrieved successfully")
+    @Operation(summary = "Get user by ID", description = "Admin only")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> get(@PathVariable final Long id) {
         var data = userService.getById(id);
-        return ResponseEntity.ok(new ResponseObject(200, "User retrieved successfully", data));
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "User retrieved successfully",
+                data
+        ));
     }
 
+    // 🔹 Admin: create new user
     @PostMapping
-    public ResponseEntity<ResponseObject> create(@Valid @RequestBody CreateUserRequest req) {
+    @ApiResponse(message = "User created successfully")
+    @Operation(summary = "Create user", description = "Admin only")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> create(@Valid @RequestBody final CreateUserRequest req) {
         var data = userService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseObject(201, "User created successfully", data));
+                .body(new ResponseObject(HttpStatus.CREATED.value(), "User created successfully", data));
     }
 
+    // 🔹 Self: update my own profile
     @PutMapping("/me")
     @AuthenticatedEndpoint
+    @ApiResponse(message = "Profile updated successfully")
     @Operation(summary = "Update my profile",
-            description = "User updates own profile (no status/locked/verify/roles)")
-    public ResponseEntity<ResponseObject> updateMyProfile(@Valid @RequestBody UpdateUserRequest req) {
-        // Lưu ý: nếu User entity có getter là getId() thì đổi sang getId()
+            description = "User updates own profile (no roles/status/locked fields)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseObject> updateMyProfile(@Valid @RequestBody final UpdateUserRequest req) {
         Long currentUserId = accountUtils.getCurrentUser().getUserId();
         var data = userService.updateSelf(currentUserId, req);
-        return ResponseEntity.ok(new ResponseObject(200, "Profile updated successfully", data));
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Profile updated successfully",
+                data
+        ));
     }
 
+    // 🔹 Admin: update user
     @PutMapping("/{id}")
+    @ApiResponse(message = "User updated successfully")
     @Operation(summary = "Admin update user", description = "Admin only")
-    public ResponseEntity<ResponseObject> update(@PathVariable Long id,
-                                                 @Valid @RequestBody AdminUpdateUserRequest req) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> update(@PathVariable final Long id,
+                                                 @Valid @RequestBody final AdminUpdateUserRequest req) {
         var data = userService.updateAdmin(id, req);
-        return ResponseEntity.ok(new ResponseObject(200, "User updated successfully", data));
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "User updated successfully",
+                data
+        ));
     }
 
+    // 🔹 Admin: delete user
     @DeleteMapping("/{id}")
+    @ApiResponse(message = "User deleted successfully")
     @Operation(summary = "Delete user", description = "Admin only")
-    public ResponseEntity<ResponseObject> delete(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> delete(@PathVariable final Long id) {
         userService.delete(id);
-        return ResponseEntity.ok(
-                new ResponseObject(
-                        HttpStatus.OK.value(),
-                        "User deleted successfully",
-                        Map.of("id", id)
-                )
-        );
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "User deleted successfully",
+                Map.of("id", id)
+        ));
     }
 }

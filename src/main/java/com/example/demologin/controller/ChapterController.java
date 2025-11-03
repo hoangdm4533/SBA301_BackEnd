@@ -29,25 +29,30 @@ public class ChapterController {
 
     private final ChapterService chapterService;
     private final LessonService lessonService;
+
     @PostMapping
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Create new chapter", description = "Thêm mới một chương thuộc LessonPlan")
     public ChapterResponse create(@RequestBody ChapterRequest request) {
         return chapterService.create(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Update chapter", description = "Cập nhật thông tin chương theo ID")
     public ChapterResponse update(@PathVariable Long id, @RequestBody ChapterRequest request) {
         return chapterService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @Operation(summary = "Delete chapter", description = "Xóa chương theo ID")
     public void delete(@PathVariable Long id) {
         chapterService.delete(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     @Operation(summary = "Get chapter by ID", description = "Lấy chi tiết chương theo ID")
     public ChapterResponse getById(@PathVariable Long id) {
         return chapterService.getById(id);
@@ -57,6 +62,7 @@ public class ChapterController {
     @Operation(summary = "Get all chapters (auto-detect paging)",
             description = "Nếu không có tham số page → trả toàn bộ danh sách chương; nếu có → trả dữ liệu phân trang")
     @ApiResponse(message = "Get chapters successfully")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     @GetMapping
     public ResponseEntity<?> getAllChapters(
             @RequestParam(required = false) Integer page,
