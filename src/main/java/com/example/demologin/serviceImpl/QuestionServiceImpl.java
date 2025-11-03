@@ -5,7 +5,7 @@ import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import com.example.demologin.entity.*;
 import com.example.demologin.exception.exceptions.NotFoundException;
-import com.example.demologin.mapper.QuestionMapper;
+import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
 import com.example.demologin.service.QuestionService;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

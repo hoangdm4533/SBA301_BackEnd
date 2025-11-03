@@ -6,8 +6,7 @@
     import com.example.demologin.dto.response.*;
     import com.example.demologin.entity.*;
     import com.example.demologin.exception.exceptions.ForbiddenException;
-    import com.example.demologin.exception.exceptions.NotFoundException;
-    import com.example.demologin.mapper.ExamAttemptMapper;
+    import com.example.demologin.mapper.examattempt.ExamAttemptMapper;
     import com.example.demologin.repository.*;
     import com.example.demologin.service.ExamTakingService;
     import com.example.demologin.utils.AccountUtils;
@@ -20,9 +19,7 @@
     import org.springframework.data.domain.Pageable;
     import org.springframework.stereotype.Service;
 
-    import java.time.Instant;
     import java.time.LocalDateTime;
-    import java.time.ZoneId;
     import java.util.*;
     import java.util.function.Function;
     import java.util.stream.Collectors;

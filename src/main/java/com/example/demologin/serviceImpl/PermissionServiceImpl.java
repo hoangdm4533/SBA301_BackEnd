@@ -5,7 +5,7 @@ import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.PermissionRepository;
 import com.example.demologin.dto.request.PermissionRequest;
 import com.example.demologin.dto.response.PermissionResponse;
-import com.example.demologin.mapper.PermissionMapper;
+import com.example.demologin.mapper.permission.PermissionMapper;
 import com.example.demologin.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

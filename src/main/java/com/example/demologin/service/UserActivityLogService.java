@@ -13,7 +13,6 @@ public interface UserActivityLogService {
     
     void logUserActivity(User user, ActivityType activityType, String details);
 
-    
     Page<UserActivityLogResponse> getAllActivityLogs(int page, int size);
     UserActivityLogResponse getActivityLogById(Long id);
     Page<UserActivityLogResponse> getActivityLogsByUserId(Long userId, int page, int size);

@@ -7,7 +7,7 @@ import com.example.demologin.dto.response.RoleResponse;
 import com.example.demologin.entity.Role;
 import com.example.demologin.exception.exceptions.BusinessException;
 import com.example.demologin.exception.exceptions.NotFoundException;
-import com.example.demologin.mapper.RoleMapper;
+import com.example.demologin.mapper.role.RoleMapper;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.RoleService;
