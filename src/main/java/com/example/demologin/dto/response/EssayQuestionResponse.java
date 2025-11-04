@@ -17,6 +17,24 @@ public class EssayQuestionResponse {
     @JsonProperty("id")
     private Long id;
 
+    @JsonProperty("grade_id")
+    private Long gradeId;
+
+    @JsonProperty("grade_number")
+    private Integer gradeNumber;
+
+    @JsonProperty("chapter_id")
+    private Long chapterId;
+
+    @JsonProperty("chapter_name")
+    private String chapterName;
+
+    @JsonProperty("lesson_id")
+    private Long lessonId;
+
+    @JsonProperty("lesson_name")
+    private String lessonName;
+
     @JsonProperty("prompt")
     private String prompt;
 
