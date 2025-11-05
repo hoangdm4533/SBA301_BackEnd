@@ -12,6 +12,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class EssayQuestionRequest {
+    @NotNull(message = "Grade ID is required")
+    @JsonProperty("grade_id")
+    private Long gradeId;
+
+    @NotNull(message = "Chapter ID is required")
+    @JsonProperty("chapter_id")
+    private Long chapterId;
+
+    @NotNull(message = "Lesson ID is required")
+    @JsonProperty("lesson_id")
+    private Long lessonId;
+
     @NotBlank(message = "Prompt is required")
     @JsonProperty("prompt")
     private String prompt;

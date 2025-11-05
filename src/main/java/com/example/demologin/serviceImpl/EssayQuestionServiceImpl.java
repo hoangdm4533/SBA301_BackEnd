@@ -3,11 +3,9 @@ package com.example.demologin.serviceImpl;
 import com.example.demologin.dto.request.EssayQuestionRequest;
 import com.example.demologin.dto.response.EssayQuestionResponse;
 import com.example.demologin.dto.response.PageResponse;
-import com.example.demologin.entity.EssayQuestion;
-import com.example.demologin.entity.User;
+import com.example.demologin.entity.*;
 import com.example.demologin.enums.QuestionStatus;
-import com.example.demologin.repository.EssayQuestionRepository;
-import com.example.demologin.repository.UserRepository;
+import com.example.demologin.repository.*;
 import com.example.demologin.service.EssayQuestionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class EssayQuestionServiceImpl implements EssayQuestionService {
     private final EssayQuestionRepository questionRepo;
     private final UserRepository userRepo;
+    private final GradeRepository gradeRepo;
+    private final ChapterRepository chapterRepo;
+    private final LessonRepository lessonRepo;
 
     @Override
     @Transactional
@@ -30,7 +31,29 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
         User teacher = userRepo.findById(teacherId)
             .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
 
+        // Validate Grade, Chapter, Lesson
+        Grade grade = gradeRepo.findById(request.getGradeId())
+            .orElseThrow(() -> new EntityNotFoundException("Grade not found with ID: " + request.getGradeId()));
+
+        Chapter chapter = chapterRepo.findById(request.getChapterId())
+            .orElseThrow(() -> new EntityNotFoundException("Chapter not found with ID: " + request.getChapterId()));
+
+        Lesson lesson = lessonRepo.findById(request.getLessonId())
+            .orElseThrow(() -> new EntityNotFoundException("Lesson not found with ID: " + request.getLessonId()));
+
+        // Validate hierarchy: Chapter belongs to Grade, Lesson belongs to Chapter
+        if (!chapter.getGrade().getId().equals(grade.getId())) {
+            throw new IllegalArgumentException("Chapter does not belong to the specified Grade");
+        }
+
+        if (!lesson.getChapter().getId().equals(chapter.getId())) {
+            throw new IllegalArgumentException("Lesson does not belong to the specified Chapter");
+        }
+
         EssayQuestion question = EssayQuestion.builder()
+            .grade(grade)
+            .chapter(chapter)
+            .lesson(lesson)
             .prompt(request.getPrompt())
             .rubric(request.getRubric())
             .timeLimitMinutes(request.getTimeLimitMinutes())
@@ -40,29 +63,52 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
             .build();
 
         question = questionRepo.save(question);
-        log.info("Teacher {} created essay question {}", teacherId, question.getId());
+        log.info("Teacher {} created essay question {} for Grade {}, Chapter {}, Lesson {}", 
+            teacherId, question.getId(), grade.getId(), chapter.getId(), lesson.getId());
 
         return mapToResponse(question);
     }
 
     @Override
     @Transactional
-    public EssayQuestionResponse updateQuestion(Long id, EssayQuestionRequest request, Long teacherId) {
-        EssayQuestion question = questionRepo.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Question not found"));
+    public EssayQuestionResponse updateQuestion(Long questionId, EssayQuestionRequest request, Long teacherId) {
+        EssayQuestion question = questionRepo.findById(questionId)
+            .orElseThrow(() -> new EntityNotFoundException("Essay question not found"));
 
-        // Check ownership
         if (!question.getCreatedBy().getUserId().equals(teacherId)) {
-            throw new SecurityException("You can only update your own questions");
+            throw new IllegalArgumentException("You can only update your own questions");
         }
 
+        // Validate Grade, Chapter, Lesson
+        Grade grade = gradeRepo.findById(request.getGradeId())
+            .orElseThrow(() -> new EntityNotFoundException("Grade not found with ID: " + request.getGradeId()));
+
+        Chapter chapter = chapterRepo.findById(request.getChapterId())
+            .orElseThrow(() -> new EntityNotFoundException("Chapter not found with ID: " + request.getChapterId()));
+
+        Lesson lesson = lessonRepo.findById(request.getLessonId())
+            .orElseThrow(() -> new EntityNotFoundException("Lesson not found with ID: " + request.getLessonId()));
+
+        // Validate hierarchy: Chapter belongs to Grade, Lesson belongs to Chapter
+        if (!chapter.getGrade().getId().equals(grade.getId())) {
+            throw new IllegalArgumentException("Chapter does not belong to the specified Grade");
+        }
+
+        if (!lesson.getChapter().getId().equals(chapter.getId())) {
+            throw new IllegalArgumentException("Lesson does not belong to the specified Chapter");
+        }
+
+        question.setGrade(grade);
+        question.setChapter(chapter);
+        question.setLesson(lesson);
         question.setPrompt(request.getPrompt());
         question.setRubric(request.getRubric());
         question.setTimeLimitMinutes(request.getTimeLimitMinutes());
         question.setMaxScore(request.getMaxScore());
 
         question = questionRepo.save(question);
-        log.info("Teacher {} updated essay question {}", teacherId, id);
+        log.info("Teacher {} updated essay question {} to Grade {}, Chapter {}, Lesson {}", 
+            teacherId, questionId, grade.getId(), chapter.getId(), lesson.getId());
 
         return mapToResponse(question);
     }
@@ -120,6 +166,12 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
     private EssayQuestionResponse mapToResponse(EssayQuestion question) {
         return EssayQuestionResponse.builder()
             .id(question.getId())
+            .gradeId(question.getGrade().getId())
+            .gradeNumber(question.getGrade().getGradeNumber())
+            .chapterId(question.getChapter().getId())
+            .chapterName(question.getChapter().getName())
+            .lessonId(question.getLesson().getId())
+            .lessonName(question.getLesson().getLessonName())
             .prompt(question.getPrompt())
             .rubric(question.getRubric())
             .timeLimitMinutes(question.getTimeLimitMinutes())
