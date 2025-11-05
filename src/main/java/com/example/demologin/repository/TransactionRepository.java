@@ -28,4 +28,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    Optional<Transaction> findTopBySubscriptionIdOrderByCreatedAtDesc(Long subscriptionId);
 }

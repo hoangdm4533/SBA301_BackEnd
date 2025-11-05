@@ -60,7 +60,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     // Cho phép preflight requests
                     auth.requestMatchers(CorsUtils::isPreFlightRequest).permitAll();
-                    
                     // Tự động permit all các endpoints được đánh dấu @PublicEndpoint
                     if (!annotatedPublicEndpoints.isEmpty()) {
                         auth.requestMatchers(annotatedPublicEndpoints.toArray(new String[0])).permitAll();
@@ -77,9 +76,9 @@ public class SecurityConfig {
                             "/login/oauth2/code/**",
                             "/oauth2/authorization/**"
                     ).permitAll();
-                    
                     // Tất cả các API endpoints khác cần authentication
                     // Filter sẽ handle JWT validation + dynamic permission với @SecuredEndpoint
+                    auth.requestMatchers("/api/payment/vnpay/vnpay-return").permitAll();
                     auth.requestMatchers("/api/**").authenticated();
                     auth.anyRequest().authenticated();
                 })
