@@ -10,14 +10,19 @@ import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.service.LessonPlanService;
 import com.example.demologin.service.ObjectStorageService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -158,4 +163,31 @@ public class LessonPlanServiceImpl implements LessonPlanService {
         // 4. Trả về response
         return mapToResponse(response);
     }
+
+    @Override
+    public byte[] exportLessonPlanToWord(Long lessonPlanId) throws IOException {
+        Optional<LessonPlan> lessonPlanOpt = lessonPlanRepo.findById(lessonPlanId);
+        if (!lessonPlanOpt.isPresent()) {
+            throw new IllegalArgumentException("LessonPlan not found with id " + lessonPlanId);
+        }
+
+        LessonPlan lessonPlan = lessonPlanOpt.get();
+
+        XWPFDocument doc = new XWPFDocument(); // POI 3.9, không cần close()
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        // Title
+        XWPFParagraph title = doc.createParagraph();
+        title.createRun().setText(lessonPlan.getTitle());
+
+        // Content
+        XWPFParagraph content = doc.createParagraph();
+        content.createRun().setText(lessonPlan.getContent() != null ? lessonPlan.getContent() : "");
+
+        doc.write(out);
+
+        return out.toByteArray();
+    }
+
+
 }

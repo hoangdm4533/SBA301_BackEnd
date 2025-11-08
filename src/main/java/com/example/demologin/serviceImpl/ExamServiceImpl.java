@@ -191,6 +191,11 @@ public class ExamServiceImpl implements ExamService {
             throw new ConflictException("Question không có level hợp lệ");
         }
 
+        QuestionType questionType = question.getType();
+        if (questionType == null) {
+            throw new ConflictException("Question không có type hợp lệ");
+        }
+
         // Lấy Matrix từ Exam
         Matrix matrix = exam.getMatrix();
         if (matrix == null) {
@@ -199,10 +204,17 @@ public class ExamServiceImpl implements ExamService {
 
         // Tìm MatrixDetail tương ứng với Level đó
         MatrixDetail matrixDetail = matrix.getDetails().stream()
-                .filter(md -> md.getLevel().getId().equals(level.getId()))
+                .filter(md ->
+                        md.getLevel().getId().equals(level.getId()) &&
+                                md.getQuestionType().getId().equals(questionType.getId())
+                )
                 .findFirst()
                 .orElseThrow(() -> new ConflictException(
-                        "Không tìm thấy MatrixDetail cho Level " + level.getDescription()));
+                        "Không tìm thấy MatrixDetail cho Level "
+                                + level.getDescription()
+                                + " và QuestionType "
+                                + questionType.getDescription()
+                ));
 
         // Đếm số lượng câu hỏi trong exam theo level
         long countByLevel = examQuestionRepository.countByExamAndQuestion_Level(exam, level);
@@ -264,9 +276,9 @@ public class ExamServiceImpl implements ExamService {
         if ("PUBLISHED".equalsIgnoreCase(exam.getStatus())) {
             throw new ConflictException("Exam này đã được publish trước đó");
         }
-        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
-            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
-        }
+//        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+//            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
+//        }
 
         // Kiểm tra exam có câu hỏi chưa
         Integer questionCount = examQuestionRepository.countByExam(exam);

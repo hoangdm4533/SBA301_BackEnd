@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -111,6 +113,24 @@ public class LessonPlanController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> exportLessonPlan(@PathVariable Long id) {
+        try {
+            byte[] wordData = lessonPlanService.exportLessonPlanToWord(id);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=lessonplan_" + id + ".docx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(wordData);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 
 
 }

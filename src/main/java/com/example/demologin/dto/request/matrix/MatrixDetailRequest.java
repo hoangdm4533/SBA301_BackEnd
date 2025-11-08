@@ -9,4 +9,5 @@ public class MatrixDetailRequest {
     private Integer totalQuestions;
     private Long levelId;
     private Long lessonId;
+    private Long questionTypeId;
 }

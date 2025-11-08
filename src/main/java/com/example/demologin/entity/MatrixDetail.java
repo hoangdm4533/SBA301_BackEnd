@@ -25,6 +25,10 @@ public class MatrixDetail {
     private Level level;
 
     @ManyToOne
+    @JoinColumn(name = "question_type_id")
+    private QuestionType questionType;
+
+    @ManyToOne
     @JoinColumn(name = "matrix_id")
     private Matrix matrix;
 

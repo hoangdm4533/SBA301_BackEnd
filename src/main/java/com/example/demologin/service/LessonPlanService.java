@@ -5,6 +5,7 @@ import com.example.demologin.dto.response.LessonPlanResponse;
 import com.example.demologin.entity.LessonPlan;
 import org.springframework.data.domain.Page;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface LessonPlanService {
@@ -15,4 +16,5 @@ public interface LessonPlanService {
     List<LessonPlanResponse> getAllLessonPlans();
     Page<LessonPlanResponse> getLessonPlans(int page, int size, String sortBy, String sortDir);
     LessonPlanResponse updateLessonPlan(Long lessonPlanId, LessonPlanRequest req);
+    public byte[] exportLessonPlanToWord(Long lessonPlanId) throws IOException;
 }

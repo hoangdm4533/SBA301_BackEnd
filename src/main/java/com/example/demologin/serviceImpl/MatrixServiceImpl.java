@@ -26,6 +26,7 @@ public class MatrixServiceImpl implements MatrixService {
     private final UserRepository userRepository;
     private final LevelRepository levelRepository;
     private final LessonRepository lessonRepository;
+    private final QuestionTypeRepository questionTypeRepository;
 
     @Override
     @Transactional
@@ -102,15 +103,18 @@ public class MatrixServiceImpl implements MatrixService {
 
     private MatrixDetail createMatrixDetail(MatrixDetailRequest detail, Matrix matrix) {
         Level level = levelRepository.findById(detail.getLevelId())
-                .orElseThrow(() -> new RuntimeException("Level not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Level not found"));
         Lesson lesson = lessonRepository.findById(detail.getLessonId())
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+        QuestionType questionType= questionTypeRepository.findById(detail.getQuestionTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("Question type not found"));
 
         return MatrixDetail.builder()
                 .totalQuestions(detail.getTotalQuestions())
                 .level(level)
                 .lesson(lesson)
                 .matrix(matrix)
+                .questionType(questionType)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
