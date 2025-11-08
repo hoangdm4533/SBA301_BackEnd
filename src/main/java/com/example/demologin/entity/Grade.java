@@ -11,26 +11,24 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "grades")
 public class Grade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50)
-    private String name;
+    private Integer gradeNumber;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "grade")
-    private List<ClassEntity> classes = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
     @OneToMany(mappedBy = "grade")
-    private List<LessonPlan> lessonPlans = new ArrayList<>();
+    private List<LessonPlan> lessonPlans;
 
     @OneToMany(mappedBy = "grade")
-    private List<Exam> exams = new ArrayList<>();
+    private List<Chapter> chapters;
 
-    @ManyToMany(mappedBy = "grades")
-    private List<Question> questions = new ArrayList<>();
 }

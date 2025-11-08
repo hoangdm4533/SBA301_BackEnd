@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.CorsUtils;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
 
@@ -58,7 +60,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     // Cho phép preflight requests
                     auth.requestMatchers(CorsUtils::isPreFlightRequest).permitAll();
-                    
                     // Tự động permit all các endpoints được đánh dấu @PublicEndpoint
                     if (!annotatedPublicEndpoints.isEmpty()) {
                         auth.requestMatchers(annotatedPublicEndpoints.toArray(new String[0])).permitAll();
@@ -75,9 +76,9 @@ public class SecurityConfig {
                             "/login/oauth2/code/**",
                             "/oauth2/authorization/**"
                     ).permitAll();
-                    
                     // Tất cả các API endpoints khác cần authentication
                     // Filter sẽ handle JWT validation + dynamic permission với @SecuredEndpoint
+                    auth.requestMatchers("/api/payment/vnpay/vnpay-return").permitAll();
                     auth.requestMatchers("/api/**").authenticated();
                     auth.anyRequest().authenticated();
                 })

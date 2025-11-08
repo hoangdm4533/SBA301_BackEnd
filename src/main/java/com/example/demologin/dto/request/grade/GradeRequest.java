@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GradeRequest {
-    private String name;
+    private Integer gradeNumber;
+
     private String description;
 }

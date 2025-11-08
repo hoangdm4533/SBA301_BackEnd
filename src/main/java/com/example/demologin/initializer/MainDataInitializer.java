@@ -1,18 +1,9 @@
 package com.example.demologin.initializer;
 
+import com.example.demologin.initializer.components.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import com.example.demologin.initializer.components.ChapterDataInitializer;
-import com.example.demologin.initializer.components.DefaultUserInitializer;
-import com.example.demologin.initializer.components.EducationDataInitializer;
-import com.example.demologin.initializer.components.ExamDataInitializer;
-import com.example.demologin.initializer.components.ExamQuestionDataInitializer;
-import com.example.demologin.initializer.components.ExamTemplateDataInitializer;
-import com.example.demologin.initializer.components.LevelDataInitializer;
-import com.example.demologin.initializer.components.PermissionRoleInitializer;
-import com.example.demologin.initializer.components.PlanDataInitializer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,13 +34,17 @@ public class MainDataInitializer implements CommandLineRunner {
 
     private final PermissionRoleInitializer permissionRoleInitializer;
     private final DefaultUserInitializer defaultUserInitializer;
+
+    private final QuestionTypeDataInitializer questionTypeDataInitializer;
+    private final LevelDataInitializer levelDataInitializer;
+    private final QuestionDataInitializer questionDataInitializer;
     private final PlanDataInitializer planDataInitializer;
     private final EducationDataInitializer educationDataInitializer;
-    private final ChapterDataInitializer chapterDataInitializer;
-    private final LevelDataInitializer levelDataInitializer;
+    private final AttemptDataInitializer attemptDataInitializer;
+
     private final ExamDataInitializer examDataInitializer;
-    private final ExamTemplateDataInitializer examTemplateDataInitializer;
-    private final ExamQuestionDataInitializer examQuestionDataInitializer;
+    private final UserInitializer userInitializer;
+    private final LessonDataInitializer lessonDataInitializer;
 
     @Override
     public void run(String... args) throws Exception {
@@ -60,52 +55,37 @@ public class MainDataInitializer implements CommandLineRunner {
             log.info("📋 Step 1: Initializing Permissions and Roles...");
             permissionRoleInitializer.initializePermissionsAndRoles();
             log.info("✅ Permissions and Roles initialization completed");
-            
+
             // Step 2: Initialize Default Users
             log.info("👥 Step 2: Initializing Default Users...");
             defaultUserInitializer.initializeDefaultUsers();
             log.info("✅ Default Users initialization completed");
-            
-            // Step 3: Initialize Subscription Plans
-            log.info("💳 Step 3: Initializing Subscription Plans...");
-            planDataInitializer.initializePlans();
-            log.info("✅ Subscription Plans initialization completed");
-            
-            // Step 4: Initialize Education Data
-            log.info("📚 Step 4: Initializing Education Data (Grades, Classes, Lesson Plans)...");
-            educationDataInitializer.initializeEducationData();
-            log.info("✅ Education Data initialization completed");
-            
-            // Step 5: Initialize Chapters
-            log.info("📖 Step 5: Initializing Chapters...");
-            chapterDataInitializer.initializeChapters();
-            log.info("✅ Chapters initialization completed");
-            
-            // Step 6: Initialize Level Data
-            log.info("📊 Step 6: Initializing Level Data...");
+
+            // Step 3: Plans and Subscriptions
+            log.info("💳 Step 3: Initializing Plans and Subscriptions...");
+            planDataInitializer.initializePlansAndSubscriptions();
+
+            // Step 4: Education hierarchy
+            log.info("📚 Step 4: Initializing Education hierarchy...");
+            educationDataInitializer.initializeEducation();
+
+            // Step 5: Lessons must come before questions
+            log.info("🧩 Step 5: Initializing Lessons...");
+            lessonDataInitializer.initializeLessons();
+
+            // Step 6: Question metadata and questions
+            log.info("🧠 Step 6: Initializing Question metadata and Questions...");
+            questionTypeDataInitializer.initializeQuestionTypes();
             levelDataInitializer.initializeLevels();
-            log.info("✅ Level Data initialization completed");
-            
-            // Step 7: Initialize Exam Data
-            log.info("📝 Step 7: Initializing Exam Data (Questions, Options, Exams)...");
-            examDataInitializer.initializeExamData();
-            log.info("✅ Exam Data initialization completed");
-            
-            // Step 8: Initialize Exam Templates
-            log.info("📋 Step 8: Initializing Exam Templates...");
-            examTemplateDataInitializer.initializeExamTemplates();
-            log.info("✅ Exam Templates initialization completed");
-            
-            // Step 9: Initialize Exam Questions (Links)
-            log.info("🔗 Step 9: Initializing Exam Question Links...");
-            examQuestionDataInitializer.initialize();
-            log.info("✅ Exam Question Links initialization completed");
-            
-            // Future initialization steps can be added here
-            // Example:
-            // log.info("📊 Step 10: Initializing System Settings...");
-            // systemSettingsInitializer.initializeSettings();
-            
+            questionDataInitializer.initializeQuestions();
+
+            // Step 7: Exams and attempts
+            examDataInitializer.initializeExams();
+            attemptDataInitializer.initializeAttempts();
+
+            log.info("👤 Step 8: Initializing Users...");
+            userInitializer.initializeUsers();
+
             log.info("🎉 Main Data Initialization Process completed successfully!");
             
         } catch (Exception e) {

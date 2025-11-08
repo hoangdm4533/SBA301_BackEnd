@@ -26,6 +26,10 @@ public class PermissionRoleInitializer {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
 
+    private static final String ROLE_STUDENT = "STUDENT";
+    private static final String ROLE_TEACHER = "TEACHER";
+
+
     // ===================== PERMISSION CODES =====================
     private static final String USER_MANAGE = "USER_MANAGE";  // mới thêm
     private static final String USER_TOKEN_MANAGEMENT = "USER_TOKEN_MANAGEMENT";
@@ -76,6 +80,40 @@ public class PermissionRoleInitializer {
     private static final String EXAM_VIEW_RESULTS = "EXAM_VIEW_RESULTS";
     private static final String EXAM_VIEW_HISTORY = "EXAM_VIEW_HISTORY";
 
+    private static final String QUESTION_VIEW   = "QUESTION_VIEW";
+    private static final String QUESTION_CREATE = "QUESTION_CREATE";
+    private static final String QUESTION_UPDATE = "QUESTION_UPDATE";
+    private static final String QUESTION_DELETE = "QUESTION_DELETE";
+
+    // Exam permissions (admin quản trị đề thi)
+    private static final String EXAM_CREATE = "EXAM_CREATE";
+    private static final String EXAM_UPDATE = "EXAM_UPDATE";
+    private static final String EXAM_DELETE = "EXAM_DELETE";
+    private static final String EXAM_QUESTION_ADD = "EXAM_QUESTION_ADD";
+    private static final String EXAM_QUESTION_REMOVE = "EXAM_QUESTION_REMOVE";
+    private static final String EXAM_PUBLISH = "EXAM_PUBLISH";
+    private static final String EXAM_ARCHIVE = "EXAM_ARCHIVE";
+
+    // Attempt/grade (admin)
+    private static final String EXAM_ATTEMPT_MANAGE = "EXAM_ATTEMPT_MANAGE";
+    private static final String EXAM_GRADE = "EXAM_GRADE";
+    private static final String EXAM_RESULT_VIEW = "EXAM_RESULT_VIEW";
+
+    // Lesson Plan permissions
+    private static final String LESSON_PLAN_VIEW   = "LESSON_PLAN_VIEW";
+    private static final String LESSON_PLAN_CREATE = "LESSON_PLAN_CREATE";
+    private static final String LESSON_PLAN_UPDATE = "LESSON_PLAN_UPDATE";
+    private static final String LESSON_PLAN_DELETE = "LESSON_PLAN_DELETE";
+    private static final String LESSON_PLAN_COMPACT = "LESSON_PLAN_COMPACT"; // compact & save
+
+    // Lesson Plan Edit (lịch sử chỉnh sửa)
+    private static final String LESSON_PLAN_EDIT_CREATE = "LESSON_PLAN_EDIT_CREATE";
+    private static final String LESSON_PLAN_EDIT_VIEW   = "LESSON_PLAN_EDIT_VIEW";
+
+
+
+
+
     @Transactional
     public void initializePermissionsAndRoles() {
         log.info("🔑 Initializing system permissions and roles...");
@@ -95,6 +133,7 @@ public class PermissionRoleInitializer {
             } else {
                 log.info("ℹ️ Exam permissions already exist, skipping initialization");
             }
+            ensureMemberHasFullPermissions();
             return;
         }
 
@@ -152,7 +191,35 @@ public class PermissionRoleInitializer {
                 new Permission(EXAM_TAKE, "Làm bài thi"),
                 new Permission(EXAM_VIEW_AVAILABLE, "Xem danh sách bài thi có sẵn"),
                 new Permission(EXAM_VIEW_RESULTS, "Xem kết quả bài thi"),
-                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài")
+                new Permission(EXAM_VIEW_HISTORY, "Xem lịch sử làm bài"),
+
+                new Permission(QUESTION_VIEW,   "Xem câu hỏi"),
+                new Permission(QUESTION_CREATE, "Tạo câu hỏi"),
+                new Permission(QUESTION_UPDATE, "Cập nhật câu hỏi"),
+                new Permission(QUESTION_DELETE, "Xóa câu hỏi"),
+
+                new Permission(EXAM_CREATE, "Tạo bài thi"),
+                new Permission(EXAM_UPDATE, "Cập nhật bài thi"),
+                new Permission(EXAM_DELETE, "Xóa bài thi"),
+                new Permission(EXAM_QUESTION_ADD, "Thêm câu hỏi vào bài thi"),
+                new Permission(EXAM_QUESTION_REMOVE, "Gỡ câu hỏi khỏi bài thi"),
+                new Permission(EXAM_PUBLISH, "Publish bài thi"),
+                new Permission(EXAM_ARCHIVE, "Archive bài thi"),
+                new Permission(EXAM_ATTEMPT_MANAGE, "Quản lý bài làm (attempt)"),
+                new Permission(EXAM_GRADE, "Chấm bài thi"),
+                new Permission(EXAM_RESULT_VIEW, "Xem kết quả và bài làm của học sinh"),
+
+                // Lesson Plan
+                new Permission(LESSON_PLAN_VIEW,   "Xem lesson plan"),
+                new Permission(LESSON_PLAN_CREATE, "Tạo lesson plan"),
+                new Permission(LESSON_PLAN_UPDATE, "Cập nhật lesson plan"),
+                new Permission(LESSON_PLAN_DELETE, "Xóa lesson plan"),
+                new Permission(LESSON_PLAN_COMPACT,"Compact & lưu lesson plan"),
+
+                // Lesson Plan Edit (history)
+                new Permission(LESSON_PLAN_EDIT_CREATE, "Ghi lịch sử chỉnh sửa lesson plan"),
+                new Permission(LESSON_PLAN_EDIT_VIEW,   "Xem lịch sử chỉnh sửa lesson plan")
+
         );
 
         permissionRepository.saveAll(permissions);
@@ -171,17 +238,45 @@ public class PermissionRoleInitializer {
         // Admin: full quyền
         Set<Permission> adminPerms = new HashSet<>(permMap.values());
 
+        roleRepository.findByName(ROLE_STUDENT).orElseGet(() -> {
+            Role student = Role.builder().name(ROLE_STUDENT).build();
+
+            Set<Permission> studentPerms = STUDENT_PERMISSION_CODES.stream()
+                    .map(permMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            student.setPermissions(studentPerms);
+            return roleRepository.save(student);
+        });
+
+        // === Create TEACHER role ===
+        roleRepository.findByName(ROLE_TEACHER).orElseGet(() -> {
+            Role teacher = Role.builder().name(ROLE_TEACHER).build();
+
+            Set<Permission> teacherPerms = TEACHER_PERMISSION_CODES.stream()
+                    .map(permMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            teacher.setPermissions(teacherPerms);
+            return roleRepository.save(teacher);
+        });
+
+
         // Member: quyền giới hạn + exam taking permissions
-        Set<Permission> memberPerms = Set.of(
-                permMap.get(USER_TOKEN_MANAGEMENT),
-                permMap.get(TOKEN_INVALIDATE_OWN),
-                permMap.get(TOKEN_VIEW_OWN),
-                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY),
-                permMap.get(EXAM_TAKE),
-                permMap.get(EXAM_VIEW_AVAILABLE),
-                permMap.get(EXAM_VIEW_RESULTS),
-                permMap.get(EXAM_VIEW_HISTORY)
-        );
+//        Set<Permission> memberPerms = Set.of(
+//                permMap.get(USER_TOKEN_MANAGEMENT),
+//                permMap.get(TOKEN_INVALIDATE_OWN),
+//                permMap.get(TOKEN_VIEW_OWN),
+//                permMap.get(USER_VIEW_OWN_LOGIN_HISTORY),
+//                permMap.get(EXAM_TAKE),
+//                permMap.get(EXAM_VIEW_AVAILABLE),
+//                permMap.get(EXAM_VIEW_RESULTS),
+//                permMap.get(EXAM_VIEW_HISTORY)
+//        );
+        Set<Permission> memberPerms = new HashSet<>(permMap.values());
+
 
         roleRepository.save(Role.builder()
                 .name("ADMIN")
@@ -242,4 +337,69 @@ public class PermissionRoleInitializer {
             log.warn("⚠️ MEMBER role not found, cannot update with exam permissions");
         }
     }
+
+    private void ensureMemberHasFullPermissions() {
+        // Lấy/khởi tạo role MEMBER
+        Role member = roleRepository.findByName("MEMBER")
+                .orElseGet(() -> roleRepository.save(Role.builder().name("MEMBER").build()));
+
+        // Set toàn bộ permissions cho MEMBER
+        Set<Permission> fullPerms = new HashSet<>(permissionRepository.findAll());
+        member.setPermissions(fullPerms);
+        roleRepository.save(member);
+
+        log.debug("✅ Ensured MEMBER has {} permissions (full access)", fullPerms.size());
+    }
+
+    private static final Set<String> STUDENT_PERMISSION_CODES = Set.of(
+            USER_TOKEN_MANAGEMENT,
+            TOKEN_INVALIDATE_OWN,
+            TOKEN_VIEW_OWN,
+            USER_VIEW_OWN_LOGIN_HISTORY,
+            EXAM_TAKE,
+            EXAM_VIEW_AVAILABLE,
+            EXAM_VIEW_RESULTS,
+            EXAM_VIEW_HISTORY,
+            EXAM_TEMPLATE_VIEW
+    );
+
+    private static final Set<String> TEACHER_PERMISSION_CODES = Set.of(
+            // Cá nhân (token, hoạt động riêng)
+            USER_TOKEN_MANAGEMENT,
+            TOKEN_INVALIDATE_OWN,
+            TOKEN_VIEW_OWN,
+            USER_VIEW_OWN_LOGIN_HISTORY,
+
+            // Question bank (ngân hàng câu hỏi)
+            QUESTION_VIEW,
+            QUESTION_CREATE,
+            QUESTION_UPDATE,
+            QUESTION_DELETE,
+
+            // Exam template (đề thi mẫu)
+            EXAM_TEMPLATE_VIEW,
+            EXAM_TEMPLATE_CREATE,
+            EXAM_TEMPLATE_UPDATE,
+            EXAM_TEMPLATE_DELETE,
+
+            // Exam (kỳ thi)
+            EXAM_CREATE,
+            EXAM_UPDATE,
+            EXAM_DELETE,
+            EXAM_PUBLISH,
+            EXAM_ARCHIVE,
+            EXAM_GRADE,
+            EXAM_RESULT_VIEW,
+
+            // Lesson plan (giáo án)
+            LESSON_PLAN_VIEW,
+            LESSON_PLAN_CREATE,
+            LESSON_PLAN_UPDATE,
+            LESSON_PLAN_DELETE,
+            LESSON_PLAN_COMPACT,
+            LESSON_PLAN_EDIT_CREATE,
+            LESSON_PLAN_EDIT_VIEW
+    );
+
+
 }

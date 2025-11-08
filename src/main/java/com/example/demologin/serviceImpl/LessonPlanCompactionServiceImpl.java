@@ -7,8 +7,10 @@ import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.service.LessonPlanCompactionService;
 import com.example.demologin.service.LessonPlanStorageService;
+import com.example.demologin.utils.lessonPlanEdit.ILessonPlanEditUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,18 +18,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionService {
     private final LessonPlanRepository lessonPlanRepo;
     private final LessonPlanEditRepository lessonPlanEditRepo;
     private final LessonPlanStorageService storageService;
+    private final ILessonPlanEditUtil lessonPlanEditUtil;
 
-    public LessonPlanCompactionServiceImpl(LessonPlanRepository lessonPlanRepo,
-                                       LessonPlanEditRepository lessonPlanEditRepo,
-                                           LessonPlanStorageService storageService) {
-        this.lessonPlanRepo = lessonPlanRepo;
-        this.lessonPlanEditRepo = lessonPlanEditRepo;
-        this.storageService = storageService;
-    }
+//    public LessonPlanCompactionServiceImpl(LessonPlanRepository lessonPlanRepo,
+//                                       LessonPlanEditRepository lessonPlanEditRepo,
+//                                           LessonPlanStorageService storageService) {
+//        this.lessonPlanRepo = lessonPlanRepo;
+//        this.lessonPlanEditRepo = lessonPlanEditRepo;
+//        this.storageService = storageService;
+//    }
 
     /**
      * Thực hiện compaction khi giáo viên bấm Save
@@ -35,33 +39,38 @@ public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionServ
     @Transactional
     @Override
     public void compactLessonPlan(Long lessonPlanId) {
+        // 1️⃣ Lấy LessonPlan hiện tại
         LessonPlan lessonPlan = lessonPlanRepo.findById(lessonPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found: " + lessonPlanId));
 
-        String objectKey = lessonPlan.getFilePath();
         try {
-            // 1. Lấy base content từ MinIO
-            String baseContent = storageService.downloadContent(objectKey);
+            // 2️⃣ Lấy nội dung hiện tại trong DB
+            String baseContent = lessonPlan.getContent();
+            if (baseContent == null) {
+                baseContent = "";
+            }
 
-            // 2. Lấy edits từ MySQL
+            // 3️⃣ Lấy tất cả edits từ DB
             List<LessonPlanEdit> edits = lessonPlanEditRepo.findByLessonPlanIdOrderByCreatedAtAsc(lessonPlanId);
+            if (edits.isEmpty()) {
+                System.out.println("[Compact] Không có edit nào cho lessonPlanId=" + lessonPlanId);
+                return;
+            }
 
-            // 3. Merge edits vào baseContent
-            String mergedContent = applyEdits(baseContent, edits);
+            // 4️⃣ Merge edits vào baseContent
+            String mergedContent = lessonPlanEditUtil.applyEdits(baseContent, edits);
 
-            // 4. Upload content mới lên MinIO
-            storageService.uploadContent(objectKey, mergedContent);
-
-            // 5. Update DB metadata
+            // 5️⃣ Cập nhật LessonPlan trong DB
+            lessonPlan.setContent(mergedContent);
             lessonPlan.setUpdatedAt(LocalDateTime.now());
             lessonPlanRepo.save(lessonPlan);
 
-            // 6. Xoá edits cũ
-            lessonPlanEditRepo.deleteAll(edits);
+            // 6️⃣ Xoá các bản ghi edit sau khi merge thành công
+            lessonPlanEditRepo.deleteAllInBatch(edits);
 
-            System.out.println("Compaction thành công cho lessonPlanId=" + lessonPlanId);
+            System.out.printf("[Compact] ✅ Merge thành công %d edits cho lessonPlanId=%d%n", edits.size(), lessonPlanId);
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi compaction cho lessonPlanId=" + lessonPlanId, e);
+            throw new RuntimeException("❌ Lỗi compaction cho lessonPlanId=" + lessonPlanId, e);
         }
     }
 
@@ -70,29 +79,57 @@ public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionServ
      * Edit JSON có thể là { "operation":"append", "text":"abc" }
      * hoặc { "operation":"replace", "text":"new text" }
      */
-    private String applyEdits(String baseContent, List<LessonPlanEdit> edits) {
-        StringBuilder result = new StringBuilder(baseContent);
-        for (LessonPlanEdit edit : edits) {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode node = mapper.readTree(edit.getOperation());
-                String op = node.get("operation").asText();
-                String text = node.get("text").asText();
+//    public String applyEdits(String baseContent, List<LessonPlanEdit> edits) {
+//        StringBuilder result = new StringBuilder(baseContent);
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        int shift = 0; // tổng thay đổi độ dài so với baseContent ban đầu
+//
+//        for (LessonPlanEdit edit : edits) {
+//            try {
+//                JsonNode node = mapper.readTree(edit.getOperation());
+//                String action = node.get("action").asText();
+//
+//                switch (action) {
+//                    case "insert" -> {
+//                        int pos = node.path("pos").asInt(result.length());
+//                        String ch = node.path("char").asText("");
+//
+//                        pos = Math.max(0, Math.min(pos + shift, result.length()));
+//
+//                        result.insert(pos, ch);
+//
+//                        shift += ch.length(); // tăng shift
+//                    }
+//
+//                    case "delete" -> {
+//                        int start = node.path("start").asInt(-1);
+//                        int end = node.path("end").asInt(-1);
+//
+//                        start = start + shift;
+//                        end = end + shift;
+//
+//                        if (start >= 0 && end > start && end <= result.length()) {
+//                            result.delete(start, end);
+//                            shift -= (end - start); // giảm shift
+//                        } else {
+//                            System.err.printf("Invalid delete range for edit %d: start=%d end=%d len=%d%n",
+//                                    edit.getId(), start, end, result.length());
+//                        }
+//                    }
+//
+//                    default -> System.err.println("Unknown action: " + action);
+//                }
+//            } catch (Exception ex) {
+//                System.err.println("Skip invalid edit " + edit.getId() + ": " + ex.getMessage());
+//            }
+//        }
+//
+//        return result.toString();
+//    }
 
-                switch (op) {
-                    case "append" -> result.append(text);
-                    case "replace" -> {
-                        result.setLength(0);
-                        result.append(text);
-                    }
-                    default -> System.out.println("Unknown operation: " + op);
-                }
-            } catch (Exception ex) {
-                System.err.println("Skip invalid edit: " + edit.getId());
-            }
-        }
-        return result.toString();
-    }
+
+
 
     private LessonPlanResponse mapToResponse(LessonPlan plan) {
         LessonPlanResponse dto = new LessonPlanResponse();

@@ -1,7 +1,6 @@
 package com.example.demologin.repository;
 
 import com.example.demologin.entity.ExamAttempt;
-import com.example.demologin.entity.ExamTemplate;
 import com.example.demologin.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,32 +9,34 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> {
+    Page<ExamAttempt> findByUser(User user, Pageable pageable);
 
-    List<ExamAttempt> findByStudentOrderByStartedAtDesc(User student);
+    @Query("""
+  SELECT a FROM ExamAttempt a
+  JOIN a.user u
+  JOIN a.exam e
+  WHERE e.id = :examId
+    AND (
+      :kw IS NULL OR
+      LOWER(u.fullName) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+      LOWER(u.username) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+      LOWER(u.email) LIKE LOWER(CONCAT('%', :kw, '%'))
+    )
+    AND (
+      :from IS NULL OR a.finishedAt IS NULL OR a.finishedAt >= :from
+    )
+    AND (
+      :to IS NULL OR a.finishedAt IS NULL OR a.finishedAt < :to
+    )
+""")
+    Page<ExamAttempt> searchForTeacher(
+            @Param("examId") Long examId,
+            @Param("kw") String keyword,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            Pageable pageable);
 
-    Page<ExamAttempt> findByStudentOrderByStartedAtDesc(User student, Pageable pageable);
-
-    @Query("SELECT ea FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.finishedAt IS NULL")
-    List<ExamAttempt> findInProgressExamsByStudent(@Param("studentId") Long studentId);
-
-    @Query("SELECT ea FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.exam.id = :examId")
-    List<ExamAttempt> findByStudentIdAndExamId(@Param("studentId") Long studentId, @Param("examId") Long examId);
-
-    @Query("SELECT ea FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.examTemplate.id = :examTemplateId")
-    List<ExamAttempt> findByStudentIdAndExamTemplateId(@Param("studentId") Long studentId, @Param("examTemplateId") Long examTemplateId);
-
-    @Query("SELECT ea FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.finishedAt IS NOT NULL ORDER BY ea.startedAt DESC")
-    List<ExamAttempt> findCompletedExamsByStudent(@Param("studentId") Long studentId);
-
-    @Query("SELECT COUNT(ea) FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.exam.id = :examId")
-    Long countAttemptsByStudentAndExam(@Param("studentId") Long studentId, @Param("examId") Long examId);
-
-    @Query("SELECT COUNT(ea) FROM ExamAttempt ea WHERE ea.student.userId = :studentId AND ea.examTemplate.id = :examTemplateId")
-    Long countAttemptsByStudentAndExamTemplate(@Param("studentId") Long studentId, @Param("examTemplateId") Long examTemplateId);
-
-    Optional<ExamAttempt> findByIdAndStudent(Long id, User student);
+    Page<ExamAttempt> findByUser_UserId(Long userId, Pageable pageable);
 }

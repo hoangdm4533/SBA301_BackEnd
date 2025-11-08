@@ -1,27 +1,31 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.dto.request.grade.GradeRequest;
+import com.example.demologin.dto.response.ChapterResponse;
 import com.example.demologin.dto.response.GradeResponse;
 import com.example.demologin.entity.Grade;
+import com.example.demologin.mapper.chapter.IChapterMapper;
+import com.example.demologin.repository.ChapterRepository;
 import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.service.GradeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GradeServiceImpl implements GradeService {
     private final GradeRepository gradeRepository;
+    private final ChapterRepository chapterRepository;
+    private final IChapterMapper chapterMapper;
 
-    public GradeServiceImpl(GradeRepository gradeRepository) {
-        this.gradeRepository = gradeRepository;
-    }
 
     private GradeResponse mapToResponse(Grade grade) {
         return GradeResponse.builder()
                 .id(grade.getId())
-                .name(grade.getName())
+                .gradeNumber(grade.getGradeNumber())
                 .description(grade.getDescription())
                 .build();
     }
@@ -29,7 +33,7 @@ public class GradeServiceImpl implements GradeService {
     @Override
     public GradeResponse createGrade(GradeRequest request) {
         Grade grade = Grade.builder()
-                .name(request.getName())
+                .gradeNumber(request.getGradeNumber())
                 .description(request.getDescription())
                 .build();
         Grade saved = gradeRepository.save(grade);
@@ -56,7 +60,7 @@ public class GradeServiceImpl implements GradeService {
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Grade not found with id " + id));
 
-        grade.setName(request.getName());
+        grade.setGradeNumber(request.getGradeNumber());
         grade.setDescription(request.getDescription());
 
         Grade updated = gradeRepository.save(grade);
@@ -69,5 +73,23 @@ public class GradeServiceImpl implements GradeService {
             throw new IllegalArgumentException("Grade not found with id " + id);
         }
         gradeRepository.deleteById(id);
+    }
+
+    @Override
+    public List<ChapterResponse> getChaptersByGradeId(Long gradeId) {
+        try{
+// Kiểm tra Grade tồn tại
+            Grade grade = gradeRepository.findById(gradeId)
+                    .orElseThrow(() -> new RuntimeException("Grade not found with id: " + gradeId));
+
+            // Lấy danh sách Chapter thuộc Grade
+            return chapterRepository.findByGrade_IdOrderByOrderNoAsc(grade.getId())
+                    .stream()
+                    .map(chapterMapper::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.out.println("Excetpion " + e);
+            return List.of();
+        }
     }
 }

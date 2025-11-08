@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "email_otps")
 public class EmailOtp {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

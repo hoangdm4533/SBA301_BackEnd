@@ -3,38 +3,49 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.PermissionRequest;
+import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.service.PermissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/api/admin/permissions")
 @Tag(name = "Permission Management", description = "APIs for managing system permissions")
-    public class PermissionController {
+@PreAuthorize("hasRole('ADMIN')")
+public class PermissionController {
+
     private final PermissionService permissionService;
 
-    @SecuredEndpoint("PERMISSION_VIEW")
     @GetMapping
     @ApiResponse(message = "Permissions retrieved successfully")
-    @Operation(summary = "Get all permissions", 
-               description = "Retrieve all system permissions")
-    public Object getAll() {
-        return permissionService.getAll();
+    @Operation(summary = "Get all permissions",
+            description = "Retrieve all system permissions")
+    public ResponseEntity<ResponseObject> getAll() {
+        final var data = permissionService.getAll();
+        return ResponseEntity.ok(
+                new ResponseObject(HttpStatus.OK.value(), "Permissions retrieved successfully", data)
+        );
     }
 
     @PutMapping("/{id}")
     @ApiResponse(message = "Permission updated successfully")
-    @SecuredEndpoint("PERMISSION_UPDATE")
-    @Operation(summary = "Update permission", 
-               description = "Update permission name and description")
-    public Object update(
-            @Parameter(description = "Permission ID") @PathVariable Long id,
-            @RequestBody @Valid PermissionRequest req) {
-        return permissionService.updatePermissionName(id, req);
+    @Operation(summary = "Update permission",
+            description = "Update permission name and description")
+    public ResponseEntity<ResponseObject> update(
+            @Parameter(description = "Permission ID") @PathVariable final Long id,
+            @Valid @RequestBody final PermissionRequest req
+    ) {
+        final var data = permissionService.updatePermissionName(id, req);
+        return ResponseEntity.ok(
+                new ResponseObject(HttpStatus.OK.value(), "Permission updated successfully", data)
+        );
     }
-} 
+}

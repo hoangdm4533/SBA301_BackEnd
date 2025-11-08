@@ -9,8 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class LessonPlanRequest {
-    @JsonProperty("teacher_id")
-    private Long teacherId;
+//    @JsonProperty("teacher_id")
+//    private Long teacherId;
     @JsonProperty("grade_id")
     private Long gradeId;
     private String title;

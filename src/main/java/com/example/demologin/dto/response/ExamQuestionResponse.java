@@ -1,23 +1,17 @@
 package com.example.demologin.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.time.LocalDateTime;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ExamQuestionResponse {
     private Long id;
-    private Long examTemplateId;
+    private Long examId;
     private Long questionId;
     private String questionText;
     private String questionType;
-    private String questionDifficulty;
-    private Integer questionOrder;
-    private Double points;
-    private String note;
-    private LocalDateTime createdAt;
+    private double score;
 }

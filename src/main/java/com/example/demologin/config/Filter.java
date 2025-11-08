@@ -48,6 +48,11 @@ public class Filter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+            if (request.getRequestURI().contains("/vnpay-return")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
 
             String token = getToken(request);
             if (token == null) {
@@ -102,7 +107,9 @@ public class Filter extends OncePerRequestFilter {
                 "/swagger-resources/**",
                 "/webjars/**",
                 "/login/oauth2/code/**",
-                "/oauth2/authorization/**"
+                "/oauth2/authorization/**",
+                "/api/payment/vnpay/vnpay-return",
+                "/vnpay-return"
         );
 
         return systemPublicEndpoints.stream()

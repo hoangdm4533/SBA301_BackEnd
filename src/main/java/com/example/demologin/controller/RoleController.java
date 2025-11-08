@@ -12,81 +12,83 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/api/admin/roles")
 @Tag(name = "Role Management", description = "APIs for managing user roles and role permissions")
-    public class RoleController {
+@PreAuthorize("hasRole('ADMIN')")
+public class RoleController {
+
     private final RoleService roleService;
 
-    @SecuredEndpoint("ROLE_VIEW")
     @GetMapping
     @SmartCache
     @ApiResponse(message = "Roles retrieved successfully")
-    @Operation(summary = "Get all roles", 
-               description = "Retrieve all roles in the system")
-    public Object getAll() {
-        return roleService.getAll();
+    @Operation(summary = "Get all roles", description = "Retrieve all roles in the system")
+    public ResponseEntity<ResponseObject> getAll() {
+        final var data = roleService.getAll();
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Roles retrieved successfully", data));
     }
 
     @PostMapping
-    @ApiResponse(message = "Role created successfully")
-    @SecuredEndpoint("ROLE_CREATE")
     @SmartCache
-    @Operation(summary = "Create new role", 
-               description = "Create a new role with specified name and description")
-    public Object create(@RequestBody @Valid CreateRoleRequest req) {
-        return roleService.create(req);
+    @SecuredEndpoint("ROLE_CREATE")
+    @ApiResponse(message = "Role created successfully")
+    @Operation(summary = "Create new role", description = "Create a new role with specified name and description")
+    public ResponseEntity<ResponseObject> create(@RequestBody @Valid final CreateRoleRequest req) {
+        final var data = roleService.create(req);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseObject(HttpStatus.CREATED.value(), "Role created successfully", data));
     }
 
     @PutMapping("/{id}")
-    @ApiResponse(message = "Role updated successfully")
     @SmartCache
     @SecuredEndpoint("ROLE_UPDATE")
-    @Operation(summary = "Update role", 
-               description = "Update role name and description")
-    public Object update(
-            @Parameter(description = "Role ID") @PathVariable Long id, 
-            @RequestBody @Valid UpdateRoleRequest req) {
-        return roleService.update(id, req);
+    @ApiResponse(message = "Role updated successfully")
+    @Operation(summary = "Update role", description = "Update role name and description")
+    public ResponseEntity<ResponseObject> update(
+            @Parameter(description = "Role ID") @PathVariable final Long id,
+            @RequestBody @Valid final UpdateRoleRequest req) {
+        final var data = roleService.update(id, req);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Role updated successfully", data));
     }
 
     @DeleteMapping("/{id}")
-//    @ApiResponse(message = "Role deleted successfully")
     @SmartCache
     @SecuredEndpoint("ROLE_DELETE")
-    @Operation(summary = "Delete role", 
-               description = "Delete a role from the system")
-    public ResponseObject delete(@PathVariable Long id) {
+    @ApiResponse(message = "Role deleted successfully")
+    @Operation(summary = "Delete role", description = "Delete a role from the system")
+    public ResponseEntity<ResponseObject> delete(@PathVariable final Long id) {
         roleService.delete(id);
-        return new ResponseObject(HttpStatus.OK.value(), "Role deleted successfully", null);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Role deleted successfully", id));
     }
 
     @PutMapping("/{id}/permissions")
-    @ApiResponse(message = "Role permissions updated successfully")
-    @SecuredEndpoint("ROLE_UPDATE_PERMISSIONS")
     @SmartCache
-    @Operation(summary = "Update role permissions", 
-               description = "Update permissions assigned to a role")
-    public Object updatePermissions(
-            @Parameter(description = "Role ID") @PathVariable Long id, 
-            @RequestBody @Valid RolePermissionsRequest req) {
-        return roleService.updatePermissions(id, req);
+    @SecuredEndpoint("ROLE_PERMISSION_UPDATE")
+    @ApiResponse(message = "Role permissions updated successfully")
+    @Operation(summary = "Update role permissions", description = "Update permissions assigned to a role")
+    public ResponseEntity<ResponseObject> updatePermissions(
+            @Parameter(description = "Role ID") @PathVariable final Long id,
+            @RequestBody @Valid final RolePermissionsRequest req) {
+        final var data = roleService.updatePermissions(id, req);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Role permissions updated successfully", data));
     }
 
-    @SecuredEndpoint("ROLE_VIEW")
     @GetMapping("/{id}")
     @SmartCache
+    @SecuredEndpoint("ROLE_VIEW")
     @ApiResponse(message = "Role retrieved successfully")
-    @Operation(summary = "Get role by ID",
-            description = "Retrieve a role by its ID")
-    public Object getById(
-            @Parameter(description = "Role ID") @PathVariable Long id) {
-        return roleService.getById(id);
+    @Operation(summary = "Get role by ID", description = "Retrieve a role by its ID")
+    public ResponseEntity<ResponseObject> getById(
+            @Parameter(description = "Role ID") @PathVariable final Long id) {
+        final var data = roleService.getById(id);
+        return ResponseEntity.ok(new ResponseObject(HttpStatus.OK.value(), "Role retrieved successfully", data));
     }
-
 }

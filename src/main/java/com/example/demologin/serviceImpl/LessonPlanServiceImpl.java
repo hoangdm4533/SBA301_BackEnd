@@ -4,45 +4,42 @@ import com.example.demologin.dto.request.lesson_plan.LessonPlanRequest;
 import com.example.demologin.dto.response.LessonPlanResponse;
 import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.LessonPlan;
-import com.example.demologin.entity.User;
 import com.example.demologin.repository.GradeRepository;
+import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
-import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanService;
 import com.example.demologin.service.ObjectStorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class LessonPlanServiceImpl implements LessonPlanService {
     private final LessonPlanRepository lessonPlanRepo;
-    private final UserRepository userRepo;
+//    private final UserRepository userRepo;
     private final GradeRepository gradeRepo;
     private final ObjectStorageService storageService; // Sử dụng MinIO
+    private final LessonPlanEditRepository lessonPlanEditRepo;
 
-    public LessonPlanServiceImpl(LessonPlanRepository lessonPlanRepo,
-                                 UserRepository userRepo,
-                                 GradeRepository gradeRepo,
-                                 ObjectStorageService storageService) {
-        this.lessonPlanRepo = lessonPlanRepo;
-        this.userRepo = userRepo;
-        this.gradeRepo = gradeRepo;
-        this.storageService = storageService;
-
-    }
 
     @Override
     public LessonPlanResponse createLessonPlan(LessonPlanRequest req) {
-        User teacher = userRepo.findById(req.getTeacherId())
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
-//        Grade grade = gradeRepo.findById(req.getGradeId())
-//                .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
+//        User teacher = userRepo.findById(req.getTeacherId())
+//                .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+        Grade grade = gradeRepo.findById(req.getGradeId())
+                .orElseThrow(() -> new IllegalArgumentException("Grade not found"));
 
         // 1. Tạo lesson plan (chưa có filePath)
         LessonPlan plan = LessonPlan.builder()
-                .teacher(teacher)
-//                .grade(grade)
+//                .teacher(teacher)
+                .grade(grade)
                 .title(req.getTitle())
                 .content(null) // content sẽ được lưu trong MinIO
                 .createdAt(LocalDateTime.now())
@@ -69,15 +66,96 @@ public class LessonPlanServiceImpl implements LessonPlanService {
     }
 
     public LessonPlanResponse mapToResponse(LessonPlan plan) {
-        LessonPlanResponse dto = new LessonPlanResponse();
-        dto.setId(plan.getId());
-        dto.setTitle(plan.getTitle());
-        dto.setContent(plan.getContent());
-        dto.setFilePath(plan.getFilePath());
-        dto.setCreatedAt(plan.getCreatedAt());
-        dto.setUpdatedAt(plan.getUpdatedAt());
-//        dto.setTeacherName(plan.getTeacher().getFullName()); // giả sử có field name
-//        dto.setGradeName(plan.getGrade().getName());     // giả sử có field name
-        return dto;
+       return LessonPlanResponse.builder()
+                .id(plan.getId())
+                .filePath(plan.getFilePath())
+                .content(plan.getContent())
+                .title(plan.getTitle())
+                .createdAt(plan.getCreatedAt())
+                .updatedAt(plan.getUpdatedAt())
+                .gradeNumber(plan.getGrade().getGradeNumber())
+//                .teacherName(plan.getGrade().get())
+                .build();
+    }
+
+    @Override
+    public boolean deleteLessonPlan(Long lessonPlanId) {
+        LessonPlan plan = lessonPlanRepo.findById(lessonPlanId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson Plan not found"));
+
+        try {
+            lessonPlanEditRepo.deleteByLessonPlanId(lessonPlanId);
+
+            // 1. Xóa file khỏi MinIO (nếu có)
+            if (plan.getFilePath() != null) {
+                storageService.deleteDocument(plan.getFilePath());
+            }
+
+
+            // 2. Xóa record khỏi DB
+            lessonPlanRepo.delete(plan);
+            return true;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete lesson plan", e);
+        }
+    }
+
+    @Override
+    public LessonPlanResponse findLessonPlanById(Long lessonPlanId) {
+        LessonPlan plan = lessonPlanRepo.findById(lessonPlanId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson Plan not found"));
+
+        // Lấy content từ MinIO
+//        String content = null;
+//        if (plan.getFilePath() != null) {
+//            try {
+//                content = storageService.fetchDocument(plan.getFilePath());
+//            } catch (Exception e) {
+//                throw new RuntimeException("Failed to load lesson plan content from MinIO", e);
+//            }
+//        }
+//
+//        plan.setContent(content);
+        return mapToResponse(plan);
+    }
+
+    @Override
+    public List<LessonPlanResponse> getAllLessonPlans() {
+        List<LessonPlan> plans = lessonPlanRepo.findAll();
+        return plans.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public Page<LessonPlanResponse> getLessonPlans(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<LessonPlan> planPage = lessonPlanRepo.findAll(pageable);
+
+        return planPage.map(this::mapToResponse);
+    }
+
+    @Override
+    public LessonPlanResponse updateLessonPlan(Long lessonPlanId, LessonPlanRequest req) {
+        // 1. Lấy lesson plan theo ID
+        LessonPlan lessonPlan = lessonPlanRepo.findById(lessonPlanId)
+                .orElseThrow(() -> new RuntimeException("LessonPlan not found with id: " + lessonPlanId));
+
+        // 2. Cập nhật thông tin
+        lessonPlan.setGrade(gradeRepo.findById(req.getGradeId()).orElseThrow(() -> new RuntimeException("Khoông tìm thâấy grade")));
+        lessonPlan.setTitle(req.getTitle());
+        lessonPlan.setContent(req.getContent());
+        lessonPlan.setFilePath(req.getFilePath()); // có thể null
+
+        // 3. Lưu lại
+        LessonPlan response = lessonPlanRepo.save(lessonPlan);
+
+        // 4. Trả về response
+        return mapToResponse(response);
     }
 }

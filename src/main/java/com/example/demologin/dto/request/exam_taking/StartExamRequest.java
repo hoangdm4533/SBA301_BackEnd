@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class StartExamRequest {
-    @NotNull(message = "Exam template ID is required")
-    private Long examTemplateId;
+    @NotNull(message = "Exam ID is required")
+    private Long examId;
 }

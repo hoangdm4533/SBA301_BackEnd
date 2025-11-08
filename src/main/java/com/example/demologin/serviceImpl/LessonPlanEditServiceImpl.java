@@ -9,12 +9,14 @@ import com.example.demologin.repository.LessonPlanEditRepository;
 import com.example.demologin.repository.LessonPlanRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.LessonPlanEditService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class LessonPlanEditServiceImpl implements LessonPlanEditService {
 
     private final LessonPlanRepository lessonPlanRepo;
@@ -34,6 +36,7 @@ public class LessonPlanEditServiceImpl implements LessonPlanEditService {
      */
     @Override
     public LessonPlanEditResponse saveEdit(LessonPlanEditRequest req) {
+        log.info("lessonPlanId={}, editorId={}, operation={}", req.getLessonPlanId(), req.getEditorId(), req.getOperation());
         LessonPlan lessonPlan = lessonPlanRepo.findById(req.getLessonPlanId())
                 .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found"));
 
@@ -71,7 +74,7 @@ public class LessonPlanEditServiceImpl implements LessonPlanEditService {
         LessonPlanEditResponse dto = new LessonPlanEditResponse();
         dto.setId(edit.getId());
         dto.setOperation(edit.getOperation());
-        dto.setCreatedAt(edit.getCreatedAt());
+        dto.setCreatedAt(edit.getCreatedAt().toString());
         return dto;
     }
 }

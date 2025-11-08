@@ -18,5 +18,5 @@ public class LessonPlanResponse {
     private LocalDateTime updatedAt;
 
     private String teacherName; // optional, map từ User
-    private String gradeName;   // optional, map từ Grade
+    private Integer gradeNumber;   // optional, map từ Grade
 }

@@ -1,172 +1,113 @@
 package com.example.demologin.initializer.components;
 
+import com.example.demologin.entity.*;
+import com.example.demologin.repository.*;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.example.demologin.entity.ClassEntity;
-import com.example.demologin.entity.Grade;
-import com.example.demologin.entity.LessonPlan;
-import com.example.demologin.repository.ClassEntityRepository;
-import com.example.demologin.repository.GradeRepository;
-import com.example.demologin.repository.LessonPlanRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Education Data Initializer
- * 
- * Responsible for creating default education data including grades, classes, and lesson plans.
- * This provides basic academic structure for the system.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class EducationDataInitializer {
 
+    private final SubjectRepository subjectRepository;
     private final GradeRepository gradeRepository;
-    private final ClassEntityRepository classEntityRepository;
+    private final ChapterRepository chapterRepository;
     private final LessonPlanRepository lessonPlanRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public void initializeEducationData() {
-        log.info("📚 Initializing education data (grades, classes, lesson plans)...");
-        
-        initializeGrades();
-        initializeClasses();
-        initializeLessonPlans();
-        
-        log.info("✅ Successfully initialized education data");
-    }
-
-    private void initializeGrades() {
-        log.debug("🎓 Creating default grades...");
-        
-        if (gradeRepository.count() > 0) {
-            log.info("ℹ️ Grades already exist, skipping grade initialization");
+    public void initializeEducation() {
+        if (subjectRepository.count() > 0 || gradeRepository.count() > 0) {
+            log.info("ℹ️ Education data already present, skipping");
             return;
         }
-
-        List<Grade> grades = List.of(
-            Grade.builder()
-                .name("Lớp 1")
-                .description("Lớp học dành cho học sinh năm thứ nhất")
-                .build(),
-            Grade.builder()
-                .name("Lớp 2")
-                .description("Lớp học dành cho học sinh năm thứ hai")
-                .build(),
-            Grade.builder()
-                .name("Lớp 3")
-                .description("Lớp học dành cho học sinh năm thứ ba")
-                .build(),
-            Grade.builder()
-                .name("Lớp 4")
-                .description("Lớp học dành cho học sinh năm thứ tư")
-                .build(),
-            Grade.builder()
-                .name("Lớp 5")
-                .description("Lớp học dành cho học sinh năm thứ năm")
-                .build(),
-            Grade.builder()
-                .name("Lớp 6")
-                .description("Lớp học dành cho học sinh năm thứ sáu")
-                .build(),
-            Grade.builder()
-                .name("Lớp 7")
-                .description("Lớp học dành cho học sinh năm thứ bảy")
-                .build(),
-            Grade.builder()
-                .name("Lớp 8")
-                .description("Lớp học dành cho học sinh năm thứ tám")
-                .build(),
-            Grade.builder()
-                .name("Lớp 9")
-                .description("Lớp học dành cho học sinh năm thứ chín")
-                .build(),
-            Grade.builder()
-                .name("Lớp 10")
-                .description("Lớp học dành cho học sinh năm thứ mười")
-                .build(),
-            Grade.builder()
-                .name("Lớp 11")
-                .description("Lớp học dành cho học sinh năm thứ mười một")
-                .build(),
-            Grade.builder()
-                .name("Lớp 12")
-                .description("Lớp học dành cho học sinh năm thứ mười hai")
-                .build()
+        User owner = userRepository.findByUsername("admin").orElseGet(() ->
+                userRepository.findAll().stream().findFirst().orElse(null)
         );
-
-        gradeRepository.saveAll(grades);
-        log.debug("✅ Created {} grades", grades.size());
-    }
-
-    private void initializeClasses() {
-        log.debug("🏫 Creating default classes...");
-        
-        if (classEntityRepository.count() > 0) {
-            log.info("ℹ️ Classes already exist, skipping class initialization");
+        if (owner == null) {
+            log.warn("⚠️ No user available to assign Subject ownership");
             return;
         }
 
-        List<Grade> grades = gradeRepository.findAll();
-        if (grades.isEmpty()) {
-            log.warn("⚠️ No grades found, cannot create classes");
-            return;
-        }
+        // Subject 1: Mathematics with two grades and multiple chapters
+        Subject math = Subject.builder()
+                .subjectName("Mathematics")
+                .user(owner)
+                .build();
+        math = subjectRepository.save(math);
 
-        // Tạo 2 lớp cho mỗi khối lớp
-        for (Grade grade : grades) {
-            for (int i = 1; i <= 2; i++) {
-                ClassEntity classEntity = ClassEntity.builder()
-                    .name(grade.getName() + "A" + i)
-                    .grade(grade)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-                
-                classEntityRepository.save(classEntity);
-            }
-        }
-        
-        log.debug("✅ Created {} classes", classEntityRepository.count());
-    }
+        Grade g6 = Grade.builder()
+                .gradeNumber(6)
+                .description("Grade 6 - Basic Math")
+                .subject(math)
+                .build();
+        g6 = gradeRepository.save(g6);
 
-    private void initializeLessonPlans() {
-        log.debug("📋 Creating default lesson plans...");
-        
-        if (lessonPlanRepository.count() > 0) {
-            log.info("ℹ️ Lesson plans already exist, skipping lesson plan initialization");
-            return;
-        }
+        Grade g7 = Grade.builder()
+                .gradeNumber(7)
+                .description("Grade 7 - Intermediate Math")
+                .subject(math)
+                .build();
+        g7 = gradeRepository.save(g7);
 
-        List<Grade> grades = gradeRepository.findAll();
-        if (grades.isEmpty()) {
-            log.warn("⚠️ No grades found, cannot create lesson plans");
-            return;
-        }
+        Chapter g6c1 = Chapter.builder().name("Numbers and Operations").orderNo(1).grade(g6).build();
+        Chapter g6c2 = Chapter.builder().name("Fractions and Decimals").orderNo(2).grade(g6).build();
+        Chapter g7c1 = Chapter.builder().name("Algebraic Expressions").orderNo(1).grade(g7).build();
+        chapterRepository.saveAll(java.util.List.of(g6c1, g6c2, g7c1));
 
-        // Tạo kế hoạch bài học mẫu cho từng khối lớp
-        String[] subjects = {"Toán học", "Tiếng Việt", "Khoa học", "Lịch sử", "Địa lý", "Tiếng Anh"};
-        
-        for (Grade grade : grades) {
-            for (String subject : subjects) {
-                LessonPlan lessonPlan = LessonPlan.builder()
-                    .title("Kế hoạch " + subject + " - " + grade.getName())
-                    .content("Kế hoạch giảng dạy môn " + subject + " dành cho " + grade.getName() + ". " +
-                           "Nội dung chi tiết kế hoạch giảng dạy môn " + subject + " cho " + grade.getName())
-                    .grade(grade)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-                
-                lessonPlanRepository.save(lessonPlan);
-            }
-        }
-        
-        log.debug("✅ Created {} lesson plans", lessonPlanRepository.count());
+        LessonPlan lp1 = LessonPlan.builder()
+                .title("Grade 6 Math Plan")
+                .content("Introduction to numbers, operations, and fractions")
+                .filePath(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .grade(g6)
+                .build();
+        LessonPlan lp2 = LessonPlan.builder()
+                .title("Grade 7 Algebra Plan")
+                .content("Basics of algebraic expressions and equations")
+                .filePath(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .grade(g7)
+                .build();
+        lessonPlanRepository.saveAll(java.util.List.of(lp1, lp2));
+
+        // Subject 2: Science with one grade and two chapters
+        Subject sci = Subject.builder()
+                .subjectName("Science")
+                .user(owner)
+                .build();
+        sci = subjectRepository.save(sci);
+
+        Grade g8 = Grade.builder()
+                .gradeNumber(8)
+                .description("Grade 8 - General Science")
+                .subject(sci)
+                .build();
+        g8 = gradeRepository.save(g8);
+
+        Chapter g8c1 = Chapter.builder().name("Cells and Organisms").orderNo(1).grade(g8).build();
+        Chapter g8c2 = Chapter.builder().name("Forces and Motion").orderNo(2).grade(g8).build();
+        chapterRepository.saveAll(java.util.List.of(g8c1, g8c2));
+
+        LessonPlan lp3 = LessonPlan.builder()
+                .title("Grade 8 Science Plan")
+                .content("Overview of biology and physics basics")
+                .filePath(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .grade(g8)
+                .build();
+        lessonPlanRepository.save(lp3);
+
+        log.info("✅ Seeded education data: subjects={}, grades={}, chapters added, lesson plans added",
+                subjectRepository.count(), gradeRepository.count());
     }
 }

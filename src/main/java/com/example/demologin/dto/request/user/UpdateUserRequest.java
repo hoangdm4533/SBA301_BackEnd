@@ -1,13 +1,30 @@
 package com.example.demologin.dto.request.user;
 
+import com.example.demologin.enums.Gender;
+import com.example.demologin.enums.UserStatus;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Set;
 
 @Getter
 @Setter
 public class UpdateUserRequest {
-    private Long userId;
+
+    @Size(max = 50)
+    private String username;
+
+    @Size(max = 100)
     private String fullName;
+
+    @Email
+    @Size(max = 255)
     private String email;
-    private String reason; // Lý do cập nhật
-} 
+
+    private Gender gender;
+
+    @Size(min = 6, max = 100)
+    private String newPassword;
+}
