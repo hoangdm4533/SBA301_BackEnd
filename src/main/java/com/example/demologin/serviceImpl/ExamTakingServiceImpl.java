@@ -48,6 +48,7 @@
                 card.setTitle(e.getTitle());
                 card.setDescription(e.getDescription());
                 card.setStatus(e.getStatus());
+                card.setDurationMinutes(e.getDurationMinutes());
                 card.setQuestionCount(
                         e.getExamQuestions() != null ? e.getExamQuestions().size() : 0
                 );
@@ -67,10 +68,19 @@
 
             User currentUser = accountUtils.getCurrentUser();
 
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime expiresAt = null;
+
+            // Nếu đề thi có thời gian làm bài, tính thời điểm hết hạn
+            if (exam.getDurationMinutes() != null && exam.getDurationMinutes() > 0) {
+                expiresAt = now.plusMinutes(exam.getDurationMinutes());
+            }
+
             ExamAttempt attempt = new ExamAttempt();
             attempt.setExam(exam);
             attempt.setUser(currentUser);
-            attempt.setStartedAt(LocalDateTime.now());
+            attempt.setStartedAt(now);
+            attempt.setExpiresAt(expiresAt);
             attempt = examAttemptRepository.save(attempt);
 
             // Lấy câu hỏi của đề + map về QuestionView (không lộ đáp án)
@@ -115,6 +125,17 @@
             User currentUser = accountUtils.getCurrentUser();
             if (!attempt.getUser().getUserId().equals(currentUser.getUserId())) {
                 throw new ForbiddenException("You cannot submit someone else's attempt");
+            }
+
+            // Kiểm tra nếu đã nộp rồi
+            if (attempt.getFinishedAt() != null) {
+                throw new ForbiddenException("This attempt has already been submitted");
+            }
+
+            // Kiểm tra nếu quá hạn (có thể log nếu cần)
+            LocalDateTime now = LocalDateTime.now();
+            if (attempt.getExpiresAt() != null && now.isAfter(attempt.getExpiresAt())) {
+                // Đã hết thời gian - vẫn cho nộp nhưng có thể xử lý thêm (log, notification, etc.)
             }
 
             Exam exam = attempt.getExam();

@@ -15,6 +15,7 @@ public class ExamResponse {
     private String title;
     private String description;
     private String status;
+    private Integer durationMinutes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<ExamQuestionResponse> questions;

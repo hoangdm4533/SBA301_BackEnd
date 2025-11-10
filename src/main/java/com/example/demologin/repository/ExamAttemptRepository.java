@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> {
     Page<ExamAttempt> findByUser(User user, Pageable pageable);
@@ -39,4 +40,9 @@ public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> 
             Pageable pageable);
 
     Page<ExamAttempt> findByUser_UserId(Long userId, Pageable pageable);
+
+    /**
+     * Tìm các attempt đã hết hạn nhưng chưa nộp (để tự động nộp)
+     */
+    List<ExamAttempt> findByExpiresAtBeforeAndFinishedAtIsNull(LocalDateTime expiresAt);
 }

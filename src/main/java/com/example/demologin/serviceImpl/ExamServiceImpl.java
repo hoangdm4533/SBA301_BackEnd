@@ -45,6 +45,7 @@ public class ExamServiceImpl implements ExamService {
                 .title(exam.getTitle())
                 .description(exam.getDescription())
                 .status(exam.getStatus())
+                .durationMinutes(exam.getDurationMinutes())
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
                 .questions(questions)
@@ -83,6 +84,7 @@ public class ExamServiceImpl implements ExamService {
             Exam exam = Exam.builder()
                     .title(request.getTitle())
                     .description(request.getDescription())
+                    .durationMinutes(request.getDurationMinutes())
                     .status(request.getStatus() != null ? request.getStatus() : "DRAFT")
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
@@ -135,6 +137,7 @@ public class ExamServiceImpl implements ExamService {
         }
 
         exam.setTitle(request.getTitle());
+        exam.setDurationMinutes(request.getDurationMinutes());
         exam.setDescription(request.getDescription());
         exam.setStatus(request.getStatus());
         exam.setUpdatedAt(LocalDateTime.now());
