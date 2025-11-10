@@ -1,5 +1,6 @@
 package com.example.demologin.controller;
 
+import com.example.demologin.annotation.AuthenticatedEndpoint;
 import com.example.demologin.dto.request.subcription.SubscriptionRequest;
 import com.example.demologin.dto.response.PageResponse;
 import com.example.demologin.dto.response.SubscriptionResponse;
@@ -64,5 +65,12 @@ public class SubscriptionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         subscriptionService.deleteSubscription(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get my subscriptions", description = "For students to view their own subscription history")
+    @GetMapping("/my-subscriptions")
+    @AuthenticatedEndpoint
+    public ResponseEntity<List<SubscriptionResponse>> getMySubscriptions() {
+        return ResponseEntity.ok(subscriptionService.getMySubscriptions());
     }
 }

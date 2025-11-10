@@ -23,4 +23,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                               Pageable pageable);
     
     boolean existsByUserUserIdAndStatusAndEndDateAfter(Long userId, String status, LocalDateTime date);
+
+    List<Subscription> findByUserUserIdOrderByCreatedAtDesc(Long userId);
 }
