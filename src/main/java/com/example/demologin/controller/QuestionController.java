@@ -3,6 +3,7 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.dto.request.ai.QuestionGenerate;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -88,7 +89,7 @@ public class QuestionController {
 
     @GetMapping("/generate")
     @ApiResponse(message = "Question deleted successfully")
-    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionCreateRequest request) {
+    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGeneratet request) {
         String result = questionService.generateQuestion(request);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),

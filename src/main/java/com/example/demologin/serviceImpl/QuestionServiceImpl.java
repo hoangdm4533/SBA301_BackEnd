@@ -1,6 +1,7 @@
 package com.example.demologin.serviceImpl;
 
 import com.example.demologin.config.GeminiConfig;
+import com.example.demologin.dto.request.ai.QuestionGenerate;
 import com.example.demologin.dto.request.question.OptionRequest;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
@@ -197,8 +198,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public String generateQuestion(QuestionCreateRequest req) {
-        // System instruction mô tả dữ liệu từ request
+    public String generateQuestion(QuestionGenerate req) {
+        // System instruction mô tả yêu cầu cho AI
         String sysIns = buildSystemInstruction(req);
 
         GenerateContentConfig config = GenerateContentConfig.builder()
@@ -206,6 +207,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
                 .build();
 
+        // User prompt: yêu cầu AI sinh "quantity" câu hỏi
         String userPrompt = buildUserPrompt(req);
 
         Content content = Content.fromParts(
@@ -221,46 +223,38 @@ public class QuestionServiceImpl implements QuestionService {
         return res.text();
     }
 
-    private String buildSystemInstruction(QuestionCreateRequest req) {
+    private String buildSystemInstruction(QuestionGenerate req) {
+        int questionCount = req.getQuantity() != null ? req.getQuantity() : 1;
         return """
-                Bạn là hệ thống tạo câu hỏi trắc nghiệm có độ chính xác cao.
-                Dựa trên dữ liệu đầu vào, bạn phải sinh lại câu hỏi và gắn nhãn (đúng) vào đúng option.
-                
-                type: %s
-                formula: %s
-                Số lượng option: %d
-                
-                Yêu cầu xuất ra đúng format:
-                1. {question}
-                A. {option 1}
-                B. {option 2 (đúng)}
-                C. {option 3}
-                D. {option 4}
-                """
+            Bạn là hệ thống tạo câu hỏi trắc nghiệm chính xác cao môn toán.
+            Sinh %d câu hỏi dựa trên dữ liệu đầu vào.
+            type: %s
+            formula: %s
+            Mỗi câu hỏi có 2-4 option, trong đó có duy nhất 1 option đúng.
+            
+            Format trả về phải theo mẫu:
+            1. {question}
+            A. {option 1}
+            B. {option 2 (đúng nếu option đúng)}
+            C. {option 3}
+            D. {option 4}
+            """
                 .formatted(
+                        questionCount,
                         req.getType(),
-                        req.getFormula() == null ? "" : req.getFormula(),
-                        req.getOptions() == null ? 0 : req.getOptions().size()
+                        req.getFormula() == null ? "" : req.getFormula()
                 );
     }
 
-    private String buildUserPrompt(QuestionCreateRequest req) {
-
+    private String buildUserPrompt(QuestionGenerate req) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Sinh lại câu hỏi sau:\n");
-        sb.append(req.getQuestionText()).append("\n\n");
-
-        sb.append("Các phương án:\n");
-        char label = 'A';
-        for (OptionRequest option : req.getOptions()) {
-            if (option.getIsCorrect()) {
-                sb.append(label).append(". ").append(option.getOptionText()).append(" (đúng)\n");
-            } else {
-                sb.append(label).append(". ").append(option.getOptionText()).append("\n");
-            }
-            label++;
+        sb.append("Sinh ").append(req.getQuantity() != null ? req.getQuantity() : 1).append(" câu hỏi ");
+        sb.append("theo loại ").append(req.getType()).append(".\n");
+        if (req.getFormula() != null && !req.getFormula().isEmpty()) {
+            sb.append("Sử dụng công thức: ").append(req.getFormula()).append("\n");
         }
-
+        sb.append("Mỗi câu hỏi có 2-4 option, duy nhất 1 option đúng.\n");
+        sb.append("Xuất ra đúng format đánh số câu hỏi và option A/B/C/D.\n");
         return sb.toString();
     }
 }
