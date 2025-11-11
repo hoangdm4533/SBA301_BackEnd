@@ -147,6 +147,7 @@ public class MatrixServiceImpl implements MatrixService {
                 .levelDescription(detail.getLevel().getDifficulty())
                 .lessonName(detail.getLesson().getLessonName())
                 .totalQuestions(detail.getTotalQuestions())
+                .questionType(detail.getQuestionType().getDescription())
                 .createdAt(detail.getCreatedAt())
                 .updatedAt(detail.getUpdatedAt())
                 .build();
