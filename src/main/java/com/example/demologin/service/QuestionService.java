@@ -12,4 +12,5 @@ public interface QuestionService {
     QuestionResponse create(QuestionCreateRequest req);
     QuestionResponse update(Long id, QuestionUpdateRequest req);
     void delete(Long id);
+    String generateQuestion(QuestionCreateRequest req);
 }

@@ -1,5 +1,7 @@
 package com.example.demologin.serviceImpl;
 
+import com.example.demologin.config.GeminiConfig;
+import com.example.demologin.dto.request.question.OptionRequest;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -8,6 +10,10 @@ import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
 import com.example.demologin.service.QuestionService;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.Part;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,7 +35,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionMapper mapper;
     private final LevelRepository levelRepo;
     private final LessonRepository lessonRepo;
-
+    private final GeminiConfig geminiConfig;
 
     @Override
     @Transactional(readOnly = true)
@@ -184,5 +190,73 @@ public class QuestionServiceImpl implements QuestionService {
         Question q = questionRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Question not found: " + id));
         questionRepo.delete(q);
+    }
+
+    @Override
+    public String generateQuestion(QuestionCreateRequest req) {
+        // System instruction mô tả dữ liệu từ request
+        String sysIns = buildSystemInstruction(req);
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .temperature(0.2f)
+                .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
+                .build();
+
+        String userPrompt = buildUserPrompt(req);
+
+        Content content = Content.fromParts(
+                Part.fromText(userPrompt)
+        );
+
+        GenerateContentResponse res = geminiConfig.generate(
+                "gemini-2.5-flash",
+                content,
+                config
+        );
+
+        return res.text();
+    }
+
+    private String buildSystemInstruction(QuestionCreateRequest req) {
+        return """
+                Bạn là hệ thống tạo câu hỏi trắc nghiệm có độ chính xác cao.
+                Dựa trên dữ liệu đầu vào, bạn phải sinh lại câu hỏi và gắn nhãn (đúng) vào đúng option.
+                
+                type: %s
+                formula: %s
+                Số lượng option: %d
+                
+                Yêu cầu xuất ra đúng format:
+                1. {question}
+                A. {option 1}
+                B. {option 2 (đúng)}
+                C. {option 3}
+                D. {option 4}
+                """
+                .formatted(
+                        req.getType(),
+                        req.getFormula() == null ? "" : req.getFormula(),
+                        req.getOptions() == null ? 0 : req.getOptions().size()
+                );
+    }
+
+    private String buildUserPrompt(QuestionCreateRequest req) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Sinh lại câu hỏi sau:\n");
+        sb.append(req.getQuestionText()).append("\n\n");
+
+        sb.append("Các phương án:\n");
+        char label = 'A';
+        for (OptionRequest option : req.getOptions()) {
+            if (option.getIsCorrect()) {
+                sb.append(label).append(". ").append(option.getOptionText()).append(" (đúng)\n");
+            } else {
+                sb.append(label).append(". ").append(option.getOptionText()).append("\n");
+            }
+            label++;
+        }
+
+        return sb.toString();
     }
 }

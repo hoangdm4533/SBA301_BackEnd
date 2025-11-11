@@ -21,9 +21,9 @@ public class LevelDataInitializer {
             return;
         }
         levelRepository.saveAll(List.of(
-                Level.builder().description("EASY").score(1.0).build(),
-                Level.builder().description("MEDIUM").score(2.0).build(),
-                Level.builder().description("HARD").score(3.0).build()
+                Level.builder().difficulty("EASY").score(1.0).build(),
+                Level.builder().difficulty("MEDIUM").score(2.0).build(),
+                Level.builder().difficulty("HARD").score(3.0).build()
         ));
     }
 }

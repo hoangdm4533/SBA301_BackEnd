@@ -42,6 +42,17 @@ public class UserInitializer {
                  r.setDescription("Role for teachers");
                  return roleRepository.save(r);
              });
+     Role adminRole = roleRepository.findByName("ADMIN")
+             .orElseGet(() -> {
+                 Role r = new Role();
+                 r.setName("ADMIN");
+                 r.setDescription("Role for admins");
+                 return roleRepository.save(r);
+             });
+
+     User admin = new User();
+     admin.setUsername("admin");
+     admin.setPassword(passwordEncoder.encode("admin123"));
 
      // === 2️⃣ Tạo user STUDENT ===
      for (int i = 1; i <= 5; i++) {

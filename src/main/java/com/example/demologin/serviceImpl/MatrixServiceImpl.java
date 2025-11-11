@@ -144,7 +144,7 @@ public class MatrixServiceImpl implements MatrixService {
     private MatrixDetailResponse mapToDetailResponse(MatrixDetail detail) {
         return MatrixDetailResponse.builder()
                 .id(detail.getId())
-                .levelDescription(detail.getLevel().getDescription())
+                .levelDescription(detail.getLevel().getDifficulty())
                 .lessonName(detail.getLesson().getLessonName())
                 .totalQuestions(detail.getTotalQuestions())
                 .createdAt(detail.getCreatedAt())

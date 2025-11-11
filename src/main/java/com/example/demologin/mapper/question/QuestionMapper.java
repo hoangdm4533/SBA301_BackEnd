@@ -56,7 +56,6 @@ public class QuestionMapper implements IQuestionMapper {
         Double levelScore = null;
         if (q.getLevel() != null) {
             levelId = q.getLevel().getId();
-            levelCode = q.getLevel().getDescription();
             levelScore = q.getLevel().getScore();
         }
 

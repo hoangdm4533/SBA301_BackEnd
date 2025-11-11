@@ -18,7 +18,6 @@ public class Level {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
-
+    private String difficulty;
     private Double score;
 }

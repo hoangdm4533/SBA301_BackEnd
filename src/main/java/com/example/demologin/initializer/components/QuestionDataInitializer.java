@@ -45,11 +45,11 @@ public class QuestionDataInitializer {
         QuestionType trueFalse = questionTypeRepository.findByDescriptionIgnoreCase("TRUE_FALSE")
                 .orElseThrow(() -> new IllegalStateException("Missing QuestionType: TRUE_FALSE"));
 
-        Level easy = levelRepository.findByDescription("EASY")
+        Level easy = levelRepository.findByDifficulty("EASY")
                 .orElseThrow(() -> new IllegalStateException("Missing Level: EASY"));
-        Level medium = levelRepository.findByDescription("MEDIUM")
+        Level medium = levelRepository.findByDifficulty("MEDIUM")
                 .orElseThrow(() -> new IllegalStateException("Missing Level: MEDIUM"));
-        Level hard = levelRepository.findByDescription("HARD")
+        Level hard = levelRepository.findByDifficulty("HARD")
                 .orElseThrow(() -> new IllegalStateException("Missing Level: HARD"));
 
         List<Question> questions = new ArrayList<>();
