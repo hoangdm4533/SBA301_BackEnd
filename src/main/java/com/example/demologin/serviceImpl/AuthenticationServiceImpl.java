@@ -225,7 +225,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
+                roles.add(roleRepository.findByName("STUDENT").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                 
                 user = new User(
                         email.substring(0, email.indexOf('@')),
@@ -386,7 +386,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-                roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
+                roles.add(roleRepository.findByName("STUDENT").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                 
                 user = new User(
                         email.substring(0, email.indexOf('@')),
@@ -408,8 +408,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.setFullName(name);
                     updated = true;
                 }
-                if (!user.getRoles().stream().anyMatch(r -> r.getName().equals("MEMBER"))) {
-                    user.addRole(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
+                if (!user.getRoles().stream().anyMatch(r -> r.getName().equals("STUDENT"))) {
+                    user.addRole(roleRepository.findByName("STUDENT").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
                     updated = true;
                 }
                 if (user.getStatus() != UserStatus.ACTIVE) {
@@ -467,7 +467,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
-            roles.add(roleRepository.findByName("MEMBER").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
+            roles.add(roleRepository.findByName("STUDENT").orElseThrow(() -> new NotFoundException("Role MEMBER not found")));
             
             user = new User(
                     email.substring(0, email.indexOf('@')),
