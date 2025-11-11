@@ -14,12 +14,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/matrices")
 @Tag(name = "Matrix Management", description = "APIs for managing matrices")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
 public class MatrixController {
     private final MatrixService matrixService;
 

@@ -48,6 +48,7 @@ public class ExamServiceImpl implements ExamService {
                 .durationMinutes(exam.getDurationMinutes())
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
+                .matrixId(exam.getMatrix() != null ? exam.getMatrix().getId() : null)
                 .questions(questions)
                 .build();
     }

@@ -18,5 +18,6 @@ public class ExamResponse {
     private Integer durationMinutes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long matrixId;
     private List<ExamQuestionResponse> questions;
 }
