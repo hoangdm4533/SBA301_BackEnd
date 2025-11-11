@@ -177,10 +177,6 @@ public class QuestionServiceImpl implements QuestionService {
                 if (correctCount != 1)
                     throw new IllegalArgumentException("TRUE_FALSE requires exactly 1 correct option.");
             }
-            case "SHORT_ANSWER" -> {
-                if (options.size() != 1 || correctCount != 1)
-                    throw new IllegalArgumentException("SHORT_ANSWER should have exactly 1 correct answer.");
-            }
             default -> { /* ignore others */ }
         }
     }

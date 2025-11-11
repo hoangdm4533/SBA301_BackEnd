@@ -44,8 +44,6 @@ public class QuestionDataInitializer {
                 .orElseThrow(() -> new IllegalStateException("Missing QuestionType: MCQ_MULTI"));
         QuestionType trueFalse = questionTypeRepository.findByDescriptionIgnoreCase("TRUE_FALSE")
                 .orElseThrow(() -> new IllegalStateException("Missing QuestionType: TRUE_FALSE"));
-        QuestionType shortAns = questionTypeRepository.findByDescriptionIgnoreCase("SHORT_ANSWER")
-                .orElseThrow(() -> new IllegalStateException("Missing QuestionType: SHORT_ANSWER"));
 
         Level easy = levelRepository.findByDifficulty("EASY")
                 .orElseThrow(() -> new IllegalStateException("Missing Level: EASY"));
@@ -132,103 +130,79 @@ public class QuestionDataInitializer {
         ));
         questions.add(q5);
 
-        // Q6 - Biểu thức đại số
+        // Q6 - Hình học phẳng
         Question q6 = Question.builder()
-                .questionText("Giá trị của biểu thức 2x + 5 khi x = 3 là bao nhiêu?")
-                .type(shortAns)
-                .level(medium)
-                .lesson(lesson2)
-                .build();
-        q6.setOptions(List.of(
-                new Option(null, q6, "11", true)
-        ));
-        questions.add(q6);
-
-        // Q7 - Phương trình đơn giản
-        Question q7 = Question.builder()
-                .questionText("Tìm x: 3x + 9 = 0")
-                .type(shortAns)
-                .level(medium)
-                .lesson(lesson2)
-                .build();
-        q7.setOptions(List.of(
-                new Option(null, q7, "x = -3", true)
-        ));
-        questions.add(q7);
-
-        // Q8 - Hình học phẳng
-        Question q8 = Question.builder()
                 .questionText("Tổng ba góc của một tam giác bằng bao nhiêu độ?")
                 .type(mcqSingle)
                 .level(easy)
                 .lesson(lesson3)
                 .build();
-        q8.setOptions(List.of(
-                new Option(null, q8, "90°", false),
-                new Option(null, q8, "180°", true),
-                new Option(null, q8, "270°", false),
-                new Option(null, q8, "360°", false)
+        q6.setOptions(List.of(
+                new Option(null, q6, "90°", false),
+                new Option(null, q6, "180°", true),
+                new Option(null, q6, "270°", false),
+                new Option(null, q6, "360°", false)
         ));
-        questions.add(q8);
+        questions.add(q6);
 
-        // Q9 - Diện tích hình chữ nhật
-        Question q9 = Question.builder()
+        // Q7 - Diện tích hình chữ nhật
+        Question q7 = Question.builder()
                 .questionText("Một hình chữ nhật có chiều dài 8cm và chiều rộng 5cm. Diện tích của nó là bao nhiêu?")
                 .type(mcqSingle)
                 .level(easy)
                 .lesson(lesson3)
                 .build();
-        q9.setOptions(List.of(
-                new Option(null, q9, "30 cm²", false),
-                new Option(null, q9, "35 cm²", false),
-                new Option(null, q9, "40 cm²", true),
-                new Option(null, q9, "45 cm²", false)
+        q7.setOptions(List.of(
+                new Option(null, q7, "30 cm²", false),
+                new Option(null, q7, "35 cm²", false),
+                new Option(null, q7, "40 cm²", true),
+                new Option(null, q7, "45 cm²", false)
         ));
-        questions.add(q9);
+        questions.add(q7);
 
-        // Q10 - Thống kê
-        Question q10 = Question.builder()
+        // Q8 - Thống kê
+        Question q8 = Question.builder()
                 .questionText("Cho dãy số: 2, 4, 6, 8, 10. Số trung bình cộng là bao nhiêu?")
                 .type(mcqSingle)
                 .level(easy)
                 .lesson(lesson3)
                 .build();
-        q10.setOptions(List.of(
-                new Option(null, q10, "5", true),
-                new Option(null, q10, "6", false),
-                new Option(null, q10, "7", false),
-                new Option(null, q10, "8", false)
+        q8.setOptions(List.of(
+                new Option(null, q8, "5", true),
+                new Option(null, q8, "6", false),
+                new Option(null, q8, "7", false),
+                new Option(null, q8, "8", false)
         ));
-        questions.add(q10);
+        questions.add(q8);
 
-        // Q11 - Toán nâng cao
-        Question q11 = Question.builder()
+        // Q9 - Toán nâng cao
+        Question q9 = Question.builder()
                 .questionText("Kết quả của \\( (2 + 3)^2 - (3 - 2)^2 \\) là?")
                 .type(mcqSingle)
                 .level(hard)
                 .lesson(lesson3)
                 .formula("(2 + 3)^2 - (3 - 2)^2")
                 .build();
-        q11.setOptions(List.of(
-                new Option(null, q11, "20", false),
-                new Option(null, q11, "23", false),
-                new Option(null, q11, "24", true),
-                new Option(null, q11, "25", false)
+        q9.setOptions(List.of(
+                new Option(null, q9, "20", false),
+                new Option(null, q9, "23", false),
+                new Option(null, q9, "24", true),
+                new Option(null, q9, "25", false)
         ));
-        questions.add(q11);
+        questions.add(q9);
 
-        // Q12 - Số nguyên âm
-        Question q12 = Question.builder()
+        // Q10 - Số nguyên âm
+        Question q10 = Question.builder()
                 .questionText("Đúng hay sai: \\(-7 < -5\\)")
                 .type(trueFalse)
                 .level(easy)
                 .lesson(lesson1)
                 .build();
-        q12.setOptions(List.of(
-                new Option(null, q12, "Đúng", true),
-                new Option(null, q12, "Sai", false)
+        q10.setOptions(List.of(
+                new Option(null, q10, "Đúng", true),
+                new Option(null, q10, "Sai", false)
         ));
-        questions.add(q12);
+        questions.add(q10);
 
         // ==== Lưu toàn bộ ====
         questionRepository.saveAll(questions);

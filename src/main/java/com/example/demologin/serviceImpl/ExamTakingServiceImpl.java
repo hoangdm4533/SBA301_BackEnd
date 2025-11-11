@@ -94,21 +94,20 @@
                         .map(o -> {
                             OptionView ov = new OptionView();
                             ov.setId(o.getId());
-                            ov.setContent(o.getOptionText()); // 🔁 nếu DTO bạn dùng 'content' thì đổi setContent(...)
+                            ov.setContent(o.getOptionText()); //
                             return ov;
                         })
                         .toList();
 
                 QuestionView qv = new QuestionView();
                 qv.setId(q.getId());
-                qv.setText(q.getQuestionText()); // 🔁 nếu DTO bạn dùng 'text' thì đổi setText(...)
+                qv.setText(q.getQuestionText());
                 qv.setQuestionType(q.getType() != null ? q.getType().getDescription() : null); // 🔁 nếu DTO bạn dùng 'questionType' thì đổi tên setter
                 qv.setOptions(optionViews);
                 qv.setScore(eq.getScore()); // gửi điểm từng câu để FE hiển thị nếu cần
                 return qv;
             }).toList();
 
-            // ✅ Trả về qua mapper (đúng kiểu List<QuestionView>)
             return examAttemptMapper.toStartResponse(
                     attempt,
                     questionViews.size(),
@@ -168,15 +167,18 @@
                             ? Collections.emptyList()
                             : ans.getSelectedOptionIds();
 
-                    // So sánh theo tập hợp
+                    // So sánh theo tập hợp (Set)
+                    // Logic: Phải chọn đúng TẤT CẢ đáp án đúng và KHÔNG chọn đáp án sai nào
+                    // - MCQ_SINGLE: chọn đúng 1 đáp án đúng duy nhất
+                    // - MCQ_MULTI: chọn đúng TẤT CẢ các đáp án đúng, không thiếu, không thừa
+                    // - TRUE_FALSE: chọn đúng 1 trong 2 (True/False)
+                    // Nếu thiếu hoặc thừa đáp án → 0 điểm
                     boolean isCorrect = new HashSet<>(chosen).equals(new HashSet<>(correctIds));
                     if (isCorrect) {
                         totalCorrect++;
                         double qScore = eq.getScore() == null ? 1.0 : eq.getScore().doubleValue();
                         totalScore += qScore;
                     }
-
-                    // TODO: nếu có SHORT_ANSWER thì xử lý ans.getAnswerText() tại đây
                 }
             }
 

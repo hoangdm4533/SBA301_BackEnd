@@ -17,8 +17,7 @@ public class QuestionTypeDataInitializer {
 
     @Transactional
     public void initializeQuestionTypes() {
-        // Các loại phổ biến: đơn chọn, nhiều chọn, đúng/sai, tự luận ngắn
-        List<String> types = List.of("MCQ_SINGLE", "MCQ_MULTI", "TRUE_FALSE", "SHORT_ANSWER");
+        List<String> types = List.of("MCQ_SINGLE", "MCQ_MULTI", "TRUE_FALSE");
 
         int created = 0;
         for (String t : types) {

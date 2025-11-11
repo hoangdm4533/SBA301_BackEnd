@@ -10,9 +10,6 @@ public class AnswerPayload {
     @NotNull
     private Long questionId;
 
-    // với MCQ/TF: truyền danh sách optionId đã chọn (1 hoặc nhiều)
+    // Truyền danh sách optionId đã chọn (1 hoặc nhiều) cho câu hỏi trắc nghiệm
     private List<Long> selectedOptionIds;
-
-    //tự luận
-    private String answerText;
 }
