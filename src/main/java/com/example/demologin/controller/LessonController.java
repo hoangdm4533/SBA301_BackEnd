@@ -25,7 +25,7 @@ public class LessonController {
 
     @PostMapping
     @ApiResponse(message = "Lesson created successfully")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize(" hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ResponseObject> createLesson(@RequestBody LessonRequest request) {
         final LessonResponse data = lessonService.createLesson(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject(
@@ -37,7 +37,7 @@ public class LessonController {
 
     @GetMapping("/{id}")
     @ApiResponse(message = "Lesson retrieved successfully")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ResponseObject> getLessonById(@PathVariable Long id) {
         final LessonResponse data = lessonService.getLessonById(id);
         return ResponseEntity.ok(new ResponseObject(
