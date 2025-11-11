@@ -60,9 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
             .createdAt(LocalDateTime.now())
             .build();
         transactionRepository.save(tx);
-        long unitAmount = BigDecimal.valueOf(plan.getPrice())
-                .multiply(BigDecimal.valueOf(100))
-                .longValueExact();
+        long unitAmount = plan.getPrice().longValue();
     // 4️⃣ Tạo Stripe Checkout session
     SessionCreateParams params = SessionCreateParams.builder()
             .setMode(SessionCreateParams.Mode.PAYMENT)
