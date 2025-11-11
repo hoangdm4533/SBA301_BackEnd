@@ -64,7 +64,6 @@ public class QuestionMapper implements IQuestionMapper {
                 .id(q.getId())
                 .questionText(q.getQuestionText())
                 .type(q.getType() != null ? q.getType().getDescription() : null)
-                .formula(q.getFormula())
                 .lessonId(lessonId)
                 .lessonName(lessonName)
                 .chapterId(chapterId)
