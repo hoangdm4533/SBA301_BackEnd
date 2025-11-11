@@ -283,4 +283,24 @@ public class QuestionServiceImpl implements QuestionService {
 
         return sb.toString();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByLevel(Long levelId, int page, int size) {
+        Level level = levelRepo.findById(levelId)
+                .orElseThrow(() -> new NotFoundException("Level not found: " + levelId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByLevel(level, pageable).map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByType(Long typeId, int page, int size) {
+        QuestionType type = questionTypeRepo.findById(typeId)
+                .orElseThrow(() -> new NotFoundException("QuestionType not found: " + typeId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByType(type, pageable).map(mapper::toResponse);
+    }
 }

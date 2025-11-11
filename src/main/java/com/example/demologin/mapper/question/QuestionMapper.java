@@ -52,11 +52,8 @@ public class QuestionMapper implements IQuestionMapper {
         }
 
         Long levelId = null;
-        String levelCode = null;
-        Double levelScore = null;
         if (q.getLevel() != null) {
             levelId = q.getLevel().getId();
-            levelScore = q.getLevel().getScore();
         }
 
         // Trả về đúng các field bạn đang dùng, không set dư
@@ -71,8 +68,6 @@ public class QuestionMapper implements IQuestionMapper {
                 .gradeId(gradeId)
                 .gradeNumber(gradeNumber)
                 .levelId(levelId)
-                .levelCode(levelCode)
-                .levelScore(levelScore)
                 .createdAt(q.getCreatedAt())
                 .updatedAt(q.getUpdatedAt())
                 .options(optionRes)

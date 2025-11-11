@@ -88,13 +88,45 @@ public class QuestionController {
     }
 
     @PostMapping("/generate")
-    @ApiResponse(message = "Question deleted successfully")
+    @ApiResponse(message = "Question generated successfully")
     public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) {
         String result = questionService.generateQuestion(request);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
-                "Question deleted successfully",
+                "Question generated successfully",
                 result
+        ));
+    }
+
+    @GetMapping("/by-level/{levelId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by level successfully")
+    public ResponseEntity<ResponseObject> listByLevel(
+            @PathVariable final Long levelId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByLevel(levelId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by level successfully",
+                data
+        ));
+    }
+
+    @GetMapping("/by-type/{typeId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by type successfully")
+    public ResponseEntity<ResponseObject> listByType(
+            @PathVariable final Long typeId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByType(typeId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by type successfully",
+                data
         ));
     }
 }

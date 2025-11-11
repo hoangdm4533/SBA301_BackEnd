@@ -4,6 +4,8 @@ import com.example.demologin.entity.Lesson;
 import com.example.demologin.entity.Level;
 import com.example.demologin.entity.Question;
 import com.example.demologin.entity.QuestionType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +17,10 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByType(QuestionType type);
 
     List<Question> findByLevelAndLessonAndType(Level level, Lesson lesson, QuestionType type);
+
+    Page<Question> findByLevel(Level level, Pageable pageable);
+
+    Page<Question> findByType(QuestionType type, Pageable pageable);
 
     @Query("""
         select (count(eq) > 0)
