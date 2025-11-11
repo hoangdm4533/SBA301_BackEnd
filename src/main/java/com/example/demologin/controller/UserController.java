@@ -3,7 +3,6 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.AuthenticatedEndpoint;
 import com.example.demologin.annotation.PageResponse;
-import com.example.demologin.annotation.SecuredEndpoint;
 import com.example.demologin.dto.request.user.AdminUpdateUserRequest;
 import com.example.demologin.dto.request.user.CreateUserRequest;
 import com.example.demologin.dto.request.user.UpdateUserRequest;
@@ -41,9 +40,15 @@ public class UserController {
     @Operation(summary = "Get all users (paginated)", description = "Retrieve all users (Admin only)")
     @PreAuthorize("hasRole('ADMIN')")
     @PageResponse
-    public ResponseEntity<ResponseObject> getAllUsers(int page, int size) {
-        Page<MemberResponse> data = userService.getAllUsers(page, size); // đổi UserResponse -> MemberResponse
-        return ResponseEntity.ok(new ResponseObject(200, "Users retrieved successfully", data));
+    public ResponseEntity<ResponseObject> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<MemberResponse> data = userService.getAllUsers(page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Users retrieved successfully",
+                data
+        ));
     }
 
     // 🔹 Self: get my profile
