@@ -17,8 +17,6 @@ public class QuestionGenerate {
     @NotBlank
     private String type;
 
-    private String formula;
-
     @NotNull
     private Long lessonId;
 

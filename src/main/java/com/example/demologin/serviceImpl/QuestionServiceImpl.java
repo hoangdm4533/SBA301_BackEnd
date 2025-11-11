@@ -68,7 +68,6 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question q = new Question();
         q.setQuestionText(req.getQuestionText());
-        q.setFormula(req.getFormula());
         q.setLesson(lesson);
         q.setLevel(level);
         q.setType(type);
@@ -101,9 +100,6 @@ public class QuestionServiceImpl implements QuestionService {
 
         if (req.getQuestionText() != null && !req.getQuestionText().isBlank()) {
             q.setQuestionText(req.getQuestionText().trim());
-        }
-        if (req.getFormula() != null) {
-            q.setFormula(req.getFormula());
         }
         if (req.getLessonId() != null) {
             Lesson lesson = lessonRepo.findById(req.getLessonId())
@@ -221,36 +217,66 @@ public class QuestionServiceImpl implements QuestionService {
 
     private String buildSystemInstruction(QuestionGenerate req) {
         int questionCount = req.getQuantity() != null ? req.getQuantity() : 1;
+
+        String difficulty = "";
+        if (req.getLevelId() != null) {
+            difficulty = levelRepo.findById(req.getLevelId())
+                    .map(Level::getDifficulty)
+                    .orElse("");
+        }
+
         return """
-            Bạn là hệ thống tạo câu hỏi trắc nghiệm chính xác cao môn toán.
-            Sinh %d câu hỏi dựa trên dữ liệu đầu vào.
-            type: %s
-            formula: %s
-            Mỗi câu hỏi có 2-4 option, trong đó có duy nhất 1 option đúng.
-            
-            Format trả về phải theo mẫu:
-            1. {question}
-            A. {option 1}
-            B. {option 2 (đúng nếu option đúng)}
-            C. {option 3}
-            D. {option 4}
-            """
+        Bạn là hệ thống tạo câu hỏi trắc nghiệm chính xác cao môn Toán học lớp 10–12.
+        Sinh %d câu hỏi dựa trên dữ liệu đầu vào.
+
+        type: %s
+        difficulty: %s
+
+        Quy tắc:
+        - Mỗi câu hỏi có 2–4 phương án.
+        - Mỗi câu có thể có nhiều phương án đúng.
+        - Ở phương án đúng, thêm chữ (đúng) trong ngoặc.
+        - Cuối mỗi câu hỏi phải ghi thêm:
+          (type: {type}, difficulty: {difficulty})
+
+        Format trả về:
+        1. {question} (type: {type}, difficulty: {difficulty})
+        A. {option 1}
+        B. {option 2 (đúng nếu đúng)}
+        C. {option 3}
+        D. {option 4}
+        """
                 .formatted(
                         questionCount,
                         req.getType(),
-                        req.getFormula() == null ? "" : req.getFormula()
+                        difficulty
                 );
     }
 
     private String buildUserPrompt(QuestionGenerate req) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Sinh ").append(req.getQuantity() != null ? req.getQuantity() : 1).append(" câu hỏi ");
-        sb.append("theo loại ").append(req.getType()).append(".\n");
-        if (req.getFormula() != null && !req.getFormula().isEmpty()) {
-            sb.append("Sử dụng công thức: ").append(req.getFormula()).append("\n");
+        int questionCount = req.getQuantity() != null ? req.getQuantity() : 1;
+
+        String difficulty = "";
+        if (req.getLevelId() != null) {
+            difficulty = levelRepo.findById(req.getLevelId())
+                    .map(Level::getDifficulty)
+                    .orElse("");
         }
-        sb.append("Mỗi câu hỏi có 2-4 option, duy nhất 1 option đúng.\n");
-        sb.append("Xuất ra đúng format đánh số câu hỏi và option A/B/C/D.\n");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Sinh ").append(questionCount)
+                .append(" câu hỏi theo loại ").append(req.getType()).append(".\n");
+
+        if (!difficulty.isBlank()) {
+            sb.append("Mức độ: ").append(difficulty).append(".\n");
+        }
+
+        sb.append("""
+        Mỗi câu hỏi có 2–4 phương án và chỉ có 1 phương án đúng.
+        Cuối mỗi câu hỏi phải ghi thêm (type: {type}, difficulty: {difficulty}).
+        Xuất ra đúng format đánh số câu hỏi và các lựa chọn A/B/C/D.
+        """);
+
         return sb.toString();
     }
 }

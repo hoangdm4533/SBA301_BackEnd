@@ -10,6 +10,7 @@ import lombok.*;
 public class LessonResponse {
     private Long id;
     private String lessonName;
+    private String description;
     private Long chapterId;
     private String chapterName;
 }

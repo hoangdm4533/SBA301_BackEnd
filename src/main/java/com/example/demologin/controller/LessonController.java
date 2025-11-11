@@ -83,7 +83,7 @@ public class LessonController {
 
     @PutMapping("/{id}")
     @ApiResponse(message = "Lesson updated successfully")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<ResponseObject> updateLesson(@PathVariable Long id, @RequestBody LessonRequest request) {
         final LessonResponse data = lessonService.updateLesson(id, request);
         return ResponseEntity.ok(new ResponseObject(

@@ -22,7 +22,6 @@ public class Question {
     @Column(name = "question_text")
     private String questionText;
 
-    private String formula;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
