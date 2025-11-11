@@ -50,9 +50,22 @@ public class UserInitializer {
                  return roleRepository.save(r);
              });
 
-     User admin = new User();
-     admin.setUsername("admin");
-     admin.setPassword(passwordEncoder.encode("admin123"));
+     // === 1️⃣ Tạo user ADMIN ===
+     if (!userRepository.existsByUsername("admin")) {
+         User admin = new User();
+         admin.setUsername("admin");
+         admin.setPassword(passwordEncoder.encode("admin123"));
+         admin.setFullName("System Administrator");
+         admin.setEmail("admin@example.com");
+         admin.setStatus(UserStatus.ACTIVE);
+         admin.setGender(Gender.MALE);
+         admin.setVerify(true);
+         admin.setLocked(false);
+         admin.setRoles(new HashSet<>(Set.of(adminRole)));
+
+         userRepository.save(admin);
+         log.info("✅ Created user: admin");
+     }
 
      // === 2️⃣ Tạo user STUDENT ===
      for (int i = 1; i <= 5; i++) {
