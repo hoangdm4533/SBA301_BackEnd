@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.rmi.ServerException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -191,7 +192,6 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public String generateQuestion(QuestionGenerate req) {
-        // System instruction mô tả yêu cầu cho AI
         String sysIns = buildSystemInstruction(req);
 
         GenerateContentConfig config = GenerateContentConfig.builder()
@@ -199,20 +199,24 @@ public class QuestionServiceImpl implements QuestionService {
                 .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
                 .build();
 
-        // User prompt: yêu cầu AI sinh "quantity" câu hỏi
         String userPrompt = buildUserPrompt(req);
 
         Content content = Content.fromParts(
                 Part.fromText(userPrompt)
         );
 
-        GenerateContentResponse res = geminiConfig.generate(
-                "gemini-2.5-flash",
-                content,
-                config
-        );
+        // Retry tối đa 3 lần khi gặp lỗi 503
+        for (int i = 0; i < 3; i++) {
+            GenerateContentResponse res = geminiConfig.generate(
+                    "gemini-2.5-flash",
+                    content,
+                    config
+            );
+            return res.text();
 
-        return res.text();
+        }
+
+        throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.");
     }
 
     private String buildSystemInstruction(QuestionGenerate req) {
