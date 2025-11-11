@@ -47,7 +47,7 @@ public class MainDataInitializer implements CommandLineRunner {
     private final ExamDataInitializer examDataInitializer;
     private final UserInitializer userInitializer;
     private final LessonDataInitializer lessonDataInitializer;
-
+    private final MatrixDataInitializer matrixDataInitializer;
     @Override
     public void run(String... args) throws Exception {
         log.info("🚀 Starting Main Data Initialization Process...");
@@ -82,10 +82,13 @@ public class MainDataInitializer implements CommandLineRunner {
             levelDataInitializer.initializeLevels();
             questionDataInitializer.initializeQuestions();
 
+            // Step 6.5: Matrices (requires questions to be initialized first)
+            log.info("📊 Step 6.5: Initializing Matrices...");
+            matrixDataInitializer.run();
+
             // Step 7: Exams and attempts
             examDataInitializer.initializeExams();
             attemptDataInitializer.initializeAttempts();
-
             log.info("👤 Step 8: Initializing Users...");
             userInitializer.initializeUsers();
 

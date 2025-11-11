@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/matrices")
 @Tag(name = "Matrix Management", description = "APIs for managing matrices")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
 public class MatrixController {
     private final MatrixService matrixService;
 
     @PostMapping
     @ApiResponse(message = "Matrix created successfully")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') ")
     @Operation(summary = "Create new matrix", description = "Create a new matrix")
     public ResponseEntity<ResponseObject> createMatrix(@RequestBody MatrixRequest request) {
         MatrixResponse data = matrixService.createMatrix(request);
@@ -36,6 +36,7 @@ public class MatrixController {
 
     @GetMapping
     @ApiResponse(message = "Matrices retrieved successfully")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') ")
     @PageResponse
     @Operation(summary = "Get all matrices", description = "Retrieve all matrices with pagination")
     public ResponseEntity<ResponseObject> getAllMatrices(Pageable pageable) {
@@ -45,6 +46,7 @@ public class MatrixController {
 
     @GetMapping("/{id}")
     @ApiResponse(message = "Matrix retrieved successfully")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') ")
     @Operation(summary = "Get matrix by ID", description = "Retrieve a matrix by its ID")
     public ResponseEntity<ResponseObject> getMatrixById(
             @Parameter(description = "Matrix ID") @PathVariable Long id) {
@@ -54,6 +56,7 @@ public class MatrixController {
 
     @PutMapping("/{id}")
     @ApiResponse(message = "Matrix updated successfully")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') ")
     @Operation(summary = "Update matrix", description = "Update an existing matrix")
     public ResponseEntity<ResponseObject> updateMatrix(
             @Parameter(description = "Matrix ID") @PathVariable Long id,
@@ -64,6 +67,7 @@ public class MatrixController {
 
     @DeleteMapping("/{id}")
     @ApiResponse(message = "Matrix deleted successfully")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') ")
     @Operation(summary = "Delete matrix", description = "Delete a matrix")
     public ResponseEntity<ResponseObject> deleteMatrix(
             @Parameter(description = "Matrix ID") @PathVariable Long id) {

@@ -136,7 +136,7 @@ public class MatrixServiceImpl implements MatrixService {
                 .createdAt(matrix.getCreatedAt())
                 .updatedAt(matrix.getUpdatedAt())
                 .status(matrix.getStatus())
-                .userName(matrix.getUser().getUsername())
+                .userName(matrix.getUser() != null ? matrix.getUser().getUsername() : "System")
                 .details(detailResponses)
                 .build();
     }
