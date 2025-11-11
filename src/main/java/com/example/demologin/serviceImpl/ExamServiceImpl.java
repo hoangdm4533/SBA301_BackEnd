@@ -214,7 +214,7 @@ public class ExamServiceImpl implements ExamService {
                 .findFirst()
                 .orElseThrow(() -> new ConflictException(
                         "Không tìm thấy MatrixDetail cho Level "
-                                + level.getDescription()
+                                + level.getDifficulty()
                                 + " và QuestionType "
                                 + questionType.getDescription()
                 ));
@@ -225,7 +225,7 @@ public class ExamServiceImpl implements ExamService {
         if (countByLevel >= matrixDetail.getTotalQuestions()) {
             throw new ConflictException(String.format(
                     "Số câu hỏi Level '%s' đã đạt giới hạn (%d/%d)",
-                    level.getDescription(), countByLevel, matrixDetail.getTotalQuestions()
+                    level.getDifficulty(), countByLevel, matrixDetail.getTotalQuestions()
             ));
         }
 

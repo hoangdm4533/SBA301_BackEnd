@@ -85,4 +85,15 @@ public class QuestionController {
                 id
         ));
     }
+
+    @GetMapping("/generate")
+    @ApiResponse(message = "Question deleted successfully")
+    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionCreateRequest request) {
+        String result = questionService.generateQuestion(request);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question deleted successfully",
+                result
+        ));
+    }
 }
