@@ -40,7 +40,7 @@ public class ExamDataInitializer {
                 .title("Math Basics – Draft")
                 .description("Simple arithmetic and number properties")
                 .status("PUBLISHED")
-                .durationMinutes(1)
+                .durationMinutes(10)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

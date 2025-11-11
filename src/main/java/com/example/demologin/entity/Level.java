@@ -19,5 +19,6 @@ public class Level {
     private Long id;
 
     private String description;
+
     private Double score;
 }
