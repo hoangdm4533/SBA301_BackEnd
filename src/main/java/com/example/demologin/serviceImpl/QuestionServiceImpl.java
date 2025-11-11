@@ -303,4 +303,14 @@ public class QuestionServiceImpl implements QuestionService {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return questionRepo.findByType(type, pageable).map(mapper::toResponse);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size) {
+        // Kiểm tra matrix có tồn tại không (optional, có thể bỏ nếu không cần)
+        // matrixRepo.findById(matrixId).orElseThrow(() -> new NotFoundException("Matrix not found: " + matrixId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByMatrixId(matrixId, pageable).map(mapper::toResponse);
+    }
 }

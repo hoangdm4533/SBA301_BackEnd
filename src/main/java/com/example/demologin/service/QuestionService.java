@@ -16,4 +16,5 @@ public interface QuestionService {
     String generateQuestion(QuestionGenerate req);
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
     Page<QuestionResponse> listByType(Long typeId, int page, int size);
+    Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);
 }

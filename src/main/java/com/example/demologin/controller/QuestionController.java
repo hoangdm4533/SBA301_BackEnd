@@ -129,4 +129,20 @@ public class QuestionController {
                 data
         ));
     }
+
+    @GetMapping("/by-matrix/{matrixId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by matrix successfully")
+    public ResponseEntity<ResponseObject> listByMatrix(
+            @PathVariable final Long matrixId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByMatrix(matrixId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by matrix successfully",
+                data
+        ));
+    }
 }

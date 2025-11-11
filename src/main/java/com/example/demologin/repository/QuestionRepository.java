@@ -23,6 +23,15 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Page<Question> findByType(QuestionType type, Pageable pageable);
 
     @Query("""
+        SELECT DISTINCT q FROM Question q
+        JOIN MatrixDetail md ON q.level = md.level 
+            AND q.lesson = md.lesson 
+            AND q.type = md.questionType
+        WHERE md.matrix.id = :matrixId
+    """)
+    Page<Question> findByMatrixId(@Param("matrixId") Long matrixId, Pageable pageable);
+
+    @Query("""
         select (count(eq) > 0)
         from ExamQuestion eq
         where eq.exam.id = :examId and eq.question.id = :questionId
