@@ -19,4 +19,7 @@ public class ExamRequest {
     private String description;
     
     private String status; // DRAFT, PUBLISHED, ARCHIVED
+
+    @JsonProperty("duration_minutes")
+    private Integer durationMinutes;
 }

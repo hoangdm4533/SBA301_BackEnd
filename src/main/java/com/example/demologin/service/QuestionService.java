@@ -1,5 +1,6 @@
 package com.example.demologin.service;
 
+import com.example.demologin.dto.request.ai.QuestionGenerate;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -12,4 +13,8 @@ public interface QuestionService {
     QuestionResponse create(QuestionCreateRequest req);
     QuestionResponse update(Long id, QuestionUpdateRequest req);
     void delete(Long id);
+    String generateQuestion(QuestionGenerate req);
+    Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
+    Page<QuestionResponse> listByType(Long typeId, int page, int size);
+    Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);
 }

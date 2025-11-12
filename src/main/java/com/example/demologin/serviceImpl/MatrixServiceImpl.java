@@ -26,6 +26,7 @@ public class MatrixServiceImpl implements MatrixService {
     private final UserRepository userRepository;
     private final LevelRepository levelRepository;
     private final LessonRepository lessonRepository;
+    private final QuestionTypeRepository questionTypeRepository;
 
     @Override
     @Transactional
@@ -102,15 +103,18 @@ public class MatrixServiceImpl implements MatrixService {
 
     private MatrixDetail createMatrixDetail(MatrixDetailRequest detail, Matrix matrix) {
         Level level = levelRepository.findById(detail.getLevelId())
-                .orElseThrow(() -> new RuntimeException("Level not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Level not found"));
         Lesson lesson = lessonRepository.findById(detail.getLessonId())
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+        QuestionType questionType= questionTypeRepository.findById(detail.getQuestionTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("Question type not found"));
 
         return MatrixDetail.builder()
                 .totalQuestions(detail.getTotalQuestions())
                 .level(level)
                 .lesson(lesson)
                 .matrix(matrix)
+                .questionType(questionType)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -132,7 +136,7 @@ public class MatrixServiceImpl implements MatrixService {
                 .createdAt(matrix.getCreatedAt())
                 .updatedAt(matrix.getUpdatedAt())
                 .status(matrix.getStatus())
-                .userName(matrix.getUser().getUsername())
+                .userName(matrix.getUser() != null ? matrix.getUser().getUsername() : "System")
                 .details(detailResponses)
                 .build();
     }
@@ -140,9 +144,10 @@ public class MatrixServiceImpl implements MatrixService {
     private MatrixDetailResponse mapToDetailResponse(MatrixDetail detail) {
         return MatrixDetailResponse.builder()
                 .id(detail.getId())
-                .levelDescription(detail.getLevel().getDescription())
+                .levelDescription(detail.getLevel().getDifficulty())
                 .lessonName(detail.getLesson().getLessonName())
                 .totalQuestions(detail.getTotalQuestions())
+                .questionType(detail.getQuestionType().getDescription())
                 .createdAt(detail.getCreatedAt())
                 .updatedAt(detail.getUpdatedAt())
                 .build();

@@ -21,6 +21,10 @@ public class Exam {
     private String title;
     private String description;
     private String status;
+
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

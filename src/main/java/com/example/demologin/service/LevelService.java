@@ -12,11 +12,8 @@ public interface LevelService {
     LevelResponse getLevelById(Long id);
     List<LevelResponse> getAllLevels();
     Page<LevelResponse> getAllLevels(int page, int size, String sortBy, String sortDir);
-    List<LevelResponse> getActiveLevels();
-    List<LevelResponse> getLevelsByDifficulty(String difficulty);
     Page<LevelResponse> searchLevels(String keyword, Pageable pageable);
     LevelResponse updateLevel(Long id, LevelRequest request);
     void deleteLevel(Long id);
-    void activateLevel(Long id);
-    void deactivateLevel(Long id);
+
 }

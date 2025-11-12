@@ -1,5 +1,8 @@
 package com.example.demologin.serviceImpl;
 
+import com.example.demologin.config.GeminiConfig;
+import com.example.demologin.dto.request.ai.QuestionGenerate;
+import com.example.demologin.dto.request.question.OptionRequest;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -8,6 +11,10 @@ import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
 import com.example.demologin.service.QuestionService;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.Part;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.rmi.ServerException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,7 +37,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionMapper mapper;
     private final LevelRepository levelRepo;
     private final LessonRepository lessonRepo;
-
+    private final GeminiConfig geminiConfig;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,7 +69,6 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question q = new Question();
         q.setQuestionText(req.getQuestionText());
-        q.setFormula(req.getFormula());
         q.setLesson(lesson);
         q.setLevel(level);
         q.setType(type);
@@ -94,9 +101,6 @@ public class QuestionServiceImpl implements QuestionService {
 
         if (req.getQuestionText() != null && !req.getQuestionText().isBlank()) {
             q.setQuestionText(req.getQuestionText().trim());
-        }
-        if (req.getFormula() != null) {
-            q.setFormula(req.getFormula());
         }
         if (req.getLessonId() != null) {
             Lesson lesson = lessonRepo.findById(req.getLessonId())
@@ -170,10 +174,6 @@ public class QuestionServiceImpl implements QuestionService {
                 if (correctCount != 1)
                     throw new IllegalArgumentException("TRUE_FALSE requires exactly 1 correct option.");
             }
-            case "SHORT_ANSWER" -> {
-                if (options.size() != 1 || correctCount != 1)
-                    throw new IllegalArgumentException("SHORT_ANSWER should have exactly 1 correct answer.");
-            }
             default -> { /* ignore others */ }
         }
     }
@@ -188,5 +188,129 @@ public class QuestionServiceImpl implements QuestionService {
         Question q = questionRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Question not found: " + id));
         questionRepo.delete(q);
+    }
+
+    @Override
+    public String generateQuestion(QuestionGenerate req) {
+        String sysIns = buildSystemInstruction(req);
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .temperature(0.2f)
+                .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
+                .build();
+
+        String userPrompt = buildUserPrompt(req);
+
+        Content content = Content.fromParts(
+                Part.fromText(userPrompt)
+        );
+
+        // Retry tối đa 3 lần khi gặp lỗi 503
+        for (int i = 0; i < 3; i++) {
+            GenerateContentResponse res = geminiConfig.generate(
+                    "gemini-2.5-flash",
+                    content,
+                    config
+            );
+            return res.text();
+
+        }
+
+        throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.");
+    }
+
+    private String buildSystemInstruction(QuestionGenerate req) {
+        int questionCount = req.getQuantity() != null ? req.getQuantity() : 1;
+
+        String difficulty = "";
+        if (req.getLevelId() != null) {
+            difficulty = levelRepo.findById(req.getLevelId())
+                    .map(Level::getDifficulty)
+                    .orElse("");
+        }
+
+        return """
+        Bạn là hệ thống tạo câu hỏi trắc nghiệm chính xác cao môn Toán học lớp 10–12.
+        Sinh %d câu hỏi dựa trên dữ liệu đầu vào.
+
+        type: %s
+        difficulty: %s
+
+        Quy tắc:
+        - Mỗi câu hỏi có 2–4 phương án.
+        - Mỗi câu có thể có nhiều phương án đúng.
+        - Ở phương án đúng, thêm chữ (đúng) trong ngoặc.
+        - Cuối mỗi câu hỏi phải ghi thêm:
+          (type: {type}, difficulty: {difficulty})
+
+        Format trả về:
+        1. {question} (type: {type}, difficulty: {difficulty})
+        A. {option 1}
+        B. {option 2 (đúng nếu đúng)}
+        C. {option 3}
+        D. {option 4}
+        """
+                .formatted(
+                        questionCount,
+                        req.getType(),
+                        difficulty
+                );
+    }
+
+    private String buildUserPrompt(QuestionGenerate req) {
+        int questionCount = req.getQuantity() != null ? req.getQuantity() : 1;
+
+        String difficulty = "";
+        if (req.getLevelId() != null) {
+            difficulty = levelRepo.findById(req.getLevelId())
+                    .map(Level::getDifficulty)
+                    .orElse("");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Sinh ").append(questionCount)
+                .append(" câu hỏi theo loại ").append(req.getType()).append(".\n");
+
+        if (!difficulty.isBlank()) {
+            sb.append("Mức độ: ").append(difficulty).append(".\n");
+        }
+
+        sb.append("""
+        Mỗi câu hỏi có 2–4 phương án và chỉ có 1 phương án đúng.
+        Cuối mỗi câu hỏi phải ghi thêm (type: {type}, difficulty: {difficulty}).
+        Xuất ra đúng format đánh số câu hỏi và các lựa chọn A/B/C/D.
+        """);
+
+        return sb.toString();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByLevel(Long levelId, int page, int size) {
+        Level level = levelRepo.findById(levelId)
+                .orElseThrow(() -> new NotFoundException("Level not found: " + levelId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByLevel(level, pageable).map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByType(Long typeId, int page, int size) {
+        QuestionType type = questionTypeRepo.findById(typeId)
+                .orElseThrow(() -> new NotFoundException("QuestionType not found: " + typeId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByType(type, pageable).map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size) {
+        // Kiểm tra matrix có tồn tại không (optional, có thể bỏ nếu không cần)
+        // matrixRepo.findById(matrixId).orElseThrow(() -> new NotFoundException("Matrix not found: " + matrixId));
+
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return questionRepo.findByMatrixId(matrixId, pageable).map(mapper::toResponse);
     }
 }

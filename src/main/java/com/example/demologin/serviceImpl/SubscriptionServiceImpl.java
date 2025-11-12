@@ -112,6 +112,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         );
     }
 
+    @Override
+    public SubscriptionResponse getActiveSubscription(Long userId) {
+        Subscription subscription = subscriptionRepository
+                .findFirstByUserUserIdAndStatusAndEndDateAfterOrderByEndDateDesc(
+                        userId, "ACTIVE", LocalDateTime.now()
+                )
+                .orElseThrow(() -> new RuntimeException("No active subscription found"));
+        return mapToResponse(subscription);
+    }
+
     private SubscriptionResponse mapToResponse(Subscription sub) {
         return SubscriptionResponse.builder()
                 .id(sub.getId())

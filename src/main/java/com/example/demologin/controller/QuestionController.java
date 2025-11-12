@@ -3,6 +3,7 @@ package com.example.demologin.controller;
 import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.annotation.SecuredEndpoint;
+import com.example.demologin.dto.request.ai.QuestionGenerate;
 import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
@@ -83,6 +84,65 @@ public class QuestionController {
                 HttpStatus.OK.value(),
                 "Question deleted successfully",
                 id
+        ));
+    }
+
+    @PostMapping("/generate")
+    @ApiResponse(message = "Question generated successfully")
+    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) {
+        String result = questionService.generateQuestion(request);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question generated successfully",
+                result
+        ));
+    }
+
+    @GetMapping("/by-level/{levelId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by level successfully")
+    public ResponseEntity<ResponseObject> listByLevel(
+            @PathVariable final Long levelId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByLevel(levelId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by level successfully",
+                data
+        ));
+    }
+
+    @GetMapping("/by-type/{typeId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by type successfully")
+    public ResponseEntity<ResponseObject> listByType(
+            @PathVariable final Long typeId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByType(typeId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by type successfully",
+                data
+        ));
+    }
+
+    @GetMapping("/by-matrix/{matrixId}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by matrix successfully")
+    public ResponseEntity<ResponseObject> listByMatrix(
+            @PathVariable final Long matrixId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByMatrix(matrixId, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by matrix successfully",
+                data
         ));
     }
 }

@@ -26,8 +26,6 @@ public class QuestionResponse {
     private Integer gradeNumber;
 
     private Long levelId;
-    private String levelCode;       // "EASY/MEDIUM/HARD"
-    private Double levelScore;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 @Service
@@ -59,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
             .createdAt(LocalDateTime.now())
             .build();
         transactionRepository.save(tx);
-
+        long unitAmount = plan.getPrice().longValue();
     // 4️⃣ Tạo Stripe Checkout session
     SessionCreateParams params = SessionCreateParams.builder()
             .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -71,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
                             .setPriceData(
                                     SessionCreateParams.LineItem.PriceData.builder()
                                             .setCurrency("vnd")
-                                            .setUnitAmount((long) (plan.getPrice() * 100)) // cents
+                                            .setUnitAmount(unitAmount) // cents
                                             .setProductData(
                                                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                                             .setName(plan.getName())

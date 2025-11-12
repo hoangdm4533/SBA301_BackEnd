@@ -31,6 +31,6 @@ public class Matrix {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "matrix")
+    @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatrixDetail> details;
 }

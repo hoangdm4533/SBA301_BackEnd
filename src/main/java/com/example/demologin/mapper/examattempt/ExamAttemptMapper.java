@@ -26,7 +26,9 @@ public class ExamAttemptMapper implements IExamAttemptMapper{
         resp.setStartedAt(attempt.getStartedAt() == null
                 ? null
                 : attempt.getStartedAt().atZone(ZoneId.systemDefault()).toInstant());
-        resp.setMustSubmitBefore(null); // giữ nguyên như code gốc
+        resp.setMustSubmitBefore(attempt.getExpiresAt() == null
+                ? null
+                : attempt.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant());
         resp.setQuestions(questions);
         return resp;
     }

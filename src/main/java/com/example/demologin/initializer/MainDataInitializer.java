@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Order(1) // Ensure this runs first among all CommandLineRunners
 public class MainDataInitializer implements CommandLineRunner {
 
-    private final PermissionRoleInitializer permissionRoleInitializer;
-    private final DefaultUserInitializer defaultUserInitializer;
+//    private final PermissionRoleInitializer permissionRoleInitializer;
+//    private final DefaultUserInitializer defaultUserInitializer;
 
     private final QuestionTypeDataInitializer questionTypeDataInitializer;
     private final LevelDataInitializer levelDataInitializer;
@@ -41,11 +41,13 @@ public class MainDataInitializer implements CommandLineRunner {
     private final PlanDataInitializer planDataInitializer;
     private final EducationDataInitializer educationDataInitializer;
     private final AttemptDataInitializer attemptDataInitializer;
+    private final GradeDataInitializer gradeDataInitializer;
+    private final ChapterDataInitializer chapterDataInitializer;
 
     private final ExamDataInitializer examDataInitializer;
     private final UserInitializer userInitializer;
     private final LessonDataInitializer lessonDataInitializer;
-
+    private final MatrixDataInitializer matrixDataInitializer;
     @Override
     public void run(String... args) throws Exception {
         log.info("🚀 Starting Main Data Initialization Process...");
@@ -53,14 +55,15 @@ public class MainDataInitializer implements CommandLineRunner {
         try {
             // Step 1: Initialize Permissions and Roles
             log.info("📋 Step 1: Initializing Permissions and Roles...");
-            permissionRoleInitializer.initializePermissionsAndRoles();
+//            permissionRoleInitializer.initializePermissionsAndRoles();
             log.info("✅ Permissions and Roles initialization completed");
 
             // Step 2: Initialize Default Users
             log.info("👥 Step 2: Initializing Default Users...");
-            defaultUserInitializer.initializeDefaultUsers();
+//            defaultUserInitializer.initializeDefaultUsers();
             log.info("✅ Default Users initialization completed");
-
+            gradeDataInitializer.initGrade();
+            chapterDataInitializer.initChapter();
             // Step 3: Plans and Subscriptions
             log.info("💳 Step 3: Initializing Plans and Subscriptions...");
             planDataInitializer.initializePlansAndSubscriptions();
@@ -79,10 +82,13 @@ public class MainDataInitializer implements CommandLineRunner {
             levelDataInitializer.initializeLevels();
             questionDataInitializer.initializeQuestions();
 
+            // Step 6.5: Matrices (requires questions to be initialized first)
+            log.info("📊 Step 6.5: Initializing Matrices...");
+            matrixDataInitializer.run();
+
             // Step 7: Exams and attempts
             examDataInitializer.initializeExams();
             attemptDataInitializer.initializeAttempts();
-
             log.info("👤 Step 8: Initializing Users...");
             userInitializer.initializeUsers();
 

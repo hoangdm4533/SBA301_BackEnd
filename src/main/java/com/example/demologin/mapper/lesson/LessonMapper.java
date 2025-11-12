@@ -12,6 +12,7 @@ public class LessonMapper implements ILessonMapper {
     public Lesson toEntity(LessonRequest request, Chapter chapter) {
         return Lesson.builder()
                 .lessonName(request.getLessonName())
+                .descriptions(request.getDescriptions())
                 .chapter(chapter)
                 .build();
     }
@@ -21,6 +22,7 @@ public class LessonMapper implements ILessonMapper {
         return LessonResponse.builder()
                 .id(lesson.getId())
                 .lessonName(lesson.getLessonName())
+                .description(lesson.getDescriptions())
                 .chapterId(lesson.getChapter() != null ? lesson.getChapter().getId() : null)
                 .chapterName(lesson.getChapter() != null ? lesson.getChapter().getName() : null)
                 .build();

@@ -45,8 +45,10 @@ public class ExamServiceImpl implements ExamService {
                 .title(exam.getTitle())
                 .description(exam.getDescription())
                 .status(exam.getStatus())
+                .durationMinutes(exam.getDurationMinutes())
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
+                .matrixId(exam.getMatrix() != null ? exam.getMatrix().getId() : null)
                 .questions(questions)
                 .build();
     }
@@ -83,6 +85,7 @@ public class ExamServiceImpl implements ExamService {
             Exam exam = Exam.builder()
                     .title(request.getTitle())
                     .description(request.getDescription())
+                    .durationMinutes(request.getDurationMinutes())
                     .status(request.getStatus() != null ? request.getStatus() : "DRAFT")
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
@@ -135,6 +138,7 @@ public class ExamServiceImpl implements ExamService {
         }
 
         exam.setTitle(request.getTitle());
+        exam.setDurationMinutes(request.getDurationMinutes());
         exam.setDescription(request.getDescription());
         exam.setStatus(request.getStatus());
         exam.setUpdatedAt(LocalDateTime.now());
@@ -191,6 +195,11 @@ public class ExamServiceImpl implements ExamService {
             throw new ConflictException("Question không có level hợp lệ");
         }
 
+        QuestionType questionType = question.getType();
+        if (questionType == null) {
+            throw new ConflictException("Question không có type hợp lệ");
+        }
+
         // Lấy Matrix từ Exam
         Matrix matrix = exam.getMatrix();
         if (matrix == null) {
@@ -199,10 +208,17 @@ public class ExamServiceImpl implements ExamService {
 
         // Tìm MatrixDetail tương ứng với Level đó
         MatrixDetail matrixDetail = matrix.getDetails().stream()
-                .filter(md -> md.getLevel().getId().equals(level.getId()))
+                .filter(md ->
+                        md.getLevel().getId().equals(level.getId()) &&
+                                md.getQuestionType().getId().equals(questionType.getId())
+                )
                 .findFirst()
                 .orElseThrow(() -> new ConflictException(
-                        "Không tìm thấy MatrixDetail cho Level " + level.getDescription()));
+                        "Không tìm thấy MatrixDetail cho Level "
+                                + level.getDifficulty()
+                                + " và QuestionType "
+                                + questionType.getDescription()
+                ));
 
         // Đếm số lượng câu hỏi trong exam theo level
         long countByLevel = examQuestionRepository.countByExamAndQuestion_Level(exam, level);
@@ -210,7 +226,7 @@ public class ExamServiceImpl implements ExamService {
         if (countByLevel >= matrixDetail.getTotalQuestions()) {
             throw new ConflictException(String.format(
                     "Số câu hỏi Level '%s' đã đạt giới hạn (%d/%d)",
-                    level.getDescription(), countByLevel, matrixDetail.getTotalQuestions()
+                    level.getDifficulty(), countByLevel, matrixDetail.getTotalQuestions()
             ));
         }
 
@@ -264,9 +280,9 @@ public class ExamServiceImpl implements ExamService {
         if ("PUBLISHED".equalsIgnoreCase(exam.getStatus())) {
             throw new ConflictException("Exam này đã được publish trước đó");
         }
-        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
-            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
-        }
+//        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+//            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
+//        }
 
         // Kiểm tra exam có câu hỏi chưa
         Integer questionCount = examQuestionRepository.countByExam(exam);

@@ -39,7 +39,8 @@ public class ExamDataInitializer {
         Exam exam1 = Exam.builder()
                 .title("Math Basics – Draft")
                 .description("Simple arithmetic and number properties")
-                .status("DRAFT")
+                .status("PUBLISHED")
+                .durationMinutes(10)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -57,6 +58,7 @@ public class ExamDataInitializer {
                 .title("General Knowledge – Published")
                 .description("Mixed MCQ and True/False")
                 .status("PUBLISHED")
+                .durationMinutes(10)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

@@ -20,6 +20,10 @@ public class ExamAttempt {
 
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt; // Thời điểm hết hạn làm bài (tự động nộp)
+
     private Double score;
     private String gradedBy;
 
