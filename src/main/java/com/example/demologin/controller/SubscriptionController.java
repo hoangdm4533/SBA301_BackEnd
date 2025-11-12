@@ -6,6 +6,7 @@ import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.dto.request.subcription.SubscriptionRequest;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.dto.response.SubscriptionResponse;
+import com.example.demologin.entity.User;
 import com.example.demologin.service.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -114,17 +116,27 @@ public class SubscriptionController {
         ));
     }
 
-    @GetMapping("/my-subscriptions")
-    @ApiResponse(message = "My subscriptions retrieved successfully")
-    @Operation(summary = "Get my subscriptions", description = "For students to view their own subscription history")
+    @GetMapping("/check-active")
+    @ApiResponse(message = "Active subscription retrieved successfully")
+    @Operation(summary = "Check active subscription status", 
+               description = "Get current active subscription with remaining time for the logged-in user")
     @AuthenticatedEndpoint
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ResponseObject> getMySubscriptions() {
-        final List<SubscriptionResponse> data = subscriptionService.getMySubscriptions();
-        return ResponseEntity.ok(new ResponseObject(
-                HttpStatus.OK.value(),
-                "My subscriptions retrieved successfully",
-                data
-        ));
+    public ResponseEntity<ResponseObject> checkActiveSubscription(
+            @AuthenticationPrincipal User currentUser) {
+        try {
+            final SubscriptionResponse data = subscriptionService.getActiveSubscription(currentUser.getUserId());
+            return ResponseEntity.ok(new ResponseObject(
+                    HttpStatus.OK.value(),
+                    "Active subscription found",
+                    data
+            ));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject(
+                    HttpStatus.NOT_FOUND.value(),
+                    "No active subscription found",
+                    null
+            ));
+        }
     }
 }

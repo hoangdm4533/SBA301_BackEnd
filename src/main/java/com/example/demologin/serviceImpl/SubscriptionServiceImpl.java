@@ -11,7 +11,6 @@ import com.example.demologin.repository.PlanRepository;
 import com.example.demologin.repository.SubscriptionRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.SubscriptionService;
-import com.example.demologin.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +27,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final PlanRepository planRepository;
-    private final AccountUtils accountUtils;
 
     @Override
     public SubscriptionResponse createSubscription(SubscriptionRequest request) {
@@ -115,12 +113,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public List<SubscriptionResponse> getMySubscriptions() {
-        Long userId = accountUtils.getCurrentUser().getUserId();
-        return subscriptionRepository.findByUserUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public SubscriptionResponse getActiveSubscription(Long userId) {
+        Subscription subscription = subscriptionRepository
+                .findFirstByUserUserIdAndStatusAndEndDateAfterOrderByEndDateDesc(
+                        userId, "ACTIVE", LocalDateTime.now()
+                )
+                .orElseThrow(() -> new RuntimeException("No active subscription found"));
+        return mapToResponse(subscription);
     }
 
     private SubscriptionResponse mapToResponse(Subscription sub) {

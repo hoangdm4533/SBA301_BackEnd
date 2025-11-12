@@ -16,5 +16,5 @@ public interface SubscriptionService {
     PageResponse<SubscriptionResponse> getAllSubscriptionsPaged(Long userId, Long planId, String status, Pageable pageable);
     boolean deleteSubscription(Long id);
     boolean hasPremium(Long userId);
-    List<SubscriptionResponse> getMySubscriptions();
+    SubscriptionResponse getActiveSubscription(Long userId);
 }
