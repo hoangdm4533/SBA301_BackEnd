@@ -4,6 +4,7 @@ import com.example.demologin.annotation.ApiResponse;
 import com.example.demologin.annotation.AuthenticatedEndpoint;
 import com.example.demologin.annotation.PageResponse;
 import com.example.demologin.dto.request.exam.ExamSubmitRequest;
+import com.example.demologin.dto.response.AttemptDetailResponse;
 import com.example.demologin.dto.response.AttemptSummary;
 import com.example.demologin.dto.response.ExamCard;
 import com.example.demologin.dto.response.ExamStartResponse;
@@ -27,7 +28,6 @@ public class ExamMemberController {
 
     private final ExamTakingService examTakingService;
 
-    // Danh sách bài thi có thể làm (PUBLISHED)
     @GetMapping("/available")
     @AuthenticatedEndpoint
     @PreAuthorize("hasRole('STUDENT')")
@@ -90,6 +90,20 @@ public class ExamMemberController {
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
                 "My attempts retrieved",
+                data
+        ));
+    }
+
+    // Xem chi tiết bài thi đã làm (câu đúng/sai, điểm từng câu, ...)
+    @GetMapping("/attempts/{attemptId}")
+    @AuthenticatedEndpoint
+    @PreAuthorize("hasRole('STUDENT')")
+    @ApiResponse(message = "Lấy chi tiết bài thi thành công")
+    public ResponseEntity<ResponseObject> getAttemptDetail(@PathVariable final Long attemptId) {
+        AttemptDetailResponse data = examTakingService.getAttemptDetail(attemptId);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Attempt details retrieved",
                 data
         ));
     }

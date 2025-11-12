@@ -24,15 +24,16 @@
     import java.util.function.Function;
     import java.util.stream.Collectors;
 
-    @Service
-    @RequiredArgsConstructor
-    public class ExamTakingServiceImpl implements ExamTakingService {
-        private final ExamAttemptRepository examAttemptRepository;
-        private final ExamQuestionRepository examQuestionRepository;
-        private final OptionRepository optionRepository;
-        private final AccountUtils accountUtils;
-        private final ExamRepository examRepository;
-        private final ExamAttemptMapper examAttemptMapper;
+@Service
+@RequiredArgsConstructor
+public class ExamTakingServiceImpl implements ExamTakingService {
+    private final ExamAttemptRepository examAttemptRepository;
+    private final ExamQuestionRepository examQuestionRepository;
+    private final OptionRepository optionRepository;
+    private final StudentAnswerRepository studentAnswerRepository;
+    private final AccountUtils accountUtils;
+    private final ExamRepository examRepository;
+    private final ExamAttemptMapper examAttemptMapper;
 
 
         @Override
@@ -135,6 +136,7 @@
             LocalDateTime now = LocalDateTime.now();
             if (attempt.getExpiresAt() != null && now.isAfter(attempt.getExpiresAt())) {
                 // Đã hết thời gian - vẫn cho nộp nhưng có thể xử lý thêm (log, notification, etc.)
+                // TODO: log timeout if needed
             }
 
             Exam exam = attempt.getExam();
@@ -158,6 +160,8 @@
                     ExamQuestion eq = examQuestionsByQid.get(qid);
                     if (eq == null) continue; // câu không thuộc đề
 
+                    Question question = eq.getQuestion();
+
                     // Đáp án đúng
                     List<Long> correctIds = optionRepository.findByQuestion_IdAndIsCorrectTrue(qid)
                             .stream().map(Option::getId).toList();
@@ -168,16 +172,27 @@
                             : ans.getSelectedOptionIds();
 
                     // So sánh theo tập hợp (Set)
-                    // Logic: Phải chọn đúng TẤT CẢ đáp án đúng và KHÔNG chọn đáp án sai nào
-                    // - MCQ_SINGLE: chọn đúng 1 đáp án đúng duy nhất
-                    // - MCQ_MULTI: chọn đúng TẤT CẢ các đáp án đúng, không thiếu, không thừa
-                    // - TRUE_FALSE: chọn đúng 1 trong 2 (True/False)
-                    // Nếu thiếu hoặc thừa đáp án → 0 điểm
                     boolean isCorrect = new HashSet<>(chosen).equals(new HashSet<>(correctIds));
                     if (isCorrect) {
                         totalCorrect++;
                         double qScore = eq.getScore() == null ? 1.0 : eq.getScore().doubleValue();
                         totalScore += qScore;
+                    }
+
+                    // Lưu mỗi lựa chọn của học sinh vào StudentAnswer
+                    for (Long optionId : chosen) {
+                        Option selectedOption = optionRepository.findById(optionId).orElse(null);
+                        if (selectedOption != null) {
+                            StudentAnswer studentAnswer = new StudentAnswer();
+                            studentAnswer.setExamAttempt(attempt);
+                            studentAnswer.setQuestion(question);
+                            studentAnswer.setOption(selectedOption);
+                            studentAnswer.setUser(currentUser);
+                            // Nếu là MCQ_SINGLE, lưu score của toàn câu
+                            // Nếu là MCQ_MULTI hoặc TRUE_FALSE, có thể chia score cho từng option
+                            studentAnswer.setScore(isCorrect ? (eq.getScore() != null ? eq.getScore() : 1.0) : 0.0);
+                            studentAnswerRepository.save(studentAnswer);
+                        }
                     }
                 }
             }
@@ -186,7 +201,6 @@
             attempt.setScore(totalScore);
             examAttemptRepository.save(attempt);
 
-            // ✅ Trả về qua mapper
             return examAttemptMapper.toSubmitResponse(
                     attempt,
                     maxScore,
@@ -194,6 +208,7 @@
                     totalCorrect
             );
         }
+
 
         @Override
         @Transactional
@@ -218,5 +233,97 @@
             return new PageImpl<>(summaries, pageable, attempts.getTotalElements());
         }
 
+        @Override
+        @Transactional
+        public AttemptDetailResponse getAttemptDetail(Long attemptId) {
+            ExamAttempt attempt = examAttemptRepository.findById(attemptId)
+                    .orElseThrow(() -> new EntityNotFoundException("Attempt not found"));
+
+            User currentUser = accountUtils.getCurrentUser();
+            if (!attempt.getUser().getUserId().equals(currentUser.getUserId())) {
+                throw new ForbiddenException("You cannot view someone else's attempt");
+            }
+
+            Exam exam = attempt.getExam();
+            List<ExamQuestion> eqs = examQuestionRepository.findByExam(exam);
+            List<StudentAnswer> studentAnswers = studentAnswerRepository.findByAttemptId(attemptId);
+
+            // Map student answers by question ID
+            Map<Long, List<StudentAnswer>> answersByQuestionId = studentAnswers.stream()
+                    .collect(Collectors.groupingBy(sa -> sa.getQuestion().getId()));
+
+            double maxScore = eqs.stream()
+                    .map(ExamQuestion::getScore)
+                    .map(s -> s == null ? 1.0 : s.doubleValue())
+                    .reduce(0.0, Double::sum);
+
+            int totalCorrect = 0;
+
+            List<AttemptDetailResponse.AttemptQuestionDetail> questionDetails = new ArrayList<>();
+
+            for (ExamQuestion eq : eqs) {
+                Question question = eq.getQuestion();
+                List<StudentAnswer> answers = answersByQuestionId.getOrDefault(question.getId(), Collections.emptyList());
+
+                // Đáp án đúng
+                List<Long> correctOptionIds = optionRepository.findByQuestion_IdAndIsCorrectTrue(question.getId())
+                        .stream().map(Option::getId).toList();
+
+                // Lựa chọn của user
+                List<Long> selectedOptionIds = answers.stream()
+                        .map(sa -> sa.getOption().getId())
+                        .toList();
+
+                // Kiểm tra đúng/sai
+                boolean isCorrect = new HashSet<>(selectedOptionIds).equals(new HashSet<>(correctOptionIds));
+                if (isCorrect) {
+                    totalCorrect++;
+                }
+
+                // Build question detail
+                AttemptDetailResponse.AttemptQuestionDetail qDetail = new AttemptDetailResponse.AttemptQuestionDetail();
+                qDetail.setQuestionId(question.getId());
+                qDetail.setQuestionText(question.getQuestionText());
+                qDetail.setQuestionType(question.getType() != null ? question.getType().getDescription() : null);
+                qDetail.setScore(isCorrect ? (eq.getScore() != null ? eq.getScore() : 1.0) : 0.0);
+                qDetail.setMaxScore(eq.getScore() != null ? eq.getScore() : 1.0);
+                qDetail.setCorrect(isCorrect);
+                qDetail.setSelectedOptionIds(selectedOptionIds);
+                qDetail.setCorrectOptionIds(correctOptionIds);
+
+                // Build options list
+                List<AttemptDetailResponse.OptionDetail> optionDetails = new ArrayList<>();
+                if (question.getOptions() != null) {
+                    for (Option option : question.getOptions()) {
+                        AttemptDetailResponse.OptionDetail oDetail = new AttemptDetailResponse.OptionDetail();
+                        oDetail.setId(option.getId());
+                        oDetail.setText(option.getOptionText());
+                        oDetail.setIsCorrect(option.getIsCorrect());
+                        oDetail.setIsSelected(selectedOptionIds.contains(option.getId()));
+                        optionDetails.add(oDetail);
+                    }
+                }
+                qDetail.setOptions(optionDetails);
+
+                questionDetails.add(qDetail);
+            }
+
+            // Build response
+            AttemptDetailResponse response = new AttemptDetailResponse();
+            response.setAttemptId(attempt.getId());
+            response.setExamId(exam.getId());
+            response.setExamTitle(exam.getTitle());
+            response.setStartedAt(attempt.getStartedAt());
+            response.setFinishedAt(attempt.getFinishedAt());
+            response.setScore(attempt.getScore() != null ? attempt.getScore() : 0.0);
+            response.setMaxScore(maxScore);
+            response.setTotalQuestions(eqs.size());
+            response.setCorrectAnswers(totalCorrect);
+            response.setQuestions(questionDetails);
+
+            return response;
+        }
+
     }
+
 

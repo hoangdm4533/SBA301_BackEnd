@@ -14,7 +14,6 @@ public class QuestionResponse {
     private Long id;
     private String questionText;
     private String type;
-    private String formula;
 
     private Long lessonId;          // tiện cho FE
     private String lessonName;

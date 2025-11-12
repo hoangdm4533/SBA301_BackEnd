@@ -14,10 +14,8 @@ public class QuestionCreateRequest {
     @NotBlank
     private String questionText;
 
-    @NotBlank
-    private String type;
-
-    private String formula;
+    @NotNull
+    private Long typeId;  // Thay đổi từ String type sang Long typeId
 
     @NotNull
     private Long lessonId;

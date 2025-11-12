@@ -63,9 +63,8 @@ public class QuestionServiceImpl implements QuestionService {
         Level level = levelRepo.findById(req.getLevelId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid levelId: " + req.getLevelId()));
 
-        String typeCode = req.getType() == null ? null : req.getType().trim().toUpperCase();
-        QuestionType type = questionTypeRepo.findByDescriptionIgnoreCase(typeCode)
-                .orElseThrow(() -> new IllegalArgumentException("QuestionType not found: " + req.getType()));
+        QuestionType type = questionTypeRepo.findById(req.getTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("QuestionType not found: " + req.getTypeId()));
 
         Question q = new Question();
         q.setQuestionText(req.getQuestionText());
@@ -81,7 +80,7 @@ public class QuestionServiceImpl implements QuestionService {
                     .map(o -> new Option(null, null, o.getOptionText(), Boolean.TRUE.equals(o.getIsCorrect())))
                     .collect(java.util.stream.Collectors.toList());
 
-            validateOptions(typeCode, options);
+            validateOptions(type.getDescription(), options);
 
             for (Option o : options) {
                 q.addOption(o); // add vào collection & setQuestion(this)
@@ -114,11 +113,11 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         String effectiveTypeCode = null;
-        if (req.getType() != null && !req.getType().isBlank()) {
-            effectiveTypeCode = req.getType().trim().toUpperCase();
-            QuestionType type = questionTypeRepo.findByDescriptionIgnoreCase(effectiveTypeCode)
-                    .orElseThrow(() -> new IllegalArgumentException("QuestionType not found: " + req.getType()));
+        if (req.getTypeId() != null) {
+            QuestionType type = questionTypeRepo.findById(req.getTypeId())
+                    .orElseThrow(() -> new IllegalArgumentException("QuestionType not found: " + req.getTypeId()));
             q.setType(type);
+            effectiveTypeCode = type.getDescription();
         } else if (q.getType() != null) {
             effectiveTypeCode = q.getType().getDescription();
         }

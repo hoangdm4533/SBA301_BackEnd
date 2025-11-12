@@ -9,8 +9,7 @@ import java.util.List;
 @Setter
 public class QuestionUpdateRequest {
     private String questionText;
-    private String type;
-    private String formula;
+    private Long typeId;  // Thay đổi từ String type sang Long typeId
 
     private Long lessonId;
     private Long levelId;
