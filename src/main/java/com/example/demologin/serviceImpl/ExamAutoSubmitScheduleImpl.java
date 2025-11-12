@@ -1,7 +1,8 @@
-package com.example.demologin.service;
+package com.example.demologin.serviceImpl;
 
 import com.example.demologin.entity.ExamAttempt;
 import com.example.demologin.repository.ExamAttemptRepository;
+import com.example.demologin.service.ExamAutoSubmitSchedule;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ExamAutoSubmitScheduler {
+public class ExamAutoSubmitScheduleImpl implements ExamAutoSubmitSchedule {
 
     private final ExamAttemptRepository examAttemptRepository;
 
@@ -26,6 +27,7 @@ public class ExamAutoSubmitScheduler {
      */
     @Scheduled(cron = "0 * * * * ?") // Chạy vào giây 0 của mỗi phút
     @Transactional
+    @Override
     public void autoSubmitExpiredAttempts() {
         LocalDateTime now = LocalDateTime.now();
 
