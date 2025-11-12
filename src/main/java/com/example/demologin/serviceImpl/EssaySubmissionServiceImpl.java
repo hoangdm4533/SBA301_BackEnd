@@ -205,6 +205,7 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
         // 2. Check if already graded
         if (submission.getStatus() == SubmissionStatus.GRADED) {
             log.warn("Submission {} already graded, updating score", submission.getId());
+            System.out.println("hello");
         }
 
         // 3. Validate score
