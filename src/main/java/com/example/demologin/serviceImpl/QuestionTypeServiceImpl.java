@@ -6,7 +6,7 @@ import com.example.demologin.dto.response.QuestionTypeResponse;
 import com.example.demologin.entity.QuestionType;
 import com.example.demologin.exception.exceptions.ConflictException;
 import com.example.demologin.exception.exceptions.NotFoundException;
-import com.example.demologin.mapper.QuestionTypeMapper;
+import com.example.demologin.mapper.questiontype.IQuestionTypeMapper;
 import com.example.demologin.repository.QuestionTypeRepository;
 import com.example.demologin.service.QuestionTypeService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class QuestionTypeServiceImpl implements QuestionTypeService {
     private final QuestionTypeRepository questionTypeRepository;
-    private final QuestionTypeMapper mapper;
+    private final IQuestionTypeMapper mapper;
 
     @Override
     @Transactional(readOnly = true)
