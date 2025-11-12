@@ -49,6 +49,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashSet;
 import java.util.Map;
 import java.time.LocalDateTime;
@@ -105,7 +106,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new NotFoundException("Role MEMBER not found"));
             Set<com.example.demologin.entity.Role> roles = new HashSet<>();
             roles.add(memberRole);
-            
+            if (request.getDateOfBirth() != null) {
+                LocalDate dob = request.getDateOfBirth();
+                LocalDate today = LocalDate.now();
+                int age = Period.between(dob, today).getYears();
+
+                if (age < 7) {
+                    throw new IllegalArgumentException("Người dùng phải từ 7 tuổi trở lên mới được đăng ký.");
+                }
+            }
             User newUser = new User(
                     request.getUsername(),
                     passwordEncoder.encode(request.getPassword()),
