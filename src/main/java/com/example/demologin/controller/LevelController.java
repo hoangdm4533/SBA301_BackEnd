@@ -67,7 +67,7 @@ public class LevelController {
         ));
     }
 
-    @GetMapping()
+    @GetMapping("difficulty")
     @PageResponse
     @ApiResponse(message = "Level find by difficulty completed successfully")
     @Operation(summary = "Get level", description = "Get level by difficulty")

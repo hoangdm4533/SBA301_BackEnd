@@ -49,7 +49,7 @@ public class QuestionTypeController {
         ));
     }
 
-    @GetMapping()
+    @GetMapping("description")
     @ApiResponse(message = "Question type retrieved with description successfully")
     public ResponseEntity<ResponseObject> get(@RequestParam("description") String description) {
         var data = questionTypeService.findByDescription(description);
