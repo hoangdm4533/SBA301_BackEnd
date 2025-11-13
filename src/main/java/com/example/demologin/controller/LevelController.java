@@ -75,7 +75,7 @@ public class LevelController {
         final LevelResponse data = levelService.getByDifficulty(difficulty);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
-                "Levels search completed successfully",
+                "Levels find by difficulty completed successfully",
                 data
         ));
     }
