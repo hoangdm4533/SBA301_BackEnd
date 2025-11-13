@@ -11,4 +11,5 @@ public interface QuestionTypeService {
     QuestionTypeResponse create(QuestionTypeCreateRequest req);
     QuestionTypeResponse update(Long id, QuestionTypeUpdateRequest req);
     void delete(Long id);
+    QuestionTypeResponse findByDescription(String description);
 }

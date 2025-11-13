@@ -80,5 +80,14 @@ public class QuestionTypeServiceImpl implements QuestionTypeService {
                 .orElseThrow(() -> new NotFoundException("Question Type not found with id: " + id));
         questionTypeRepository.delete(questionType);
     }
+
+    @Override
+    public QuestionTypeResponse findByDescription(String description) {
+        return questionTypeRepository
+                .findByDescriptionIgnoreCase(description)
+                .map(questionType
+                        -> mapper.toResponse(questionType))
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy loại câu hỏi " + description));
+    }
 }
 

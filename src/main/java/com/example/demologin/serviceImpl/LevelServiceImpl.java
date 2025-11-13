@@ -4,6 +4,7 @@ import com.example.demologin.dto.request.level.LevelRequest;
 import com.example.demologin.dto.response.LevelResponse;
 import com.example.demologin.entity.Level;
 import com.example.demologin.entity.User;
+import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.ExamRepository;
 import com.example.demologin.repository.LevelRepository;
 import com.example.demologin.service.LevelService;
@@ -100,6 +101,13 @@ public class LevelServiceImpl implements LevelService {
         }
 
         levelRepository.delete(level);
+    }
+
+    @Override
+    public LevelResponse getByDifficulty(String difficulty) {
+        return levelRepository.findByDifficulty(difficulty)
+                .map(this::mapToResponse)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy độ khó" + difficulty));
     }
 
 }

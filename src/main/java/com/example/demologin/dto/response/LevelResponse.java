@@ -11,15 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class LevelResponse {
     private Long id;
-    private String name;
-    private String description;
     private String difficulty;
     private String status;
-    private Integer minScore;
-    private Integer maxScore;
-    private String createdBy;
-    private String updatedBy;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Integer totalExamTemplates;
+    private Double score;
 }

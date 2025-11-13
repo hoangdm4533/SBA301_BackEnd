@@ -15,5 +15,5 @@ public interface LevelService {
     Page<LevelResponse> searchLevels(String keyword, Pageable pageable);
     LevelResponse updateLevel(Long id, LevelRequest request);
     void deleteLevel(Long id);
-
+    LevelResponse getByDifficulty(String difficulty);
 }
