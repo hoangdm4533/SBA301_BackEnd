@@ -27,6 +27,10 @@ public interface EssaySubmissionRepository extends JpaRepository<EssaySubmission
     // Find pending submissions (for teacher)
     Page<EssaySubmission> findByStatusOrderBySubmittedAtAsc(SubmissionStatus status, Pageable pageable);
     
+    // Find pending submissions for questions created by specific teacher
+    Page<EssaySubmission> findByStatusAndEssayQuestionCreatedByUserIdOrderBySubmittedAtAsc(
+        SubmissionStatus status, Long teacherId, Pageable pageable);
+    
     // Count submissions by status for a question
     long countByEssayQuestionIdAndStatus(Long questionId, SubmissionStatus status);
 }

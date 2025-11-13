@@ -1,38 +1,34 @@
 package com.example.demologin.serviceImpl;
 
-import com.example.demologin.dto.request.EssaySubmissionStartRequest;
-import com.example.demologin.dto.request.EssaySubmissionSubmitRequest;
 import com.example.demologin.dto.request.TeacherGradingRequest;
-import com.example.demologin.dto.response.EssaySubmissionResponse;
-import com.example.demologin.dto.response.MemberResponse;
+import com.example.demologin.dto.request.essay.EssaySubmissionStartRequest;
+import com.example.demologin.dto.request.essay.EssaySubmissionSubmitRequest;
 import com.example.demologin.dto.response.PageResponse;
-import com.example.demologin.dto.response.UserResponse;
-import com.example.demologin.entity.EssayQuestion;
-import com.example.demologin.entity.EssaySubmission;
-import com.example.demologin.entity.Role;
-import com.example.demologin.entity.User;
-import com.example.demologin.enums.ActivityType;
+import com.example.demologin.dto.response.EssaySubmissionResponse;
+import com.example.demologin.dto.response.essay.SubmissionAttachmentResponse;
+import com.example.demologin.entity.*;
 import com.example.demologin.enums.SubmissionStatus;
-import com.example.demologin.mapper.UserMapper;
-import com.example.demologin.repository.EssayQuestionRepository;
-import com.example.demologin.repository.EssaySubmissionRepository;
-import com.example.demologin.repository.UserRepository;
+import com.example.demologin.repository.*;
+import com.example.demologin.service.CloudinaryService;
 import com.example.demologin.service.EssaySubmissionService;
 import com.example.demologin.service.SubscriptionService;
-import com.example.demologin.service.UserActivityLogService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,185 +36,175 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EssaySubmissionServiceImpl implements EssaySubmissionService {
     private final EssaySubmissionRepository submissionRepo;
+    private final SubmissionAttachmentRepository attachmentRepo;
     private final EssayQuestionRepository questionRepo;
     private final UserRepository userRepo;
+    private final CloudinaryService cloudinaryService;
     private final SubscriptionService subscriptionService;
-    private final UserActivityLogService activityLogService;
-    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
-    public EssaySubmissionResponse startEssay(EssaySubmissionStartRequest request, Long userId) {
-        log.debug("User {} starting essay question {}", userId, request.getEssayQuestionId());
-
-        // 1. Check premium subscription
+    public EssaySubmissionResponse startEssay(EssaySubmissionStartRequest request) {
+        // Check subscription
+        Long userId =getCurrentUserId();
         if (!subscriptionService.hasPremium(userId)) {
-            throw new SecurityException("Essay feature is only available for premium users");
+            throw new SecurityException("Premium subscription required to start essay");
         }
 
-        // 2. Get user and question
+        // Check if already started
+        submissionRepo.findByUserUserIdAndEssayQuestionId(userId, request.getEssayQuestionId())
+            .ifPresent(existing -> {
+                if (existing.getStatus() == SubmissionStatus.ONGOING) {
+                    throw new IllegalStateException("You have already started this essay");
+                }
+            });
+
         User user = userRepo.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         EssayQuestion question = questionRepo.findById(request.getEssayQuestionId())
             .orElseThrow(() -> new EntityNotFoundException("Essay question not found"));
 
-        // 3. Check if already started
-        Optional<EssaySubmission> existing = submissionRepo.findByUserUserIdAndEssayQuestionId(
-            userId, question.getId());
-
-        if (existing.isPresent()) {
-            EssaySubmission submission = existing.get();
-            
-            // If expired, allow restart
-            if (submission.getStatus() == SubmissionStatus.EXPIRED) {
-                log.info("User {} restarting expired submission {}", userId, submission.getId());
-                submission.setStatus(SubmissionStatus.ONGOING);
-                submission.setStartedAt(LocalDateTime.now());
-                submission.setAnswer(null);
-                submission.setImageUrls(null);
-                submission = submissionRepo.save(submission);
-                return mapToResponse(submission, question);
-            }
-            
-            // If ongoing, return existing
-            if (submission.getStatus() == SubmissionStatus.ONGOING) {
-                log.info("User {} continuing existing submission {}", userId, submission.getId());
-                return mapToResponse(submission, question);
-            }
-            
-            // If already submitted/graded, can't restart
-            throw new IllegalStateException("You have already submitted this essay");
-        }
-
-        // 4. Create new submission
         EssaySubmission submission = EssaySubmission.builder()
             .user(user)
             .essayQuestion(question)
-            .status(SubmissionStatus.ONGOING)
             .startedAt(LocalDateTime.now())
+            .status(SubmissionStatus.ONGOING)
             .build();
 
         submission = submissionRepo.save(submission);
-        log.info("Created new submission {} for user {} on question {}", submission.getId(), userId, question.getId());
 
-        return mapToResponse(submission, question);
+        log.info("User {} started essay question {}", userId, request.getEssayQuestionId());
+        return mapToResponse(submission);
     }
 
     @Override
     @Transactional
-    public EssaySubmissionResponse submitEssay(EssaySubmissionSubmitRequest request, Long userId) {
-        log.debug("User {} submitting essay submission {}", userId, request.getSubmissionId());
-
-        // 1. Validate submission
-        EssaySubmission submission = submissionRepo.findById(request.getSubmissionId())
+    public EssaySubmissionResponse submitEssayWithFiles(
+            Long submissionId, 
+            String answer, 
+            MultipartFile[] imageFiles,
+            MultipartFile[] documentFiles) {
+        Long userId = getCurrentUserId();
+        EssaySubmission submission = submissionRepo.findById(submissionId)
             .orElseThrow(() -> new EntityNotFoundException("Submission not found"));
 
-        // 2. Check ownership
+        // Verify ownership
         if (!submission.getUser().getUserId().equals(userId)) {
-            log.warn("User {} attempted to submit submission {} belonging to user {}", 
-                userId, submission.getId(), submission.getUser().getUserId());
-            throw new SecurityException("You can only submit your own submissions");
+            throw new SecurityException("You can only submit your own essays");
         }
 
-        // 3. Check status
         if (submission.getStatus() != SubmissionStatus.ONGOING) {
-            throw new IllegalStateException("Submission already submitted or expired");
+            throw new IllegalStateException("This submission has already been submitted");
         }
 
+        // Check time limit
         EssayQuestion question = submission.getEssayQuestion();
-
-        // 4. Check time limit
-        long secondsElapsed = Duration.between(submission.getStartedAt(), LocalDateTime.now()).getSeconds();
-        int timeLimitSeconds = question.getTimeLimitMinutes() * 60;
-
-        if (secondsElapsed > timeLimitSeconds) {
-            submission.setStatus(SubmissionStatus.EXPIRED);
-            submissionRepo.save(submission);
-            log.warn("Submission {} expired - time limit exceeded", submission.getId());
-            throw new IllegalStateException("Time limit exceeded. Your submission has been marked as expired.");
-        }
-
-        // 5. Validate answer not empty
-        if (request.getAnswer() == null || request.getAnswer().trim().isEmpty()) {
-            throw new IllegalArgumentException("Answer cannot be empty");
-        }
-
-        // 6. Handle image URLs
-        String imageUrlsJson = null;
-        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            try {
-                imageUrlsJson = objectMapper.writeValueAsString(request.getImageUrls());
-                log.debug("Saved {} image URLs for submission {}", request.getImageUrls().size(), submission.getId());
-            } catch (Exception e) {
-                log.error("Failed to serialize image URLs", e);
-                throw new RuntimeException("Failed to process image URLs");
+        if (question.getTimeLimitMinutes() != null) {
+            long minutesElapsed = ChronoUnit.MINUTES.between(submission.getStartedAt(), LocalDateTime.now());
+            if (minutesElapsed > question.getTimeLimitMinutes()) {
+                submission.setStatus(SubmissionStatus.EXPIRED);
+                submissionRepo.save(submission);
+                throw new IllegalStateException("Time limit exceeded");
             }
         }
 
-        // 7. Update submission
-        submission.setAnswer(request.getAnswer());
-        submission.setImageUrls(imageUrlsJson);
+        // Update submission text
+        submission.setAnswer(answer);
         submission.setSubmittedAt(LocalDateTime.now());
-        submission.setTimeSpentSeconds((int) secondsElapsed);
-        submission.setStatus(SubmissionStatus.SUBMITTED);
+        submission.setTimeSpentSeconds((int) ChronoUnit.SECONDS.between(submission.getStartedAt(), LocalDateTime.now()));
 
+        try {
+            // Upload image files
+            if (imageFiles != null && imageFiles.length > 0) {
+                List<Map<String, Object>> imageResults = cloudinaryService.uploadMultipleImages(
+                    imageFiles, "submission_images"
+                );
+                
+                for (Map<String, Object> result : imageResults) {
+                    SubmissionAttachment attachment = SubmissionAttachment.builder()
+                        .fileName((String) result.get("file_name"))
+                        .originalFileName((String) result.get("original_file_name"))
+                        .fileUrl((String) result.get("file_url"))
+                        .cloudinaryPublicId((String) result.get("cloudinary_public_id"))
+                        .fileType((String) result.get("file_type"))
+                        .fileSize((Long) result.get("file_size"))
+                        .attachmentType("IMAGE")
+                        .build();
+                    
+                    submission.addAttachment(attachment);
+                }
+                log.info("Uploaded {} images for submission {}", imageResults.size(), submissionId);
+            }
+
+            // Upload document files
+            if (documentFiles != null && documentFiles.length > 0) {
+                List<Map<String, Object>> docResults = cloudinaryService.uploadMultipleDocuments(
+                    documentFiles, "submission_documents"
+                );
+                
+                for (Map<String, Object> result : docResults) {
+                    SubmissionAttachment attachment = SubmissionAttachment.builder()
+                        .fileName((String) result.get("file_name"))
+                        .originalFileName((String) result.get("original_file_name"))
+                        .fileUrl((String) result.get("file_url"))
+                        .cloudinaryPublicId((String) result.get("cloudinary_public_id"))
+                        .fileType((String) result.get("file_type"))
+                        .fileSize((Long) result.get("file_size"))
+                        .attachmentType("DOCUMENT")
+                        .build();
+                    
+                    submission.addAttachment(attachment);
+                }
+                log.info("Uploaded {} documents for submission {}", docResults.size(), submissionId);
+            }
+
+        } catch (IOException e) {
+            log.error("Error uploading files for submission", e);
+            throw new RuntimeException("Failed to upload files: " + e.getMessage());
+        }
+
+        submission.setStatus(SubmissionStatus.PENDING_GRADING);
         submission = submissionRepo.save(submission);
-        log.info("Submission {} submitted successfully", submission.getId());
 
-        // 8. Log activity
-        User user = submission.getUser();
-        activityLogService.logUserActivity(user, ActivityType.ESSAY_SUBMITTED, 
-            "Submitted essay: " + question.getId() + " - Time spent: " + secondsElapsed + "s");
-
-        return mapToResponse(submission, question);
+        log.info("User {} submitted essay with {} attachments", userId, submission.getAttachments().size());
+        return mapToResponse(submission);
     }
 
     @Override
-    public EssaySubmissionResponse getMySubmission(Long submissionId, Long userId) {
+    public EssaySubmissionResponse getMySubmission(Long submissionId) {
+        Long userId = getCurrentUserId();
         EssaySubmission submission = submissionRepo.findById(submissionId)
             .orElseThrow(() -> new EntityNotFoundException("Submission not found"));
 
         if (!submission.getUser().getUserId().equals(userId)) {
             throw new SecurityException("You can only view your own submissions");
         }
-
-        return mapToResponse(submission, submission.getEssayQuestion());
+        return mapToResponse(submission);
     }
 
     @Override
-    public PageResponse<EssaySubmissionResponse> getMySubmissions(Long userId, Pageable pageable) {
+    public PageResponse<EssaySubmissionResponse> getMySubmissions( Pageable pageable) {
+        Long userId = getCurrentUserId();
         Page<EssaySubmission> submissions = submissionRepo.findByUserUserIdOrderByStartedAtDesc(userId, pageable);
-        Page<EssaySubmissionResponse> responsePage = submissions.map(s -> mapToResponse(s, s.getEssayQuestion()));
+        Page<EssaySubmissionResponse> responsePage = submissions.map(this::mapToResponse);
         return new PageResponse<>(responsePage);
     }
 
     @Override
     @Transactional
-    public EssaySubmissionResponse gradeSubmission(TeacherGradingRequest request, Long teacherId) {
-        log.debug("Teacher {} grading submission {}", teacherId, request.getSubmissionId());
-
-        // 1. Get submission
+    public EssaySubmissionResponse gradeSubmission(TeacherGradingRequest request) {
+        Long teacherId = getCurrentUserId();
         EssaySubmission submission = submissionRepo.findById(request.getSubmissionId())
             .orElseThrow(() -> new EntityNotFoundException("Submission not found"));
 
-        // 2. Check if already graded
-        if (submission.getStatus() == SubmissionStatus.GRADED) {
-            log.warn("Submission {} already graded, updating score", submission.getId());
-            System.out.println("hello");
+        if (submission.getStatus() != SubmissionStatus.PENDING_GRADING) {
+            throw new IllegalStateException("Only pending submissions can be graded");
         }
 
-        // 3. Validate score
-        if (request.getScore() > submission.getEssayQuestion().getMaxScore()) {
-            throw new IllegalArgumentException("Score cannot exceed max score: " + 
-                submission.getEssayQuestion().getMaxScore());
-        }
-
-        // 4. Get teacher
         User teacher = userRepo.findById(teacherId)
             .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
 
-        // 5. Update submission with grading
         submission.setScore(request.getScore());
         submission.setFeedback(request.getFeedback());
         submission.setDetailedFeedback(request.getDetailedFeedback());
@@ -227,31 +213,38 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
         submission.setStatus(SubmissionStatus.GRADED);
 
         submission = submissionRepo.save(submission);
-        log.info("Submission {} graded by teacher {} - Score: {}/{}", 
-            submission.getId(), teacherId, request.getScore(), submission.getEssayQuestion().getMaxScore());
 
-        // 6. Log activity for student
-        User student = submission.getUser();
-        activityLogService.logUserActivity(student, ActivityType.ESSAY_GRADED, 
-            "Essay graded: " + submission.getEssayQuestion().getId() + 
-            " - Score: " + request.getScore() + "/" + submission.getEssayQuestion().getMaxScore());
-
-        return mapToResponse(submission, submission.getEssayQuestion());
+        log.info("Teacher {} graded submission {} with score {}", teacherId, submission.getId(), request.getScore());
+        return mapToResponse(submission);
     }
 
     @Override
     public PageResponse<EssaySubmissionResponse> getPendingSubmissions(Pageable pageable) {
+        // Get all pending submissions (for admin)
         Page<EssaySubmission> submissions = submissionRepo.findByStatusOrderBySubmittedAtAsc(
-            SubmissionStatus.SUBMITTED, pageable);
-        Page<EssaySubmissionResponse> responsePage = submissions.map(s -> mapToResponse(s, s.getEssayQuestion()));
+            SubmissionStatus.PENDING_GRADING, pageable
+        );
+        Page<EssaySubmissionResponse> responsePage = submissions.map(this::mapToResponse);
+        return new PageResponse<>(responsePage);
+    }
+
+    @Override
+    public PageResponse<EssaySubmissionResponse> getPendingSubmissionsForTeacher(Long teacherId, Pageable pageable) {
+        // Get pending submissions only for questions created by this teacher
+        Page<EssaySubmission> submissions = submissionRepo
+            .findByStatusAndEssayQuestionCreatedByUserIdOrderBySubmittedAtAsc(
+                SubmissionStatus.PENDING_GRADING, teacherId, pageable
+            );
+        Page<EssaySubmissionResponse> responsePage = submissions.map(this::mapToResponse);
         return new PageResponse<>(responsePage);
     }
 
     @Override
     public PageResponse<EssaySubmissionResponse> getSubmissionsForQuestion(Long questionId, Pageable pageable) {
         Page<EssaySubmission> submissions = submissionRepo.findByEssayQuestionIdOrderBySubmittedAtDesc(
-            questionId, pageable);
-        Page<EssaySubmissionResponse> responsePage = submissions.map(s -> mapToResponse(s, s.getEssayQuestion()));
+            questionId, pageable
+        );
+        Page<EssaySubmissionResponse> responsePage = submissions.map(this::mapToResponse);
         return new PageResponse<>(responsePage);
     }
 
@@ -259,67 +252,79 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
     public EssaySubmissionResponse getSubmissionById(Long submissionId) {
         EssaySubmission submission = submissionRepo.findById(submissionId)
             .orElseThrow(() -> new EntityNotFoundException("Submission not found"));
-        return mapToResponse(submission, submission.getEssayQuestion());
+        return mapToResponse(submission);
     }
 
-    private boolean isExpired(EssaySubmission submission, EssayQuestion question) {
-        if (submission.getStatus() != SubmissionStatus.ONGOING) {
-            return false;
-        }
-        long elapsed = Duration.between(submission.getStartedAt(), LocalDateTime.now()).getSeconds();
-        return elapsed > (question.getTimeLimitMinutes() * 60);
-    }
-
-    private EssaySubmissionResponse mapToResponse(EssaySubmission submission, EssayQuestion question) {
+    private EssaySubmissionResponse mapToResponse(EssaySubmission submission) {
+        EssayQuestion question = submission.getEssayQuestion();
+        
+        // Calculate time remaining
         Integer timeRemaining = null;
-        Integer timeLimitSeconds = question.getTimeLimitMinutes() * 60;
-
-        if (submission.getStatus() == SubmissionStatus.ONGOING) {
-            long elapsed = Duration.between(submission.getStartedAt(), LocalDateTime.now()).getSeconds();
-            timeRemaining = Math.max(0, timeLimitSeconds - (int) elapsed);
-        }
-
-        boolean isExpired = submission.getStatus() == SubmissionStatus.ONGOING && 
-                           isExpired(submission, question);
-
-        // Parse image URLs from JSON
-        List<String> imageUrls = null;
-        if (submission.getImageUrls() != null && !submission.getImageUrls().isEmpty()) {
-            try {
-                imageUrls = objectMapper.readValue(submission.getImageUrls(), 
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
-            } catch (Exception e) {
-                log.error("Failed to parse image URLs for submission {}", submission.getId(), e);
+        Boolean isExpired = false;
+        
+        if (question.getTimeLimitMinutes() != null && submission.getStatus() == SubmissionStatus.ONGOING) {
+            long minutesElapsed = ChronoUnit.MINUTES.between(submission.getStartedAt(), LocalDateTime.now());
+            long secondsRemaining = (question.getTimeLimitMinutes() * 60) - (minutesElapsed * 60);
+            
+            if (secondsRemaining <= 0) {
+                isExpired = true;
+                timeRemaining = 0;
+            } else {
+                timeRemaining = (int) secondsRemaining;
             }
         }
 
-        String gradedByName = submission.getGradedBy() != null ? submission.getGradedBy().getUsername() : null;
+        // Get attachments
+        List<SubmissionAttachment> attachments = attachmentRepo.findBySubmissionId(submission.getId());
+        List<SubmissionAttachmentResponse> attachmentResponses = attachments.stream()
+            .map(this::mapToAttachmentResponse)
+            .collect(Collectors.toList());
 
         return EssaySubmissionResponse.builder()
-            .id(submission.getId())
+            .id(submission.getId        ())
+            .studentId(submission.getUser().getUserId())
+            .studentName(submission.getUser().getUsername())
             .essayQuestionId(question.getId())
             .prompt(question.getPrompt())
             .answer(submission.getAnswer())
-            .imageUrls(imageUrls)
+            .attachments(attachmentResponses)
             .startedAt(submission.getStartedAt())
             .submittedAt(submission.getSubmittedAt())
             .timeSpentSeconds(submission.getTimeSpentSeconds())
             .timeRemainingSeconds(timeRemaining)
-            .timeLimitSeconds(timeLimitSeconds)
+            .timeLimitSeconds(question.getTimeLimitMinutes() != null ? question.getTimeLimitMinutes() * 60 : null)
             .score(submission.getScore())
             .maxScore(question.getMaxScore())
             .feedback(submission.getFeedback())
             .detailedFeedback(submission.getDetailedFeedback())
-            .gradedBy(gradedByName)
+            .gradedBy(submission.getGradedBy() != null ? submission.getGradedBy().getUsername() : null)
             .status(submission.getStatus())
             .gradedAt(submission.getGradedAt())
             .isExpired(isExpired)
-            .user(toUserResponse(submission.getUser()))
             .build();
     }
-    public UserResponse toUserResponse(User u) {
-        UserResponse r = new UserResponse();
-        r.setFullName(u.getFullName());
-        return r;
+
+    private SubmissionAttachmentResponse mapToAttachmentResponse(SubmissionAttachment attachment) {
+        String downloadUrl = "/api/essay-submissions/attachments/" + attachment.getId() + "/download";
+        
+        return SubmissionAttachmentResponse.builder()
+            .id(attachment.getId())
+            .fileName(attachment.getFileName())
+            .originalFileName(attachment.getOriginalFileName())
+            .fileUrl(attachment.getFileUrl())
+            .downloadUrl(downloadUrl)
+            .fileType(attachment.getFileType())
+            .fileSize(attachment.getFileSize())
+            .attachmentType(attachment.getAttachmentType())
+            .uploadedAt(attachment.getUploadedAt())
+            .build();
+    }
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User not authenticated");
+        }
+        User user = (User) authentication.getPrincipal();
+        return user.getUserId();
     }
 }

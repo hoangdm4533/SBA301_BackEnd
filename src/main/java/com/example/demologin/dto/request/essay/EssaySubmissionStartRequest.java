@@ -1,4 +1,4 @@
-package com.example.demologin.dto.request;
+package com.example.demologin.dto.request.essay;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;

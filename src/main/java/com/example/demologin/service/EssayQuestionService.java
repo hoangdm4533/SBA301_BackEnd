@@ -1,22 +1,29 @@
 package com.example.demologin.service;
 
-import com.example.demologin.dto.request.EssayQuestionRequest;
-import com.example.demologin.dto.response.EssayQuestionResponse;
-import com.example.demologin.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.demologin.dto.request.essay.EssayQuestionRequest;
+import com.example.demologin.dto.response.PageResponse;
+import com.example.demologin.dto.response.essay.EssayAttachmentResponse;
+import com.example.demologin.dto.response.essay.EssayQuestionResponse;
 
 public interface EssayQuestionService {
-    EssayQuestionResponse createQuestion(EssayQuestionRequest request, Long teacherId);
+    EssayQuestionResponse createQuestion(EssayQuestionRequest request, MultipartFile[] documentFiles, MultipartFile[] imageFiles);
     
-    EssayQuestionResponse updateQuestion(Long id, EssayQuestionRequest request, Long teacherId);
+    EssayQuestionResponse updateQuestion(Long id, EssayQuestionRequest request, MultipartFile[] documentFiles, MultipartFile[] imageFiles);
     
     EssayQuestionResponse getQuestionById(Long id);
     
+    EssayAttachmentResponse getAttachmentById(Long attachmentId);
+    
     PageResponse<EssayQuestionResponse> getAllActiveQuestions(Pageable pageable);
     
-    PageResponse<EssayQuestionResponse> getQuestionsByTeacher(Long teacherId, Pageable pageable);
+    PageResponse<EssayQuestionResponse> getQuestionsByTeacher(Pageable pageable);
     
-    void deleteQuestion(Long id, Long teacherId);
+    PageResponse<EssayQuestionResponse> getAllQuestions(Pageable pageable);
+
+    void changeQuestionStatus(Long id, String status);
     
-    void archiveQuestion(Long id, Long teacherId);
+    PageResponse<EssayQuestionResponse> searchActiveQuestions(Long gradeId, Long chapterId, Long lessonId, Pageable pageable);
 }

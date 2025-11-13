@@ -1,13 +1,15 @@
-package com.example.demologin.dto.response;
+package com.example.demologin.dto.response.essay;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.demologin.enums.QuestionStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -58,4 +60,10 @@ public class EssayQuestionResponse {
 
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonProperty("attachments")
+    private List<EssayAttachmentResponse> attachments;
+
+    @JsonProperty("attachment_urls")
+    private List<String> attachmentUrls;
 }

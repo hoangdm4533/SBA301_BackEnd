@@ -1,26 +1,33 @@
 package com.example.demologin.service;
 
-import com.example.demologin.dto.request.EssaySubmissionStartRequest;
-import com.example.demologin.dto.request.EssaySubmissionSubmitRequest;
+import com.example.demologin.dto.request.essay.EssaySubmissionStartRequest;
+import com.example.demologin.dto.request.essay.EssaySubmissionSubmitRequest;
 import com.example.demologin.dto.request.TeacherGradingRequest;
 import com.example.demologin.dto.response.EssaySubmissionResponse;
 import com.example.demologin.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface EssaySubmissionService {
     // Student operations
-    EssaySubmissionResponse startEssay(EssaySubmissionStartRequest request, Long userId);
+    EssaySubmissionResponse startEssay(EssaySubmissionStartRequest request);
+
+    EssaySubmissionResponse submitEssayWithFiles(
+        Long submissionId, 
+        String answer, 
+        MultipartFile[] imageFiles,
+        MultipartFile[] documentFiles);
     
-    EssaySubmissionResponse submitEssay(EssaySubmissionSubmitRequest request, Long userId);
+    EssaySubmissionResponse getMySubmission(Long submissionId);
     
-    EssaySubmissionResponse getMySubmission(Long submissionId, Long userId);
-    
-    PageResponse<EssaySubmissionResponse> getMySubmissions(Long userId, Pageable pageable);
+    PageResponse<EssaySubmissionResponse> getMySubmissions(Pageable pageable);
     
     // Teacher operations
-    EssaySubmissionResponse gradeSubmission(TeacherGradingRequest request, Long teacherId);
+    EssaySubmissionResponse gradeSubmission(TeacherGradingRequest request);
     
     PageResponse<EssaySubmissionResponse> getPendingSubmissions(Pageable pageable);
+    
+    PageResponse<EssaySubmissionResponse> getPendingSubmissionsForTeacher(Long teacherId, Pageable pageable);
     
     PageResponse<EssaySubmissionResponse> getSubmissionsForQuestion(Long questionId, Pageable pageable);
     
