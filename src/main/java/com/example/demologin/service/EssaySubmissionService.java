@@ -1,9 +1,8 @@
 package com.example.demologin.service;
 
 import com.example.demologin.dto.request.essay.EssaySubmissionStartRequest;
-import com.example.demologin.dto.request.essay.EssaySubmissionSubmitRequest;
 import com.example.demologin.dto.request.TeacherGradingRequest;
-import com.example.demologin.dto.response.EssaySubmissionResponse;
+import com.example.demologin.dto.response.essay.EssaySubmissionResponse;
 import com.example.demologin.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

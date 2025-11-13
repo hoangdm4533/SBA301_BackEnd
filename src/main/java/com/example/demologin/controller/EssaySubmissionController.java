@@ -4,7 +4,7 @@ import com.example.demologin.dto.request.TeacherGradingRequest;
 import com.example.demologin.dto.request.essay.EssaySubmissionStartRequest;
 import com.example.demologin.dto.response.ApiResponse;
 import com.example.demologin.dto.response.PageResponse;
-import com.example.demologin.dto.response.EssaySubmissionResponse;
+import com.example.demologin.dto.response.essay.EssaySubmissionResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.repository.SubmissionAttachmentRepository;
 import com.example.demologin.service.EssaySubmissionService;

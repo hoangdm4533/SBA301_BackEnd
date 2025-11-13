@@ -1,14 +1,15 @@
-package com.example.demologin.dto.response;
+package com.example.demologin.dto.response.essay;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.demologin.enums.SubmissionStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,6 +18,12 @@ import java.util.List;
 public class EssaySubmissionResponse {
     @JsonProperty("id")
     private Long id;
+
+    @JsonProperty("student_id")
+    private Long studentId;
+
+    @JsonProperty("student_name")
+    private String studentName;
 
     @JsonProperty("essay_question_id")
     private Long essayQuestionId;
@@ -27,8 +34,11 @@ public class EssaySubmissionResponse {
     @JsonProperty("answer")
     private String answer;
 
+    @JsonProperty("attachments")
+    private List<SubmissionAttachmentResponse> attachments;
+
     @JsonProperty("image_urls")
-    private List<String> imageUrls;
+    private List<String> imageUrls; // Legacy support
 
     @JsonProperty("started_at")
     private LocalDateTime startedAt;
@@ -68,6 +78,4 @@ public class EssaySubmissionResponse {
 
     @JsonProperty("is_expired")
     private Boolean isExpired;
-
-    private UserResponse user;
 }
