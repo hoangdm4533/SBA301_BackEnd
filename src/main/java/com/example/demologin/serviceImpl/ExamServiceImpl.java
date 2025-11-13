@@ -181,8 +181,13 @@ public class ExamServiceImpl implements ExamService {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
 
-        Question question = questionRepository.findById(request.getQuestionId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy question với id " + request.getQuestionId()));
+        // Chỉ cho phép thêm câu hỏi ACTIVE
+        Question question = questionRepository.findByIdAndStatus(
+                request.getQuestionId(),
+                com.example.demologin.enums.QuestionStatus.ACTIVE
+        ).orElseThrow(() -> new ConflictException(
+                "Câu hỏi không tồn tại hoặc đã bị archive. Chỉ có thể thêm câu hỏi đang active vào đề thi"
+        ));
 
         // Kiểm tra trùng câu hỏi
         if (examQuestionRepository.existsByExamAndQuestion(exam, question)) {

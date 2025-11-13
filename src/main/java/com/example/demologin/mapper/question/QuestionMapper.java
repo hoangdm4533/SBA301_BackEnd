@@ -60,6 +60,8 @@ public class QuestionMapper implements IQuestionMapper {
         return QuestionResponse.builder()
                 .id(q.getId())
                 .questionText(q.getQuestionText())
+                .imageUrl(q.getImageUrl())
+                .status(q.getStatus() != null ? q.getStatus().name() : null)
                 .type(q.getType() != null ? q.getType().getDescription() : null)
                 .lessonId(lessonId)
                 .lessonName(lessonName)

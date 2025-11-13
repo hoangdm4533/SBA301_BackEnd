@@ -17,4 +17,6 @@ public interface QuestionService {
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
     Page<QuestionResponse> listByType(Long typeId, int page, int size);
     Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);
+    Page<QuestionResponse> listByStatus(String status, int page, int size);
+    QuestionResponse changeStatus(Long id);
 }

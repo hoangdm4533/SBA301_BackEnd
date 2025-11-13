@@ -7,6 +7,7 @@ import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import com.example.demologin.entity.*;
+import com.example.demologin.enums.QuestionStatus;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
@@ -71,6 +72,7 @@ public class QuestionServiceImpl implements QuestionService {
         q.setLesson(lesson);
         q.setLevel(level);
         q.setType(type);
+        q.setStatus(QuestionStatus.ACTIVE);
         q.setCreatedAt(LocalDateTime.now());
         q.setUpdatedAt(LocalDateTime.now());
 
@@ -181,11 +183,19 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void delete(Long id) {
+        Question q = questionRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Question not found: " + id));
+
+        // Chỉ cho phép xóa câu hỏi đã ARCHIVED
+        if (q.getStatus() != QuestionStatus.ARCHIVED) {
+            throw new IllegalArgumentException(
+                "Chỉ có thể xóa câu hỏi đã được archive. "
+            );
+        }
+
         // Gỡ liên kết exam_questions để tránh lỗi FK
         questionRepo.unlinkAllExamsOfQuestion(id);
 
-        Question q = questionRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Question not found: " + id));
         questionRepo.delete(q);
     }
 
@@ -311,5 +321,49 @@ public class QuestionServiceImpl implements QuestionService {
 
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return questionRepo.findByMatrixId(matrixId, pageable).map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionResponse> listByStatus(String status, int page, int size) {
+        try {
+            QuestionStatus questionStatus = QuestionStatus.valueOf(status.toUpperCase());
+            var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+            return questionRepo.findByStatus(questionStatus, pageable).map(mapper::toResponse);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status. Must be ACTIVE or ARCHIVED");
+        }
+    }
+
+    @Override
+    @Transactional
+    public QuestionResponse changeStatus(Long id) {
+        Question question = questionRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Question not found: " + id));
+
+        QuestionStatus currentStatus = question.getStatus();
+
+        // Nếu đang ACTIVE và muốn chuyển sang ARCHIVED
+        if (currentStatus == QuestionStatus.ACTIVE) {
+            // Kiểm tra câu hỏi có trong exam nào không
+            boolean isUsedInExam = !questionRepo.findExamsByQuestionId(id).isEmpty();
+
+            if (isUsedInExam) {
+                throw new IllegalArgumentException(
+                    "Không thể archive câu hỏi này vì đã được sử dụng trong đề thi."
+                );
+            }
+
+            question.setStatus(QuestionStatus.ARCHIVED);
+        }
+        // Nếu đang ARCHIVED và muốn chuyển sang ACTIVE
+        else if (currentStatus == QuestionStatus.ARCHIVED) {
+            question.setStatus(QuestionStatus.ACTIVE);
+        }
+
+        question.setUpdatedAt(LocalDateTime.now());
+
+        Question saved = questionRepo.save(question);
+        return mapper.toResponse(saved);
     }
 }

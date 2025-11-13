@@ -145,4 +145,31 @@ public class QuestionController {
                 data
         ));
     }
+
+    @GetMapping("/by-status/{status}")
+    @PageResponse
+    @ApiResponse(message = "Questions retrieved by status successfully")
+    public ResponseEntity<ResponseObject> listByStatus(
+            @PathVariable final String status,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size
+    ) {
+        final Page<QuestionResponse> data = questionService.listByStatus(status, page, size);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Questions retrieved by status successfully",
+                data
+        ));
+    }
+
+    @PatchMapping("/{id}/status")
+    @ApiResponse(message = "Question status changed successfully")
+    public ResponseEntity<ResponseObject> changeStatus(@PathVariable final Long id) {
+        final QuestionResponse data = questionService.changeStatus(id);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question status changed successfully",
+                data
+        ));
+    }
 }

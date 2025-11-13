@@ -13,6 +13,8 @@ import java.util.List;
 public class QuestionResponse {
     private Long id;
     private String questionText;
+    private String imageUrl;
+    private String status;
     private String type;
 
     private Long lessonId;          // tiện cho FE

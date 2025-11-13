@@ -22,6 +22,12 @@ public class Question {
     @Column(name = "question_text")
     private String questionText;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private com.example.demologin.enums.QuestionStatus status = com.example.demologin.enums.QuestionStatus.ACTIVE;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
