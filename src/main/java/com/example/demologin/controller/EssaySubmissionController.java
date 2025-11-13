@@ -172,7 +172,7 @@ public class EssaySubmissionController {
     }
 
     @GetMapping("/attachments/{attachmentId}/download")
-    @PreAuthorize("hasRole('MEMBER') or hasRole('TEACHER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<?> downloadAttachment(@PathVariable Long attachmentId) {
         try {
             var attachment = attachmentRepo.findById(attachmentId)

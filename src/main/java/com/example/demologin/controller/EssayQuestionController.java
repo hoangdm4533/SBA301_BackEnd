@@ -86,7 +86,7 @@ public class EssayQuestionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('MEMBER')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<EssayQuestionResponse>> getQuestionById(@PathVariable Long id) {
         try {
             EssayQuestionResponse response = essayQuestionService.getQuestionById(id);
@@ -99,7 +99,7 @@ public class EssayQuestionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('MEMBER')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PageResponse<EssayQuestionResponse>>> getAllActiveQuestions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
