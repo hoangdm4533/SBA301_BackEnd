@@ -67,11 +67,11 @@ public class LevelController {
         ));
     }
 
-    @GetMapping("difficulty")
+    @GetMapping("{difficulty}")
     @PageResponse
     @ApiResponse(message = "Level find by difficulty completed successfully")
     @Operation(summary = "Get level", description = "Get level by difficulty")
-    public ResponseEntity<ResponseObject> findByDifficulty(@RequestParam("difficulty") String difficulty) {
+    public ResponseEntity<ResponseObject> findByDifficulty(@PathVariable("difficulty") String difficulty) {
         final LevelResponse data = levelService.getByDifficulty(difficulty);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
