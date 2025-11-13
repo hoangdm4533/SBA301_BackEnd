@@ -101,7 +101,7 @@ public class QuestionController {
     }
 
     @PostMapping("/ai")
-    @ApiResponse(message = "Question generated successfully")
+    @ApiResponse(message = "Question saved successfully")
     public ResponseEntity<ResponseObject> saveQuestionAi(@RequestBody List<QuestionCreateRequest> request) {
         var result = questionService.saveQuestionsAI(request);
         return ResponseEntity.ok(new ResponseObject(
