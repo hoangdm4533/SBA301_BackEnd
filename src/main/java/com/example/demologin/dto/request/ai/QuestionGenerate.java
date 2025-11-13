@@ -15,7 +15,7 @@ public class QuestionGenerate {
     private String questionText;
 
     @NotBlank
-    private String type;
+    private Long questionTypeId;
 
     @NotNull
     private Long lessonId;

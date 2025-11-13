@@ -25,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.rmi.ServerException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -227,6 +229,12 @@ public class QuestionServiceImpl implements QuestionService {
                     .map(Level::getDifficulty)
                     .orElse("");
         }
+        String type = "";
+        if (req.getQuestionTypeId() != null) {
+            type = questionTypeRepo.findById(req.getQuestionTypeId())
+                    .map(QuestionType::getDescription)
+                    .orElse("");
+        }
 
         return """
         Bạn là hệ thống tạo câu hỏi trắc nghiệm chính xác cao môn Toán học lớp 10–12.
@@ -251,7 +259,7 @@ public class QuestionServiceImpl implements QuestionService {
         """
                 .formatted(
                         questionCount,
-                        req.getType(),
+                        type,
                         difficulty
                 );
     }
@@ -266,9 +274,16 @@ public class QuestionServiceImpl implements QuestionService {
                     .orElse("");
         }
 
+        String type = "";
+        if (req.getQuestionTypeId() != null) {
+            type = questionTypeRepo.findById(req.getQuestionTypeId())
+                    .map(QuestionType::getDescription)
+                    .orElse("");
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("Sinh ").append(questionCount)
-                .append(" câu hỏi theo loại ").append(req.getType()).append(".\n");
+                .append(" câu hỏi theo loại ").append(type).append(".\n");
 
         if (!difficulty.isBlank()) {
             sb.append("Mức độ: ").append(difficulty).append(".\n");
@@ -311,5 +326,58 @@ public class QuestionServiceImpl implements QuestionService {
 
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return questionRepo.findByMatrixId(matrixId, pageable).map(mapper::toResponse);
+    }
+
+
+    @Override
+    @Transactional
+    public List<QuestionResponse> saveQuestionsAI(List<QuestionCreateRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("Câu hỏi không được trống");
+        }
+
+        List<Question> questions = new ArrayList<>();
+
+        for (QuestionCreateRequest req : requests) {
+            // --- Validate & load các entity liên quan ---
+            Lesson lesson = lessonRepo.findById(req.getLessonId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học"));
+
+            QuestionType type = questionTypeRepo.findById(req.getTypeId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại câu hỏi"));
+
+            Level level = null;
+            if (req.getLevelId() != null) {
+                level = levelRepo.findById(req.getLevelId())
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy cấp độ câu hỏi"));
+            }
+
+            // ---Tạo đối tượng Question ---
+            Question q = new Question();
+            q.setQuestionText(req.getQuestionText());
+            q.setType(type);
+            q.setLesson(lesson);
+            q.setLevel(level);
+            q.setCreatedAt(LocalDateTime.now());
+            q.setUpdatedAt(LocalDateTime.now());
+
+            // ---  Map OptionRequest -> Option ---
+            if (req.getOptions() != null && !req.getOptions().isEmpty()) {
+                List<Option> options = req.getOptions().stream()
+                        .map(optReq -> mapper.buildOption(q, optReq))
+                        .collect(Collectors.toList());
+                q.setOptions(options);
+            }
+
+            questions.add(q);
+        }
+
+        // ---  Lưu tất cả vào DB ---
+        List<Question> savedQuestions = questionRepo.saveAll(questions);
+
+        // --- Convert sang Response ---
+        return savedQuestions.stream()
+                .map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 }

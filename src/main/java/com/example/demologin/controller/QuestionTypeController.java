@@ -49,6 +49,17 @@ public class QuestionTypeController {
         ));
     }
 
+    @GetMapping()
+    @ApiResponse(message = "Question type retrieved with description successfully")
+    public ResponseEntity<ResponseObject> get(@RequestParam("description") String description) {
+        var data = questionTypeService.findByDescription(description);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question type retrieved successfully",
+                data
+        ));
+    }
+
     @PostMapping
     @ApiResponse(message = "Question type created successfully")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody final QuestionTypeCreateRequest req) {

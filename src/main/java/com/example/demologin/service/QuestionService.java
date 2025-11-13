@@ -6,6 +6,8 @@ import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 
 public interface QuestionService {
     Page<QuestionResponse> list(int page, int size);
@@ -17,4 +19,5 @@ public interface QuestionService {
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
     Page<QuestionResponse> listByType(Long typeId, int page, int size);
     Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);
+    List<QuestionResponse> saveQuestionsAI(List<QuestionCreateRequest> requests);
 }

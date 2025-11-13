@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/questions")
@@ -94,6 +96,17 @@ public class QuestionController {
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
                 "Question generated successfully",
+                result
+        ));
+    }
+
+    @PostMapping("/ai")
+    @ApiResponse(message = "Question generated successfully")
+    public ResponseEntity<ResponseObject> saveQuestionAi(@RequestBody List<QuestionCreateRequest> request) {
+        var result = questionService.saveQuestionsAI(request);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question saved successfully",
                 result
         ));
     }
