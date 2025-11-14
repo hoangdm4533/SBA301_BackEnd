@@ -5,7 +5,6 @@ import com.example.demologin.dto.request.question.QuestionCreateRequest;
 import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,8 +12,8 @@ import java.util.List;
 public interface QuestionService {
     Page<QuestionResponse> list(int page, int size);
     QuestionResponse get(Long id);
-    QuestionResponse create(QuestionCreateRequest req, MultipartFile imageFile);
-    QuestionResponse update(Long id, QuestionUpdateRequest req, MultipartFile imageFile);
+    QuestionResponse create(QuestionCreateRequest req);
+    QuestionResponse update(Long id, QuestionUpdateRequest req);
     void delete(Long id);
     String generateQuestion(QuestionGenerate req);
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
