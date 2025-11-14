@@ -11,11 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "essay_attachments")
@@ -24,34 +21,35 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EssayAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "essay_question_id", nullable = false)
-    private EssayQuestion essayQuestion;
+    EssayQuestion essayQuestion;
 
     @Column(name = "file_name", nullable = false)
-    private String fileName;
+    String fileName;
 
     @Column(name = "original_file_name", nullable = false)
-    private String originalFileName;
+    String originalFileName;
 
     @Column(name = "file_url", nullable = false, length = 500)
-    private String fileUrl;
+    String fileUrl;
 
     @Column(name = "cloudinary_public_id", nullable = false)
-    private String cloudinaryPublicId;
+    String cloudinaryPublicId;
 
     @Column(name = "file_type", nullable = false, length = 50)
-    private String fileType; // pdf, doc, docx, etc.
+    String fileType; // pdf, doc, docx, etc.
 
     @Column(name = "file_size")
-    private Long fileSize; // in bytes
+    Long fileSize; // in bytes
 
     @Column(name = "uploaded_at", nullable = false)
     @Builder.Default
-    private LocalDateTime uploadedAt = LocalDateTime.now();
+    LocalDateTime uploadedAt = LocalDateTime.now();
 }

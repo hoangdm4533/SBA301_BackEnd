@@ -1,6 +1,7 @@
 package com.example.demologin.entity;
 
 
+import com.example.demologin.enums.QuestionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -25,9 +26,10 @@ public class Question {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private com.example.demologin.enums.QuestionStatus status = com.example.demologin.enums.QuestionStatus.ACTIVE;
+    private QuestionStatus status = QuestionStatus.ACTIVE;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

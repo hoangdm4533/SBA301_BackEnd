@@ -221,8 +221,8 @@ public class QuestionServiceImpl implements QuestionService {
         Question q = questionRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Question not found: " + id));
 
-        // Chỉ cho phép xóa câu hỏi đã ARCHIVED
-        if (q.getStatus() != QuestionStatus.ARCHIVED) {
+
+        if (q.getStatus() != QuestionStatus.INACTIVE) {
             throw new IllegalArgumentException(
                 "Chỉ có thể xóa câu hỏi đã được archive. "
             );
@@ -454,11 +454,10 @@ public class QuestionServiceImpl implements QuestionService {
                     "Không thể archive câu hỏi này vì đã được sử dụng trong đề thi."
                 );
             }
-
-            question.setStatus(QuestionStatus.ARCHIVED);
+            question.setStatus(QuestionStatus.INACTIVE);
         }
         // Nếu đang ARCHIVED và muốn chuyển sang ACTIVE
-        else if (currentStatus == QuestionStatus.ARCHIVED) {
+        else if (currentStatus == QuestionStatus.INACTIVE) {
             question.setStatus(QuestionStatus.ACTIVE);
         }
 

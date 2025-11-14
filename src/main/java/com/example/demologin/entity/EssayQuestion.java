@@ -20,11 +20,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "essay_questions")
@@ -33,54 +30,55 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EssayQuestion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "grade_id", nullable = false)
-    private Grade grade;
+    Grade grade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chapter_id", nullable = false)
-    private Chapter chapter;
+    Chapter chapter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
+    Lesson lesson;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String prompt;
+    String prompt;
 
     @Column(nullable = false)
-    private String rubric; // Tiêu chí chấm điểm
+    String rubric; // Tiêu chí chấm điểm
 
     @Column(name = "time_limit_minutes", nullable = false)
-    private Integer timeLimitMinutes;
+    Integer timeLimitMinutes;
 
     @Column(name = "max_score", nullable = false)
-    private Integer maxScore;
+    Integer maxScore;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private QuestionStatus status = QuestionStatus.ACTIVE;
+    QuestionStatus status = QuestionStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy; // Teacher tạo câu hỏi
+    User createdBy; // Teacher tạo câu hỏi
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "essayQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<EssayAttachment> attachments = new ArrayList<>();
+    List<EssayAttachment> attachments = new ArrayList<>();
 
     @PreUpdate
     protected void onUpdate() {

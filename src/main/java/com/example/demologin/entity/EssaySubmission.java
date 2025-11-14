@@ -19,11 +19,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "essay_submissions")
@@ -32,59 +29,60 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EssaySubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // Student làm bài
+    User user; // Student làm bài
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "essay_question_id", nullable = false)
-    private EssayQuestion essayQuestion;
+    EssayQuestion essayQuestion;
 
     @Column(columnDefinition = "TEXT")
-    private String answer; // Câu trả lời của student
+    String answer; // Câu trả lời của student
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<SubmissionAttachment> attachments = new ArrayList<>();
+    List<SubmissionAttachment> attachments = new ArrayList<>();
 
     @Column(name = "image_urls", columnDefinition = "TEXT")
-    private String imageUrls;
+    String imageUrls;
 
     @Column(name = "started_at", nullable = false)
-    private LocalDateTime startedAt;
+    LocalDateTime startedAt;
 
     @Column(name = "submitted_at")
-    private LocalDateTime submittedAt;
+    LocalDateTime submittedAt;
 
     @Column(name = "time_spent_seconds")
-    private Integer timeSpentSeconds;
+    Integer timeSpentSeconds;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private SubmissionStatus status = SubmissionStatus.ONGOING;
+    SubmissionStatus status = SubmissionStatus.ONGOING;
 
     // Teacher grading fields
     @Column
-    private Integer score;
+    Integer score;
 
     @Column(columnDefinition = "TEXT")
-    private String feedback; // Nhận xét tổng quan
+    String feedback; // Nhận xét tổng quan
 
     @Column(name = "detailed_feedback", columnDefinition = "TEXT")
-    private String detailedFeedback; // Nhận xét chi tiết
+    String detailedFeedback; // Nhận xét chi tiết
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "graded_by")
-    private User gradedBy; // Teacher chấm bài
+    User gradedBy; // Teacher chấm bài
 
     @Column(name = "graded_at")
-    private LocalDateTime gradedAt;
+    LocalDateTime gradedAt;
 
     // Helper methods for bidirectional relationship
     public void addAttachment(SubmissionAttachment attachment) {

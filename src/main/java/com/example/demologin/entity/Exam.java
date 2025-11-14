@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,27 +14,28 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "exams")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Exam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private String title;
-    private String description;
-    private String status;
+    String title;
+    String description;
+    String status;
 
     @Column(name = "duration_minutes")
-    private Integer durationMinutes;
+    Integer durationMinutes;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "matrix_id")
-    private Matrix matrix;
+    Matrix matrix;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
-    private List<ExamQuestion> examQuestions;
+    List<ExamQuestion> examQuestions;
 
     public void addExamQuestion(ExamQuestion examQuestion) {
         examQuestions.add(examQuestion);
