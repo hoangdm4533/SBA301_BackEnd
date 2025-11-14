@@ -3,7 +3,9 @@ package com.example.demologin.initializer.components;
 import com.example.demologin.entity.QuestionType;
 import com.example.demologin.repository.QuestionTypeRepository;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +14,9 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuestionTypeDataInitializer {
-    private final QuestionTypeRepository questionTypeRepository;
+    QuestionTypeRepository questionTypeRepository;
 
     @Transactional
     public void initializeQuestionTypes() {

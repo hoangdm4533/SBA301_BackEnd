@@ -2,7 +2,9 @@
 
 import com.example.demologin.entity.*;
 import com.example.demologin.repository.*;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -15,15 +17,16 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Order(7) // Chạy sau QuestionDataInitializer
+@Order(7)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MatrixDataInitializer implements CommandLineRunner {
 
-    private final MatrixRepository matrixRepository;
-    private final QuestionRepository questionRepository;
-    private final LessonRepository lessonRepository;
-    private final QuestionTypeRepository questionTypeRepository;
-    private final LevelRepository levelRepository;
-    private final UserRepository userRepository;
+    MatrixRepository matrixRepository;
+    QuestionRepository questionRepository;
+    LessonRepository lessonRepository;
+    QuestionTypeRepository questionTypeRepository;
+    LevelRepository levelRepository;
+    UserRepository userRepository;
 
     @Override
     public void run(String... args) {

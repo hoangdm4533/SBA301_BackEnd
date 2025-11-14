@@ -7,7 +7,9 @@ import com.example.demologin.repository.ExamQuestionRepository;
 import com.example.demologin.repository.ExamRepository;
 import com.example.demologin.repository.QuestionRepository;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +19,11 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ExamDataInitializer {
-    private final ExamRepository examRepository;
-    private final ExamQuestionRepository examQuestionRepository;
-    private final QuestionRepository questionRepository;
+    ExamRepository examRepository;
+    ExamQuestionRepository examQuestionRepository;
+    QuestionRepository questionRepository;
 
     @Transactional
     public void initializeExams() {

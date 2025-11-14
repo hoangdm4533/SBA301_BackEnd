@@ -1,6 +1,8 @@
 package com.example.demologin.initializer;
 
 import com.example.demologin.initializer.components.*;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -30,24 +32,25 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Order(1) // Ensure this runs first among all CommandLineRunners
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MainDataInitializer implements CommandLineRunner {
 
-//    private final PermissionRoleInitializer permissionRoleInitializer;
-//    private final DefaultUserInitializer defaultUserInitializer;
+//    PermissionRoleInitializer permissionRoleInitializer;
+//    DefaultUserInitializer defaultUserInitializer;
 
-    private final QuestionTypeDataInitializer questionTypeDataInitializer;
-    private final LevelDataInitializer levelDataInitializer;
-    private final QuestionDataInitializer questionDataInitializer;
-    private final PlanDataInitializer planDataInitializer;
-    private final EducationDataInitializer educationDataInitializer;
-    private final AttemptDataInitializer attemptDataInitializer;
-    private final GradeDataInitializer gradeDataInitializer;
-    private final ChapterDataInitializer chapterDataInitializer;
+    QuestionTypeDataInitializer questionTypeDataInitializer;
+    LevelDataInitializer levelDataInitializer;
+    QuestionDataInitializer questionDataInitializer;
+    PlanDataInitializer planDataInitializer;
+    EducationDataInitializer educationDataInitializer;
+    AttemptDataInitializer attemptDataInitializer;
+    GradeDataInitializer gradeDataInitializer;
+    ChapterDataInitializer chapterDataInitializer;
 
-    private final ExamDataInitializer examDataInitializer;
-    private final UserInitializer userInitializer;
-    private final LessonDataInitializer lessonDataInitializer;
-    private final MatrixDataInitializer matrixDataInitializer;
+    ExamDataInitializer examDataInitializer;
+    UserInitializer userInitializer;
+    LessonDataInitializer lessonDataInitializer;
+    MatrixDataInitializer matrixDataInitializer;
     @Override
     public void run(String... args) throws Exception {
         log.info("🚀 Starting Main Data Initialization Process...");

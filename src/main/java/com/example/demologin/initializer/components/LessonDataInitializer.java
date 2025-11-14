@@ -5,7 +5,9 @@ import com.example.demologin.entity.Lesson;
 import com.example.demologin.repository.ChapterRepository;
 import com.example.demologin.repository.LessonRepository;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +17,11 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LessonDataInitializer {
 
-    private final LessonRepository lessonRepository;
-    private final ChapterRepository chapterRepository;
+    LessonRepository lessonRepository;
+    ChapterRepository chapterRepository;
 
     @Transactional
     public void initializeLessons() {

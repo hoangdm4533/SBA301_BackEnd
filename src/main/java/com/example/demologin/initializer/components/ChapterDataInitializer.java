@@ -5,15 +5,19 @@ import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.Subject;
 import com.example.demologin.repository.ChapterRepository;
 import com.example.demologin.repository.GradeRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChapterDataInitializer {
-    private final ChapterRepository chapterRepository;
-    private final GradeRepository gradeRepository;
+
+    ChapterRepository chapterRepository;
+    GradeRepository gradeRepository;
 
     public void initChapter() {
         if (chapterRepository.count() == 0) {

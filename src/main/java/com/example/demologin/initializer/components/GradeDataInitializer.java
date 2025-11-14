@@ -4,15 +4,18 @@ import com.example.demologin.entity.Grade;
 import com.example.demologin.entity.Subject;
 import com.example.demologin.repository.GradeRepository;
 import com.example.demologin.repository.SubjectRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GradeDataInitializer  {
-    private final GradeRepository gradeRepository;
-    private final SubjectRepository subjectRepository;
+    GradeRepository gradeRepository;
+    SubjectRepository subjectRepository;
 
 
     public void initGrade() throws Exception {

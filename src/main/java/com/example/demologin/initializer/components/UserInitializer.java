@@ -6,7 +6,9 @@ import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.UserStatus;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -18,11 +20,12 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserInitializer {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    UserRepository userRepository;
+    RoleRepository roleRepository;
+    PasswordEncoder passwordEncoder;
 
  @Transactional
     public void initializeUsers() {

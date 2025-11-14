@@ -10,7 +10,9 @@ import com.example.demologin.repository.SubscriptionRepository;
 import com.example.demologin.repository.TransactionRepository;
 import com.example.demologin.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,12 +23,13 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PlanDataInitializer {
 
-    private final PlanRepository planRepository;
-    private final SubscriptionRepository subscriptionRepository;
-    private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository;
+    PlanRepository planRepository;
+    SubscriptionRepository subscriptionRepository;
+    TransactionRepository transactionRepository;
+    UserRepository userRepository;
 
     @Transactional
     public void initializePlansAndSubscriptions() {

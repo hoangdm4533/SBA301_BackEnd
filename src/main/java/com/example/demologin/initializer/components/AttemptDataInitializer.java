@@ -3,7 +3,9 @@ package com.example.demologin.initializer.components;
 import com.example.demologin.entity.*;
 import com.example.demologin.repository.*;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +16,12 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AttemptDataInitializer {
 
-    private final ExamAttemptRepository examAttemptRepository;
-    private final ExamRepository examRepository;
-    private final ExamQuestionRepository examQuestionRepository;
-    private final QuestionRepository questionRepository;
-    private final OptionRepository optionRepository;
-    private final UserRepository userRepository;
+    ExamAttemptRepository examAttemptRepository;
+    ExamRepository examRepository;
+    UserRepository userRepository;
 
     @Transactional
     public void initializeAttempts() {
