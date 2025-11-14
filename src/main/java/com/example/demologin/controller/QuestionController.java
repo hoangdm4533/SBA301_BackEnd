@@ -9,18 +9,14 @@ import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.service.QuestionService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -31,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 public class QuestionController {
 
     private final QuestionService questionService;
-    private final ObjectMapper objectMapper;
 
     @GetMapping
     @PageResponse
@@ -59,14 +54,10 @@ public class QuestionController {
         ));
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     @ApiResponse(message = "Question created successfully")
-    public ResponseEntity<ResponseObject> create(
-            @RequestPart("data") final String dataJson,
-            @RequestPart(value = "image", required = false) final MultipartFile imageFile
-    ) throws IOException {
-        QuestionCreateRequest req = objectMapper.readValue(dataJson, QuestionCreateRequest.class);
-        final QuestionResponse data = questionService.create(req, imageFile);
+    public ResponseEntity<ResponseObject> create(@Valid @RequestBody final QuestionCreateRequest req) {
+        final QuestionResponse data = questionService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject(
                 HttpStatus.CREATED.value(),
                 "Question created successfully",
@@ -74,15 +65,13 @@ public class QuestionController {
         ));
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("/{id}")
     @ApiResponse(message = "Question updated successfully")
     public ResponseEntity<ResponseObject> update(
             @PathVariable final Long id,
-            @RequestPart("data") final String dataJson,
-            @RequestPart(value = "image", required = false) final MultipartFile imageFile
-    ) throws IOException {
-        QuestionUpdateRequest req = objectMapper.readValue(dataJson, QuestionUpdateRequest.class);
-        final QuestionResponse data = questionService.update(id, req, imageFile);
+            @Valid @RequestBody final QuestionUpdateRequest req
+    ) {
+        final QuestionResponse data = questionService.update(id, req);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
                 "Question updated successfully",

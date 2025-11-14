@@ -139,7 +139,7 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
         question.setTimeLimitMinutes(request.getTimeLimitMinutes());
         question.setMaxScore(request.getMaxScore());
 
-        question = questionRepo.save(question);
+
 
         // Handle new file uploads - only if files provided
         boolean hasFiles = (documentFiles != null && documentFiles.length > 0) || 
@@ -212,13 +212,12 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
                     teacherId, id, totalUploaded);
                 
                 // Save the question with new attachments
-                questionRepo.save(question);
             } catch (IOException e) {
                 log.error("Error uploading files for essay question update", e);
                 throw new RuntimeException("Failed to upload files: " + e.getMessage());
             }
         }
-
+        questionRepo.save(question);
         return mapToResponse(question);
     }
 

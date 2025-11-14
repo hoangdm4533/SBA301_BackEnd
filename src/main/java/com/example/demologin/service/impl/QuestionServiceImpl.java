@@ -10,7 +10,6 @@ import com.example.demologin.enums.QuestionStatus;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
-import com.example.demologin.service.CloudinaryService;
 import com.example.demologin.service.QuestionService;
 import com.google.genai.errors.ApiException;
 import com.google.genai.types.Content;
@@ -25,9 +24,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.rmi.ServerException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,6 @@ public class QuestionServiceImpl implements QuestionService {
     private final LevelRepository levelRepo;
     private final LessonRepository lessonRepo;
     private final GeminiConfig geminiConfig;
-    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,7 +66,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    public QuestionResponse create(QuestionCreateRequest req, MultipartFile imageFile) {
+    public QuestionResponse create(QuestionCreateRequest req) {
         Lesson lesson = lessonRepo.findById(req.getLessonId())
                 .orElseThrow(() -> new IllegalArgumentException("Lesson not found: " + req.getLessonId()));
 
@@ -86,16 +84,6 @@ public class QuestionServiceImpl implements QuestionService {
         q.setStatus(QuestionStatus.ACTIVE);
         q.setCreatedAt(LocalDateTime.now());
         q.setUpdatedAt(LocalDateTime.now());
-
-        // Upload image to Cloudinary if provided
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                Map<String, Object> uploadResult = cloudinaryService.uploadImage(imageFile, "question_images");
-                q.setImageUrl((String) uploadResult.get("file_url"));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to upload image: " + e.getMessage());
-            }
-        }
 
         // Thêm options vào collection đang managed (KHÔNG gán list mới)
         if (req.getOptions() != null && !req.getOptions().isEmpty()) {
@@ -117,30 +105,12 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    public QuestionResponse update(Long questionId, QuestionUpdateRequest req, MultipartFile imageFile) {
+    public QuestionResponse update(Long questionId, QuestionUpdateRequest req) {
         Question q = questionRepo.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
 
         if (req.getQuestionText() != null && !req.getQuestionText().isBlank()) {
             q.setQuestionText(req.getQuestionText().trim());
-        }
-        
-        // Handle image upload/update
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                // Delete old image if exists
-                if (q.getImageUrl() != null && !q.getImageUrl().isEmpty()) {
-                    String oldPublicId = extractPublicIdFromUrl(q.getImageUrl());
-                    if (oldPublicId != null) {
-                        cloudinaryService.deleteImage(oldPublicId);
-                    }
-                }
-                // Upload new image
-                Map<String, Object> uploadResult = cloudinaryService.uploadImage(imageFile, "question_images");
-                q.setImageUrl((String) uploadResult.get("file_url"));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to upload/delete image: " + e.getMessage());
-            }
         }
         if (req.getLessonId() != null) {
             Lesson lesson = lessonRepo.findById(req.getLessonId())
@@ -484,24 +454,5 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question saved = questionRepo.save(question);
         return mapper.toResponse(saved);
-    }
-
-    private String extractPublicIdFromUrl(String imageUrl) {
-        if (imageUrl == null || imageUrl.isEmpty()) {
-            return null;
-        }
-        try {
-            // Cloudinary URL format: https://res.cloudinary.com/<cloud_name>/image/upload/v<version>/<folder>/<public_id>.<extension>
-            String[] parts = imageUrl.split("/");
-            if (parts.length >= 2) {
-                String fileWithExt = parts[parts.length - 1];
-                String folderAndFile = parts[parts.length - 2] + "/" + fileWithExt;
-                // Remove extension
-                return folderAndFile.substring(0, folderAndFile.lastIndexOf('.'));
-            }
-        } catch (Exception e) {
-            // Log and continue
-        }
-        return null;
     }
 }
