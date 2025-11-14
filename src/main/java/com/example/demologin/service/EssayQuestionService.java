@@ -1,5 +1,6 @@
 package com.example.demologin.service;
 
+import com.example.demologin.enums.QuestionStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +24,7 @@ public interface EssayQuestionService {
     
     PageResponse<EssayQuestionResponse> getAllQuestions(Pageable pageable);
 
-    void changeQuestionStatus(Long id, String status);
+    void changeQuestionStatus(Long id, QuestionStatus status);
     
     PageResponse<EssayQuestionResponse> searchActiveQuestions(Long gradeId, Long chapterId, Long lessonId, Pageable pageable);
 }

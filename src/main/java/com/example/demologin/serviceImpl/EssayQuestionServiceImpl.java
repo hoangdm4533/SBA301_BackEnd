@@ -260,7 +260,7 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
 
     @Override
     @Transactional
-    public void changeQuestionStatus(Long id, String status) {
+    public void changeQuestionStatus(Long id, QuestionStatus status) {
         Long teacherId = getCurrentUserId();
         EssayQuestion question = questionRepo.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Question not found"));
@@ -271,7 +271,7 @@ public class EssayQuestionServiceImpl implements EssayQuestionService {
 
         QuestionStatus newStatus;
         try {
-            newStatus = QuestionStatus.valueOf(status.toUpperCase());
+            newStatus = status;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status. Allowed values: ACTIVE, INACTIVE, ARCHIVED");
         }

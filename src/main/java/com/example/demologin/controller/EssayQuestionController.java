@@ -6,6 +6,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import com.example.demologin.enums.QuestionStatus;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -167,7 +168,7 @@ public class EssayQuestionController {
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> changeQuestionStatus(
             @PathVariable Long id,
-            @RequestParam String status) {
+            @RequestParam QuestionStatus status) {
         
         try {
             essayQuestionService.changeQuestionStatus(id, status);
