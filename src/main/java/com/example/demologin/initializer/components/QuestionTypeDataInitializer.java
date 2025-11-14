@@ -32,6 +32,5 @@ public class QuestionTypeDataInitializer {
                 created++;
             }
         }
-        log.info("✅ QuestionType init: added {} new types (total: {})", created, questionTypeRepository.count());
     }
 }

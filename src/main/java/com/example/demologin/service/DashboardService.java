@@ -1,10 +1,8 @@
 package com.example.demologin.service;
 
 import com.example.demologin.dto.response.DashboardCardResponse;
-import com.example.demologin.dto.response.TransactionResponse;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public interface DashboardService {
     Long countUsers();

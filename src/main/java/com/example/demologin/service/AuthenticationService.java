@@ -5,7 +5,6 @@ import com.example.demologin.dto.request.login.GoogleLoginRequest;
 import com.example.demologin.dto.request.login.LoginRequest;
 import com.example.demologin.dto.request.user.UserRegistrationRequest;
 import com.example.demologin.dto.response.LoginResponse;
-import com.example.demologin.dto.response.UserResponse;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AuthenticationService extends UserDetailsService {

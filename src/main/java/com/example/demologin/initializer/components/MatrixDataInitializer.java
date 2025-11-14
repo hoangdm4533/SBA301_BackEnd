@@ -31,11 +31,8 @@ public class MatrixDataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (matrixRepository.count() > 0) {
-            log.info("✅ Matrix data already initialized");
             return;
         }
-
-        log.info("🔄 Initializing matrix data...");
 
         // Lấy admin user
         User adminUser = userRepository.findByUsername("admin").orElse(null);
@@ -50,7 +47,6 @@ public class MatrixDataInitializer implements CommandLineRunner {
         List<Level> levels = levelRepository.findAll();
 
         if (lessons.isEmpty() || questionTypes.isEmpty() || levels.isEmpty()) {
-            log.warn("⚠️ Cannot initialize matrix data: lessons, question types or levels not found");
             return;
         }
 
@@ -115,9 +111,6 @@ public class MatrixDataInitializer implements CommandLineRunner {
 
         if (!matrices.isEmpty()) {
             matrixRepository.saveAll(matrices);
-            log.info("✅ Matrix data initialized successfully: {} matrices created", matrices.size());
-        } else {
-            log.warn("⚠️ No matrix data created - questions not found");
         }
     }
 
@@ -129,8 +122,6 @@ public class MatrixDataInitializer implements CommandLineRunner {
         );
 
         if (questions.isEmpty()) {
-            log.warn("⚠️ No questions found for level: {}, lesson: {}, type: {}",
-                    level.getDifficulty(), lesson.getLessonName(), questionType.getDescription());
             return null;
         }
 
@@ -202,7 +193,6 @@ public class MatrixDataInitializer implements CommandLineRunner {
         }
 
         if (details.isEmpty()) {
-            log.warn("⚠️ No details created for mixed matrix");
             return null;
         }
 

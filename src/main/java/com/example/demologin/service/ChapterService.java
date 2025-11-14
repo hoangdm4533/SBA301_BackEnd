@@ -4,7 +4,6 @@ package com.example.demologin.service;
 import com.example.demologin.dto.request.chapter.ChapterRequest;
 import com.example.demologin.dto.response.ChapterResponse;
 import com.example.demologin.dto.response.PageResponse;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

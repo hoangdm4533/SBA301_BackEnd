@@ -67,7 +67,6 @@ public class UserInitializer {
          admin.setRoles(new HashSet<>(Set.of(adminRole)));
 
          userRepository.save(admin);
-         log.info("✅ Created user: admin");
      }
 
      // === 2️⃣ Tạo user STUDENT ===
@@ -86,7 +85,6 @@ public class UserInitializer {
              user.setRoles(new HashSet<>(Set.of(studentRole)));
 
              userRepository.save(user);
-             log.info("✅ Created user: {}", username);
          }
      }
 
@@ -106,7 +104,6 @@ public class UserInitializer {
              user.setRoles(new HashSet<>(Set.of(teacherRole)));
 
              userRepository.save(user);
-             log.info("✅ Created user: {}", username);
          }
      }
  }

@@ -26,7 +26,6 @@ public class LessonDataInitializer {
     @Transactional
     public void initializeLessons() {
         if (lessonRepository.count() > 0) {
-            log.info("ℹ️ Lessons already exist, skip seeding.");
             return;
         }
 
@@ -67,6 +66,5 @@ public class LessonDataInitializer {
         }
 
         lessonRepository.saveAll(lessons);
-        log.info("✅ Seeded {} lessons for {} chapters.", lessonRepository.count(), chapters.size());
     }
 }

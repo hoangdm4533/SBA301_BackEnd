@@ -28,13 +28,11 @@ public class ExamDataInitializer {
     @Transactional
     public void initializeExams() {
         if (examRepository.count() > 0) {
-            log.info("ℹ️ Exams already exist, skip seeding.");
             return;
         }
 
         List<Question> questions = questionRepository.findAll();
         if (questions.size() < 3) {
-            log.warn("⚠️ Need at least 3 questions to seed sample exams. Found: {}", questions.size());
             return;
         }
 
@@ -88,7 +86,6 @@ public class ExamDataInitializer {
         if (questions.size() > 10) addQuestion(exam3, questions.get(10), 1.0);
         if (questions.size() > 11) addQuestion(exam3, questions.get(11), 1.0);
 
-        log.info("✅ Seeded sample exams: {}, total exams now: {}", 3, examRepository.count());
     }
 
     private void addQuestion(Exam exam, Question question, double score) {

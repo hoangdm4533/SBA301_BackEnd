@@ -65,19 +65,15 @@ public class PlanDataInitializer {
                 .createdAt(now)
                 .build();
         planRepository.saveAll(List.of(basic, premium, annual));
-        log.info("✅ Seeded {} plans", planRepository.count());
     }
 
     private void seedSubscriptionForMember() {
         User member = userRepository.findByUsername("member").orElse(null);
         User admin = userRepository.findByUsername("admin").orElse(null);
-        if (member == null && admin == null) {
-            log.warn("⚠️ No users found to attach subscriptions");
-            return;
+        if (member == null && admin == null) {return;
         }
         List<Plan> plans = planRepository.findAll();
         if (plans.isEmpty()) {
-            log.warn("⚠️ No plans found to create subscriptions");
             return;
         }
         LocalDateTime now = LocalDateTime.now();
@@ -105,7 +101,7 @@ public class PlanDataInitializer {
                     .subscription(sub)
                     .build();
             transactionRepository.save(txn);
-            log.info("✅ Seeded subscription and transaction: user='{}', plan='{}'", user.getUsername(), plan.getName());
+
         };
 
         // Assign plans

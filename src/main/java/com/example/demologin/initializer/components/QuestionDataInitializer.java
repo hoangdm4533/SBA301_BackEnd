@@ -26,7 +26,6 @@ public class QuestionDataInitializer {
     @Transactional
     public void initializeQuestions() {
         if (questionRepository.count() > 0) {
-            log.info("ℹ️ Questions already exist, skip seeding.");
             return;
         }
 
@@ -465,6 +464,5 @@ public class QuestionDataInitializer {
 
         // ==== Lưu toàn bộ ====
         questionRepository.saveAll(questions);
-        log.info("✅ Seeded {} Math questions linked to lessons.", questionRepository.count());
     }
 }

@@ -57,8 +57,6 @@ public class ChapterDataInitializer {
                 chapterRepository.save(chapter3);
                 chapterRepository.save(chapter4);
             }
-
-            System.out.println("Initialized Chapters data.");
         }
     }
 }

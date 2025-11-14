@@ -14,7 +14,6 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EducationDataInitializer {
 
@@ -27,14 +26,12 @@ public class EducationDataInitializer {
     @Transactional
     public void initializeEducation() {
         if (subjectRepository.count() > 0 || gradeRepository.count() > 0) {
-            log.info("ℹ️ Education data already present, skipping");
             return;
         }
         User owner = userRepository.findByUsername("admin").orElseGet(() ->
                 userRepository.findAll().stream().findFirst().orElse(null)
         );
         if (owner == null) {
-            log.warn("⚠️ No user available to assign Subject ownership");
             return;
         }
 
@@ -109,8 +106,5 @@ public class EducationDataInitializer {
                 .grade(g8)
                 .build();
         lessonPlanRepository.save(lp3);
-
-        log.info("✅ Seeded education data: subjects={}, grades={}, chapters added, lesson plans added",
-                subjectRepository.count(), gradeRepository.count());
     }
 }

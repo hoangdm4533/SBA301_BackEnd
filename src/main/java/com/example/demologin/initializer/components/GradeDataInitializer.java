@@ -47,8 +47,6 @@ public class GradeDataInitializer  {
             gradeRepository.save(grade1);
             gradeRepository.save(grade2);
             gradeRepository.save(grade3);
-
-            System.out.println("Initialized Grades data.");
         }
     }
 }

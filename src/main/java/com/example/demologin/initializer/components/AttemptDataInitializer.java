@@ -26,13 +26,11 @@ public class AttemptDataInitializer {
     @Transactional
     public void initializeAttempts() {
         if (examAttemptRepository.count() > 0) {
-            log.info("ℹ️ Exam attempts already exist, skipping");
             return;
         }
         Optional<User> memberOpt = userRepository.findByUsername("member");
         Optional<User> adminOpt = userRepository.findByUsername("admin");
         if (memberOpt.isEmpty() && adminOpt.isEmpty()) {
-            log.warn("⚠️ No 'member' or 'admin' user found, cannot seed attempts");
             return;
         }
         User member = memberOpt.orElse(null);
@@ -42,7 +40,6 @@ public class AttemptDataInitializer {
                 .filter(e -> "PUBLISHED".equalsIgnoreCase(e.getStatus()))
                 .findFirst().orElse(null);
         if (publishedExam == null) {
-            log.warn("⚠️ No published exam found, cannot seed attempts");
             return;
         }
 
@@ -83,7 +80,5 @@ public class AttemptDataInitializer {
                     .build();
             examAttemptRepository.save(a3);
         }
-
-        log.info("✅ Seeded sample exam attempts for available users on published exam '{}'", publishedExam.getTitle());
     }
 }

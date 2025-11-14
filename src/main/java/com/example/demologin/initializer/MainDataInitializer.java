@@ -53,52 +53,23 @@ public class MainDataInitializer implements CommandLineRunner {
     MatrixDataInitializer matrixDataInitializer;
     @Override
     public void run(String... args) throws Exception {
-        log.info("🚀 Starting Main Data Initialization Process...");
         
         try {
-            // Step 1: Initialize Permissions and Roles
-            log.info("📋 Step 1: Initializing Permissions and Roles...");
 //            permissionRoleInitializer.initializePermissionsAndRoles();
-            log.info("✅ Permissions and Roles initialization completed");
-
-            // Step 2: Initialize Default Users
-            log.info("👥 Step 2: Initializing Default Users...");
 //            defaultUserInitializer.initializeDefaultUsers();
-            log.info("✅ Default Users initialization completed");
             gradeDataInitializer.initGrade();
             chapterDataInitializer.initChapter();
-            // Step 3: Plans and Subscriptions
-            log.info("💳 Step 3: Initializing Plans and Subscriptions...");
             planDataInitializer.initializePlansAndSubscriptions();
-
-            // Step 4: Education hierarchy
-            log.info("📚 Step 4: Initializing Education hierarchy...");
             educationDataInitializer.initializeEducation();
-
-            // Step 5: Lessons must come before questions
-            log.info("🧩 Step 5: Initializing Lessons...");
             lessonDataInitializer.initializeLessons();
-
-            // Step 6: Question metadata and questions
-            log.info("🧠 Step 6: Initializing Question metadata and Questions...");
             questionTypeDataInitializer.initializeQuestionTypes();
             levelDataInitializer.initializeLevels();
             questionDataInitializer.initializeQuestions();
-
-            // Step 6.5: Matrices (requires questions to be initialized first)
-            log.info("📊 Step 6.5: Initializing Matrices...");
             matrixDataInitializer.run();
-
-            // Step 7: Exams and attempts
             examDataInitializer.initializeExams();
             attemptDataInitializer.initializeAttempts();
-            log.info("👤 Step 8: Initializing Users...");
             userInitializer.initializeUsers();
-
-            log.info("🎉 Main Data Initialization Process completed successfully!");
-            
         } catch (Exception e) {
-            log.error("❌ Error during data initialization: {}", e.getMessage(), e);
             throw e; // Re-throw to prevent application startup with incomplete data
         }
     }
