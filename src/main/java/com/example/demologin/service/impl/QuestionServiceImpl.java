@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepo;
-    private final OptionRepository optionRepo;
     private final QuestionTypeRepository questionTypeRepo;
     private final QuestionMapper mapper;
     private final LevelRepository levelRepo;

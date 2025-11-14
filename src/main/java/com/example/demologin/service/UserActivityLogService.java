@@ -1,7 +1,6 @@
 package com.example.demologin.service;
 
 import com.example.demologin.dto.request.userActivityLog.UserActivityLogExportRequest;
-import com.example.demologin.dto.request.userActivityLog.UserActivityLogFilterRequest;
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;

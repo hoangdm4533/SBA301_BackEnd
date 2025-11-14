@@ -67,7 +67,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final RefreshTokenService refreshTokenService;
 
-
     private final UserActivityLogRepository userActivityLogRepository;
 
     private final RoleRepository roleRepository;

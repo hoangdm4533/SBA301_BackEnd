@@ -9,14 +9,9 @@ import java.util.List;
 
 public interface RoleService {
     List<RoleResponse> getAll();
-
     RoleResponse create(CreateRoleRequest req);
-
     RoleResponse update(Long id, UpdateRoleRequest req);
-
     void delete(Long id);
-
     RoleResponse updatePermissions(Long id, RolePermissionsRequest req);
-
     RoleResponse getById(Long id);
 }

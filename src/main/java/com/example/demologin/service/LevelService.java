@@ -10,7 +10,6 @@ import java.util.List;
 public interface LevelService {
     LevelResponse createLevel(LevelRequest request);
     LevelResponse getLevelById(Long id);
-    List<LevelResponse> getAllLevels();
     Page<LevelResponse> getAllLevels(int page, int size, String sortBy, String sortDir);
     Page<LevelResponse> searchLevels(String keyword, Pageable pageable);
     LevelResponse updateLevel(Long id, LevelRequest request);

@@ -3,7 +3,6 @@ package com.example.demologin.service.impl;
 import com.example.demologin.dto.request.level.LevelRequest;
 import com.example.demologin.dto.response.LevelResponse;
 import com.example.demologin.entity.Level;
-import com.example.demologin.entity.User;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.repository.ExamRepository;
 import com.example.demologin.repository.LevelRepository;
@@ -15,9 +14,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -39,7 +35,6 @@ public class LevelServiceImpl implements LevelService {
         if (levelRepository.existsByDifficultyIgnoreCase(request.getDifficulty())) {
             throw new IllegalArgumentException("Level với tên này đã tồn tại");
         }
-        User currentUser = accountUtils.getCurrentUser();
 
         Level level = Level.builder()
                 .difficulty(request.getDifficulty())
@@ -55,14 +50,6 @@ public class LevelServiceImpl implements LevelService {
         Level level = levelRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy level với id " + id));
         return mapToResponse(level);
-    }
-
-    @Override
-    public List<LevelResponse> getAllLevels() {
-        return levelRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
     }
 
     @Override
