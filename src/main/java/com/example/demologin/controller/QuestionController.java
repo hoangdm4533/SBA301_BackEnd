@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -102,13 +103,22 @@ public class QuestionController {
 
     @PostMapping("/generate")
     @ApiResponse(message = "Question generated successfully")
-    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) {
-        String result = questionService.generateQuestion(request);
-        return ResponseEntity.ok(new ResponseObject(
-                HttpStatus.OK.value(),
-                "Question generated successfully",
-                result
-        ));
+    public CompletableFuture<ResponseEntity<ResponseObject>> generate(@RequestBody QuestionGenerate request) {
+        return questionService.generateQuestion(request) // phương thức async
+                .thenApply(result -> ResponseEntity.ok(
+                        new ResponseObject(
+                                HttpStatus.OK.value(),
+                                "Question generated successfully",
+                                result
+                        )
+                ))
+                .exceptionally(ex -> ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+                        new ResponseObject(
+                                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                                "Hệ thống AI đang quá tải, vui lòng thử lại sau.",
+                                ex.getMessage()
+                        )
+                ));
     }
 
     @PostMapping("/ai")

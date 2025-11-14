@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 public interface QuestionService {
@@ -16,7 +17,7 @@ public interface QuestionService {
     QuestionResponse create(QuestionCreateRequest req, MultipartFile imageFile);
     QuestionResponse update(Long id, QuestionUpdateRequest req, MultipartFile imageFile);
     void delete(Long id);
-    String generateQuestion(QuestionGenerate req);
+    CompletableFuture<String> generateQuestion(QuestionGenerate req);
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
     Page<QuestionResponse> listByType(Long typeId, int page, int size);
     Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);

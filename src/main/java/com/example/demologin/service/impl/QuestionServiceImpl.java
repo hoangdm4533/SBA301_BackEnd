@@ -12,12 +12,14 @@ import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
 import com.example.demologin.service.CloudinaryService;
 import com.example.demologin.service.QuestionService;
+import com.google.genai.errors.ApiException;
 import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,11 +32,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepo;
     private final QuestionTypeRepository questionTypeRepo;
@@ -232,32 +239,47 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public String generateQuestion(QuestionGenerate req) {
+    public CompletableFuture<String> generateQuestion(QuestionGenerate req) {
         String sysIns = buildSystemInstruction(req);
-
         GenerateContentConfig config = GenerateContentConfig.builder()
                 .temperature(0.2f)
                 .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
                 .build();
 
         String userPrompt = buildUserPrompt(req);
+        Content content = Content.fromParts(Part.fromText(userPrompt));
 
-        Content content = Content.fromParts(
-                Part.fromText(userPrompt)
-        );
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        // Retry tối đa 3 lần khi gặp lỗi 503
-        for (int i = 0; i < 3; i++) {
-            GenerateContentResponse res = geminiConfig.generate(
-                    "gemini-2.5-flash",
-                    content,
-                    config
-            );
-            return res.text();
-
-        }
-
-        throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.");
+        return CompletableFuture.supplyAsync(() -> {
+                    int retryCount = 0;
+                    while (retryCount < 3) {
+                        try {
+                            GenerateContentResponse res = geminiConfig.generate(
+                                    "gemini-2.5-flash",
+                                    content,
+                                    config
+                            );
+                            return res.text();
+                        } catch (ApiException e) {
+                            if (e.getMessage().contains("503")) {
+                                retryCount++;
+                                log.info("Lần {} bị lỗi 503, đang retry...", retryCount);
+                                try {
+                                    // Exponential backoff strategy
+                                    TimeUnit.SECONDS.sleep((long) Math.pow(2, retryCount));
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    throw new RuntimeException("Thread bị gián đoạn", ie);
+                                }
+                            } else {
+                                throw new RuntimeException("Unexpected error: " + e.getMessage(), e);
+                            }
+                        }
+                    }
+                    throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.");
+                }, executor)
+                .whenComplete((result, ex) -> executor.shutdown());
     }
 
     private String buildSystemInstruction(QuestionGenerate req) {
