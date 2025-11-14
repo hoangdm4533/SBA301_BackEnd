@@ -14,6 +14,9 @@ import java.util.Optional;
 public interface EssaySubmissionRepository extends JpaRepository<EssaySubmission, Long> {
     Optional<EssaySubmission> findByUserUserIdAndEssayQuestionId(Long userId, Long questionId);
     
+    Optional<EssaySubmission> findByUserUserIdAndEssayQuestionIdAndStatus(
+        Long userId, Long questionId, SubmissionStatus status);
+    
     Page<EssaySubmission> findByUserUserIdOrderByStartedAtDesc(Long userId, Pageable pageable);
     
     Page<EssaySubmission> findByEssayQuestionIdOrderBySubmittedAtDesc(Long questionId, Pageable pageable);

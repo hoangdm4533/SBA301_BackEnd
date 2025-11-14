@@ -44,18 +44,10 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
     @Transactional
     public EssaySubmissionResponse startEssay(EssaySubmissionStartRequest request) {
         // Check subscription
-        Long userId =getCurrentUserId();
+        Long userId = getCurrentUserId();
         if (!subscriptionService.hasPremium(userId)) {
             throw new SecurityException("Premium subscription required to start essay");
         }
-
-        // Check if already started
-        submissionRepo.findByUserUserIdAndEssayQuestionId(userId, request.getEssayQuestionId())
-            .ifPresent(existing -> {
-                if (existing.getStatus() == SubmissionStatus.ONGOING) {
-                    throw new IllegalStateException("You have already started this essay");
-                }
-            });
 
         User user = userRepo.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -63,6 +55,18 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
         EssayQuestion question = questionRepo.findById(request.getEssayQuestionId())
             .orElseThrow(() -> new EntityNotFoundException("Essay question not found"));
 
+        // Check if user already has an ONGOING submission for this question
+        EssaySubmission existingSubmission = submissionRepo
+            .findByUserUserIdAndEssayQuestionIdAndStatus(userId, request.getEssayQuestionId(), SubmissionStatus.ONGOING)
+            .orElse(null);
+
+        if (existingSubmission != null) {
+            // User already started this essay, return existing submission (continue working)
+            log.info("User {} continuing existing essay submission {}", userId, existingSubmission.getId());
+            return mapToResponse(existingSubmission);
+        }
+
+        // Create new submission
         EssaySubmission submission = EssaySubmission.builder()
             .user(user)
             .essayQuestion(question)
@@ -72,7 +76,7 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
 
         submission = submissionRepo.save(submission);
 
-        log.info("User {} started essay question {}", userId, request.getEssayQuestionId());
+        log.info("User {} started new essay question {}", userId, request.getEssayQuestionId());
         return mapToResponse(submission);
     }
 
