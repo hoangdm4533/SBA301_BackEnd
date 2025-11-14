@@ -16,6 +16,5 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     boolean existsByName(@NotBlank(message = "Role name must not be blank") String name);
 
-
     List<Role> findAllByNameIn(Set<String> names);
 } 

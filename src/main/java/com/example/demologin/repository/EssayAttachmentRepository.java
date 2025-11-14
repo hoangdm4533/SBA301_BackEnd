@@ -10,6 +10,5 @@ import com.example.demologin.entity.EssayAttachment;
 @Repository
 public interface EssayAttachmentRepository extends JpaRepository<EssayAttachment, Long> {
     List<EssayAttachment> findByEssayQuestionId(Long essayQuestionId);
-    
-    void deleteByEssayQuestionId(Long essayQuestionId);
+
 }

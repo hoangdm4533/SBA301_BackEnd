@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ExamRepository extends JpaRepository<Exam, Long> {
-
     
     // Tìm kiếm theo status
     Page<Exam> findByStatus(String status, Pageable pageable);
@@ -32,7 +31,6 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     
     // Đếm exam theo level và status (để thay thế cho ExamTemplate)
     long countByStatus(String status);
-
 
     @Query("""
        select e from Exam e

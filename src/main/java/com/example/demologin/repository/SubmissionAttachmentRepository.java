@@ -10,6 +10,5 @@ import com.example.demologin.entity.SubmissionAttachment;
 @Repository
 public interface SubmissionAttachmentRepository extends JpaRepository<SubmissionAttachment, Long> {
     List<SubmissionAttachment> findBySubmissionId(Long submissionId);
-    
-    void deleteBySubmissionId(Long submissionId);
+
 }
