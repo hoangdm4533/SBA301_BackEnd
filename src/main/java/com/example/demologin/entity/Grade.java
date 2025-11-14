@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.*;
 
@@ -12,23 +13,24 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "grades")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Grade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private Integer gradeNumber;
+    Integer gradeNumber;
 
-    private String description;
+    String description;
 
     @ManyToOne
     @JoinColumn(name = "subject_id")
-    private Subject subject;
+    Subject subject;
 
     @OneToMany(mappedBy = "grade")
-    private List<LessonPlan> lessonPlans;
+    List<LessonPlan> lessonPlans;
 
     @OneToMany(mappedBy = "grade")
-    private List<Chapter> chapters;
+    List<Chapter> chapters;
 
 }

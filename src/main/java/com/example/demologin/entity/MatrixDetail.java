@@ -2,6 +2,8 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,29 +13,30 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MatrixDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private Integer totalQuestions;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    Integer totalQuestions;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "level_id")
-    private Level level;
+    Level level;
 
     @ManyToOne
     @JoinColumn(name = "question_type_id")
-    private QuestionType questionType;
+    QuestionType questionType;
 
     @ManyToOne
     @JoinColumn(name = "matrix_id")
-    private Matrix matrix;
+    Matrix matrix;
 
 
     @ManyToOne
     @JoinColumn(name = "lesson_id")
-    private Lesson lesson;
+    Lesson lesson;
 }

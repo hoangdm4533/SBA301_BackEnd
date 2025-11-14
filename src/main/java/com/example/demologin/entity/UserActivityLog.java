@@ -3,74 +3,78 @@ package com.example.demologin.entity;
 import com.example.demologin.enums.ActivityType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_activity_logs")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserActivityLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ActivityType activityType;
+    ActivityType activityType;
 
     @Column(nullable = true)
-    private Long userId;
+    Long userId;
 
     @Column(length = 100)
-    private String fullName;
+    String fullName;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 
 
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private String status = "SUCCESS";
+    String status = "SUCCESS";
 
     @Column(length = 500)
-    private String details;
+    String details;
 
     @Column(length = 45)
-    private String ipAddress;
+    String ipAddress;
 
     @Column(length = 1000)
-    private String userAgent;
+    String userAgent;
 
-    // Device and browser information
     @Column(length = 100)
-    private String browser;
+    String browser;
 
     @Column(length = 50)
-    private String browserVersion;
+    String browserVersion;
 
     @Column(length = 100)
-    private String operatingSystem;
+    String operatingSystem;
 
     @Column(length = 100)
-    private String device;
+    String device;
 
     @Column(length = 20)
-    private String deviceType;
-
-    // Location information
-    @Column(length = 100)
-    private String city;
+    String deviceType;
 
     @Column(length = 100)
-    private String region;
+    String city;
 
     @Column(length = 100)
-    private String country;
+    String region;
+
+    @Column(length = 100)
+    String country;
 
     @Column(length = 10)
-    private String countryCode;
+    String countryCode;
 
-    // Add pre-persist method to ensure required fields are set
     @PrePersist
     protected void onCreate() {
         if (timestamp == null) {

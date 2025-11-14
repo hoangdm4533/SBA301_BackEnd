@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
@@ -9,18 +10,18 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "options") // Use a non-reserved name
+@Table(name = "options")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "question_id")
-    private Question question;
+    Question question;
 
     @Column(columnDefinition = "TEXT")
-    private String optionText;
-
-    private Boolean isCorrect;
+    String optionText;
+    Boolean isCorrect;
 }

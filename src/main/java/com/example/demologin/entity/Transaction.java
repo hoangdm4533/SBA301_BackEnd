@@ -3,6 +3,7 @@ package com.example.demologin.entity;
 import com.example.demologin.enums.TransactionStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -13,27 +14,28 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "transactions")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private Double amount;
-    private String paymentMethod;
+    Double amount;
+    String paymentMethod;
     @Enumerated(EnumType.STRING)
-    private TransactionStatus status;
+    TransactionStatus status;
 
     @Column(unique = true)
-    private String transactionRef;
+    String transactionRef;
 
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    User user;
 
     @ManyToOne
     @JoinColumn(name = "subcription_id")
-    private Subscription subscription;
+    Subscription subscription;
 }
 

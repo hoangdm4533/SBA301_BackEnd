@@ -3,6 +3,8 @@ package com.example.demologin.entity;
 import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.UserStatus;
 import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,16 +16,20 @@ import java.util.*;
 
 @Entity
 @Table(name = "users")
+@Builder
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    Long userId;
 
     @Column(nullable = false, unique = true, length = 28)
-    private String username;
+    String username;
 
     @Column(nullable = false, length = 128)
-    private String password;
+    String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -31,54 +37,49 @@ public class User implements UserDetails {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles = new HashSet<>();
+    Set<Role> roles = new HashSet<>();
 
     @Column(nullable = false, length = 100)
-    private String fullName;
+    String fullName;
 
     @Column(nullable = false, length = 255)
-    private String email;
+    String email;
 
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private UserStatus status;
+    UserStatus status;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
     @OneToMany(mappedBy = "user")
-    private List<Subscription> subscriptions;
-
-    @OneToMany(mappedBy = "user")
-    private List<Transaction> transactions;
+    List<Subscription> subscriptions;
 
     @OneToMany(mappedBy = "user")
-    private List<ExamAttempt> examAttempts;
+    List<Transaction> transactions;
 
     @OneToMany(mappedBy = "user")
-    private List<Subject> subjects;
+    List<ExamAttempt> examAttempts;
 
     @OneToMany(mappedBy = "user")
-    private List<Matrix> matrices;
+    List<Subject> subjects;
+
+    @OneToMany(mappedBy = "user")
+    List<Matrix> matrices;
 
 
-    private int tokenVersion;
+    int tokenVersion;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private Gender gender;
+    Gender gender;
 
     @Column(name = "is_verify", nullable = false)
-    private boolean isVerify = false;
+    boolean isVerify = false;
 
 
     @Column(name = "is_locked", nullable = false)
-    private boolean locked = false;
-
-
-
-    // Constructors
-    public User() {}
+    boolean locked = false;
 
     public User(String username, String password, String fullName, String email) {
         this.username = username;

@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,29 +14,30 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "exam_attempts")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExamAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime finishedAt;
+    LocalDateTime startedAt;
+    LocalDateTime finishedAt;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt; // Thời điểm hết hạn làm bài (tự động nộp)
+    LocalDateTime expiresAt;
 
-    private Double score;
-    private String gradedBy;
+    Double score;
+    String gradedBy;
 
     @ManyToOne
     @JoinColumn(name = "exam_id")
-    private Exam exam;
+    Exam exam;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    User user;
 
     @OneToMany(mappedBy = "examAttempt")
-    private List<StudentAnswer> studentAnswers;
+    List<StudentAnswer> studentAnswers;
 }
 

@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,20 +14,21 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "lesson_plans")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class LessonPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private String title;
+    String title;
     @Lob
     @Column(columnDefinition = "LONGTEXT")
-    private String content;
-    private String filePath;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    String content;
+    String filePath;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "grade_id")
-    private Grade grade;
+    Grade grade;
 }

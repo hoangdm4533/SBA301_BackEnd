@@ -1,9 +1,11 @@
 package com.example.demologin.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -11,23 +13,24 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
-    private User user;
+    User user;
 
     @Column(nullable = false, unique = true)
-    private String token;
+    String token;
 
     @Column(nullable = false, unique = true)
-    private String jti;
+    String jti;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    LocalDateTime expiryDate;
 
 }

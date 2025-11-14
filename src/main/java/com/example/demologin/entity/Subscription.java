@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,27 +14,28 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "subscriptions")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
+    String status;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    User user;
 
     @ManyToOne
     @JoinColumn(name = "plan_id")
-    private Plan plan;
+    Plan plan;
 
     @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<Transaction> transactions = new HashSet<>();
+    Set<Transaction> transactions = new HashSet<>();
 }
 

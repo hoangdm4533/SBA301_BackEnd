@@ -3,6 +3,8 @@ package com.example.demologin.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,24 +15,24 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Matrix {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String title;
+    Long id;
+    String title;
 
-//    private String level; matrix detail co level-id roi
-    private Integer totalQuestion;
+    Integer totalQuestion;
 
-    private Double totalScore;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    Double totalScore;
+    String status;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    User user;
 
     @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MatrixDetail> details;
+    List<MatrixDetail> details;
 }

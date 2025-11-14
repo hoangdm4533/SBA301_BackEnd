@@ -2,6 +2,7 @@ package com.example.demologin.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,11 +14,11 @@ import java.util.*;
 @Builder
 @Entity
 @Table(name = "levels")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Level {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String difficulty;
-    private Double score;
+    Long id;
+    String difficulty;
+    Double score;
 }

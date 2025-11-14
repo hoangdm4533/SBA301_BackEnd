@@ -2,6 +2,8 @@ package com.example.demologin.entity;
 
 import java.time.LocalDateTime;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
@@ -13,11 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "submission_attachments")
@@ -26,37 +23,38 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubmissionAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submission_id", nullable = false)
-    private EssaySubmission submission;
+    EssaySubmission submission;
 
     @Column(name = "file_name", nullable = false)
-    private String fileName;
+    String fileName;
 
     @Column(name = "original_file_name", nullable = false)
-    private String originalFileName;
+    String originalFileName;
 
     @Column(name = "file_url", nullable = false, length = 1000)
-    private String fileUrl;
+    String fileUrl;
 
     @Column(name = "cloudinary_public_id", nullable = false)
-    private String cloudinaryPublicId;
+    String cloudinaryPublicId;
 
     @Column(name = "file_type", nullable = false, length = 50)
-    private String fileType;
+    String fileType;
 
     @Column(name = "file_size")
-    private Long fileSize;
+    Long fileSize;
 
     @Column(name = "attachment_type", nullable = false, length = 20)
-    private String attachmentType; // "IMAGE", "DOCUMENT"
+    String attachmentType; // "IMAGE", "DOCUMENT"
 
     @CreationTimestamp
     @Column(name = "uploaded_at", nullable = false, updatable = false)
-    private LocalDateTime uploadedAt;
+    LocalDateTime uploadedAt;
 }
