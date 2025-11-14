@@ -57,14 +57,17 @@ public class EssaySubmissionController {
         }
     }
 
-    @PostMapping("/{submissionId}/submit")
+    @PostMapping(value = "/{submissionId}/submit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<EssaySubmissionResponse>> submitEssay(
             @PathVariable Long submissionId,
-            @RequestPart("answer") String answer,
+            @RequestPart("data") String answerData,
             @RequestPart(value = "images", required = false) MultipartFile[] images,
             @RequestPart(value = "documents", required = false) MultipartFile[] documents) {
         try {
+            // Parse answer from JSON string (similar to create essay question)
+            String answer = answerData;
+            
             EssaySubmissionResponse response = submissionService.submitEssayWithFiles(
                 submissionId, answer, images, documents
             );
