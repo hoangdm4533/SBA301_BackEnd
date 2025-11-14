@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 
 public interface RolePermissionService {
-    public Set<String> getPermissionsForRoles(Set<String> roleNames);
+    Set<String> getPermissionsForRoles(Set<String> roleNames);
 } 

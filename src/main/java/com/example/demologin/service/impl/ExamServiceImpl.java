@@ -1,0 +1,372 @@
+package com.example.demologin.service.impl;
+
+import com.example.demologin.dto.request.exam.ExamRequest;
+import com.example.demologin.dto.request.exam.AddQuestionToExamRequest;
+import com.example.demologin.dto.response.ExamAttemptRow;
+import com.example.demologin.dto.response.ExamResponse;
+import com.example.demologin.dto.response.ExamQuestionResponse;
+import com.example.demologin.entity.*;
+import com.example.demologin.exception.exceptions.BadRequestException;
+import com.example.demologin.exception.exceptions.NotFoundException;
+import com.example.demologin.exception.exceptions.ConflictException;
+import com.example.demologin.repository.*;
+import com.example.demologin.service.ExamService;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class ExamServiceImpl implements ExamService {
+    
+    private final ExamRepository examRepository;
+    private final ExamQuestionRepository examQuestionRepository;
+    private final QuestionRepository questionRepository;
+    private final ExamAttemptRepository examAttemptRepository;
+    private final UserRepository userRepository;
+    private final MatrixRepository matrixRepository;
+
+    private ExamResponse mapToResponse(Exam exam) {
+        List<ExamQuestionResponse> questions = examQuestionRepository.findByExam(exam)
+                .stream()
+                .map(this::mapExamQuestionToResponse)
+                .collect(Collectors.toList());
+
+        return ExamResponse.builder()
+                .id(exam.getId())
+                .title(exam.getTitle())
+                .description(exam.getDescription())
+                .status(exam.getStatus())
+                .durationMinutes(exam.getDurationMinutes())
+                .createdAt(exam.getCreatedAt())
+                .updatedAt(exam.getUpdatedAt())
+                .matrixId(exam.getMatrix() != null ? exam.getMatrix().getId() : null)
+                .questions(questions)
+                .build();
+    }
+
+    private ExamQuestionResponse mapExamQuestionToResponse(ExamQuestion examQuestion) {
+        Question q = examQuestion.getQuestion();
+
+        String questionTypeDesc = null;
+        if (q != null && q.getType() != null) {
+            questionTypeDesc = q.getType().getDescription();
+        }
+
+        return ExamQuestionResponse.builder()
+                .id(examQuestion.getId())
+                .examId(examQuestion.getExam().getId())
+                .questionId(q != null ? q.getId() : null)
+                .questionText(q != null ? q.getQuestionText() : null)
+                .questionType(questionTypeDesc)   // <<== đổi sang String mô tả
+                .score(examQuestion.getScore())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ExamResponse createExam(ExamRequest request) {
+        try{
+            // Kiểm tra trùng lặp title
+            if (examRepository.existsByTitle(request.getTitle())) {
+                throw new ConflictException("Đã tồn tại exam với tiêu đề '" + request.getTitle() + "'");
+            }
+            Matrix matrix = matrixRepository.findById(request.getMatrixId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy matrix" + request.getMatrixId()));
+
+            Exam exam = Exam.builder()
+                    .title(request.getTitle())
+                    .description(request.getDescription())
+                    .durationMinutes(request.getDurationMinutes())
+                    .status(request.getStatus() != null ? request.getStatus() : "DRAFT")
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .matrix(matrix)
+                    .build();
+
+            Exam saved = examRepository.save(exam);
+            return mapToResponse(saved);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public ExamResponse getExamById(Long id) {
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
+        return mapToResponse(exam);
+    }
+
+    @Override
+    public List<ExamResponse> getAllExams() {
+        return examRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ExamResponse> getAllExams(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return examRepository.findAll(pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional
+    public ExamResponse updateExam(Long id, ExamRequest request) {
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
+
+        // Kiểm tra trùng lặp title (ngoại trừ chính nó)
+        if (!exam.getTitle().equals(request.getTitle()) && 
+            examRepository.existsByTitle(request.getTitle())) {
+            throw new ConflictException("Đã tồn tại exam với tiêu đề '" + request.getTitle() + "'");
+        }
+
+        exam.setTitle(request.getTitle());
+        exam.setDurationMinutes(request.getDurationMinutes());
+        exam.setDescription(request.getDescription());
+        exam.setStatus(request.getStatus());
+        exam.setUpdatedAt(LocalDateTime.now());
+
+        Exam updated = examRepository.save(exam);
+        return mapToResponse(updated);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteExam(Long id) {
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
+        
+        // Xóa tất cả câu hỏi trong exam trước
+        examQuestionRepository.deleteByExam(exam);
+        examRepository.delete(exam);
+        return true;
+    }
+
+    @Override
+    public Page<ExamResponse> getExamsByStatus(String status, int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return examRepository.findByStatus(status, pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Override
+    public Page<ExamResponse> searchExams(String keyword, Pageable pageable) {
+        return examRepository.findByTitleContainingOrDescriptionContaining(keyword, pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional
+    public ExamQuestionResponse addQuestionToExam(Long examId, AddQuestionToExamRequest request) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
+
+        // Chỉ cho phép thêm câu hỏi ACTIVE
+        Question question = questionRepository.findByIdAndStatus(
+                request.getQuestionId(),
+                com.example.demologin.enums.QuestionStatus.ACTIVE
+        ).orElseThrow(() -> new ConflictException(
+                "Câu hỏi không tồn tại hoặc đã bị archive. Chỉ có thể thêm câu hỏi đang active vào đề thi"
+        ));
+
+        // Kiểm tra trùng câu hỏi
+        if (examQuestionRepository.existsByExamAndQuestion(exam, question)) {
+            throw new ConflictException("Question đã tồn tại trong exam này");
+        }
+
+        // Lấy Level của question
+        Level level = question.getLevel();
+        if (level == null) {
+            throw new ConflictException("Question không có level hợp lệ");
+        }
+
+        QuestionType questionType = question.getType();
+        if (questionType == null) {
+            throw new ConflictException("Question không có type hợp lệ");
+        }
+
+        // Lấy Matrix từ Exam
+        Matrix matrix = exam.getMatrix();
+        if (matrix == null) {
+            throw new ConflictException("Exam chưa được gắn Matrix");
+        }
+
+        // Tìm MatrixDetail tương ứng với Level đó
+        MatrixDetail matrixDetail = matrix.getDetails().stream()
+                .filter(md ->
+                        md.getLevel().getId().equals(level.getId()) &&
+                                md.getQuestionType().getId().equals(questionType.getId())
+                )
+                .findFirst()
+                .orElseThrow(() -> new ConflictException(
+                        "Không tìm thấy MatrixDetail cho Level "
+                                + level.getDifficulty()
+                                + " và QuestionType "
+                                + questionType.getDescription()
+                ));
+
+        // Đếm số lượng câu hỏi trong exam theo level
+        long countByLevel = examQuestionRepository.countByExamAndQuestion_Level(exam, level);
+
+        if (countByLevel >= matrixDetail.getTotalQuestions()) {
+            throw new ConflictException(String.format(
+                    "Số câu hỏi Level '%s' đã đạt giới hạn (%d/%d)",
+                    level.getDifficulty(), countByLevel, matrixDetail.getTotalQuestions()
+            ));
+        }
+
+        // Tạo ExamQuestion mới
+        ExamQuestion examQuestion = ExamQuestion.builder()
+                .exam(exam)
+                .question(question)
+                .score(request.getScore())
+                .build();
+
+        exam.addExamQuestion(examQuestion); // đảm bảo liên kết 2 chiều
+
+        ExamQuestion saved = examQuestionRepository.save(examQuestion);
+        return mapExamQuestionToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public boolean removeQuestionFromExam(Long examId, Long questionId) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
+        
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy question với id " + questionId));
+
+        ExamQuestion examQuestion = examQuestionRepository.findByExamAndQuestion(exam, question)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy question trong exam này"));
+
+        examQuestionRepository.delete(examQuestion);
+        return true;
+    }
+
+    @Override
+    public List<ExamQuestionResponse> getQuestionsInExam(Long examId) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
+
+        return examQuestionRepository.findByExam(exam)
+                .stream()
+                .map(this::mapExamQuestionToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public boolean publishExam(Long id) {
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
+
+        // Kiểm tra trạng thái hiện tại
+        if ("PUBLISHED".equalsIgnoreCase(exam.getStatus())) {
+            throw new ConflictException("Exam này đã được publish trước đó");
+        }
+//        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+//            throw new ConflictException("Không thể publish exam đã bị lưu trữ (ARCHIVED)");
+//        }
+
+        // Kiểm tra exam có câu hỏi chưa
+        Integer questionCount = examQuestionRepository.countByExam(exam);
+        if (questionCount == null || questionCount == 0) {
+            throw new BadRequestException("Không thể publish exam không có câu hỏi");
+        }
+
+        // Cập nhật trạng thái
+        exam.setStatus("PUBLISHED");
+        exam.setUpdatedAt(LocalDateTime.now());
+
+        // Dù @Transactional tự flush, vẫn nên save để đảm bảo commit rõ ràng
+        examRepository.save(exam);
+
+        return true;
+    }
+
+
+    @Override
+    @Transactional
+    public boolean archiveExam(Long id) {
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + id));
+
+        if ("ARCHIVED".equalsIgnoreCase(exam.getStatus())) {
+            throw new ConflictException("Exam này đã được lưu trữ (ARCHIVED) trước đó");
+        }
+
+        exam.setStatus("ARCHIVED");
+        exam.setUpdatedAt(LocalDateTime.now());
+
+        // Không cần gọi save() — vì exam là entity managed trong Transaction
+        return true;
+    }
+
+    @Override
+    public Page<ExamResponse> getPublishedExams(Pageable pageable) {
+        return examRepository.findPublishedExams(pageable)
+                .map(this::mapToResponse);
+    }
+
+    private ExamAttemptRow toRow(ExamAttempt a) {
+        return ExamAttemptRow.builder()
+                .attemptId(a.getId())
+                .examId(a.getExam().getId())
+                .examTitle(a.getExam().getTitle())
+                .studentId(a.getUser().getUserId())
+                .studentName(a.getUser().getFullName())
+                .studentUsername(a.getUser().getUsername())
+                .studentEmail(a.getUser().getEmail())
+                .score(a.getScore())
+                .gradedBy(a.getGradedBy())
+                .startedAt(a.getStartedAt())
+                .finishedAt(a.getFinishedAt())
+                .status(null) // nếu có trường status trong Attempt thì set vào
+                .build();
+    }
+
+    @Override
+    public Page<ExamAttemptRow> listAttemptsOfExam(Long examId, int page, int size,
+                                                   String keyword, LocalDateTime from, LocalDateTime to) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy exam với id " + examId));
+
+        Page<ExamAttempt> p = examAttemptRepository.searchForTeacher(
+                exam.getId(), (keyword == null || keyword.isBlank()) ? null : keyword, from, to,
+                PageRequest.of(page, size, Sort.by("finishedAt").descending())
+        );
+        return p.map(this::toRow);
+    }
+
+    @Override
+    public Page<ExamAttemptRow> listAttemptsOfStudent(Long studentId, int page, int size) {
+        if (!userRepository.existsById(studentId)) {
+            throw new NotFoundException("Không tìm thấy học sinh với id " + studentId);
+        }
+        Page<ExamAttempt> p = examAttemptRepository.findByUser_UserId(
+                studentId, PageRequest.of(page, size, Sort.by("finishedAt").descending())
+        );
+        return p.map(this::toRow);
+    }
+}
