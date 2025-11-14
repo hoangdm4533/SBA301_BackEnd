@@ -3,7 +3,7 @@ package com.example.demologin.service;
 import com.example.demologin.entity.User;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.service.impl.UserServiceImpl;
-import com.example.demologin.mapper.UserMapper;
+import com.example.demologin.mapper.user.UserMapper;
 import com.example.demologin.dto.response.MemberResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

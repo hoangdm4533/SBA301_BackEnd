@@ -3,8 +3,9 @@ package com.example.demologin.mapper.chapter;
 import com.example.demologin.dto.response.ChapterResponse;
 import com.example.demologin.entity.Chapter;
 import com.example.demologin.mapper.lesson.ILessonMapper;
-import com.example.demologin.mapper.lesson.LessonMapper;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -12,8 +13,9 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChapterMapper implements IChapterMapper {
-    private final ILessonMapper lessonMapper;
+    ILessonMapper lessonMapper;
     @Override
     public ChapterResponse toResponse(Chapter chapter) {
         return ChapterResponse.builder()

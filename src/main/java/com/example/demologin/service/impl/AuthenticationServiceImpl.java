@@ -12,7 +12,7 @@ import com.example.demologin.enums.ActivityType;
 import com.example.demologin.enums.Gender;
 import com.example.demologin.enums.UserStatus;
 import com.example.demologin.exception.exceptions.*;
-import com.example.demologin.mapper.UserMapper;
+import com.example.demologin.mapper.user.UserMapper;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.repository.UserRepository;
 import com.example.demologin.repository.RoleRepository;

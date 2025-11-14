@@ -6,7 +6,7 @@ import com.example.demologin.entity.UserActivityLog;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.ActivityType;
 import com.example.demologin.exception.exceptions.NotFoundException;
-import com.example.demologin.mapper.UserActivityLogMapper;
+import com.example.demologin.mapper.user.UserActivityLogMapper;
 import com.example.demologin.repository.UserActivityLogRepository;
 import com.example.demologin.service.UserActivityLogService;
 import com.example.demologin.utils.AccountUtils;

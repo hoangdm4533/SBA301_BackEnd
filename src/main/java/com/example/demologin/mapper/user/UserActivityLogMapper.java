@@ -1,4 +1,4 @@
-package com.example.demologin.mapper;
+package com.example.demologin.mapper.user;
 
 import com.example.demologin.dto.response.UserActivityLogResponse;
 import com.example.demologin.entity.UserActivityLog;

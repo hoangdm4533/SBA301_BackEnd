@@ -1,9 +1,8 @@
-package com.example.demologin.mapper;
+package com.example.demologin.mapper.user;
 
 import com.example.demologin.dto.request.user.UserRequest;
 import com.example.demologin.dto.response.LoginResponse;
 import com.example.demologin.dto.response.MemberResponse;
-import com.example.demologin.dto.response.UserResponse;
 import com.example.demologin.entity.Role;
 import com.example.demologin.entity.User;
 import com.example.demologin.enums.UserStatus;

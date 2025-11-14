@@ -9,7 +9,7 @@ import com.example.demologin.entity.User;
 import com.example.demologin.enums.UserStatus;
 import com.example.demologin.repository.RoleRepository;
 import com.example.demologin.repository.UserRepository;
-import com.example.demologin.mapper.UserMapper;
+import com.example.demologin.mapper.user.UserMapper;
 import com.example.demologin.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
