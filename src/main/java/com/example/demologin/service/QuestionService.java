@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 
 public interface QuestionService {
@@ -16,7 +18,7 @@ public interface QuestionService {
     QuestionResponse create(QuestionCreateRequest req);
     QuestionResponse update(Long id, QuestionUpdateRequest req);
     void delete(Long id);
-    String generateQuestion(QuestionGenerate req);
+    String generateQuestion(QuestionGenerate req) throws InterruptedException, ExecutionException, TimeoutException;
     Page<QuestionResponse> listByLevel(Long levelId, int page, int size);
     Page<QuestionResponse> listByType(Long typeId, int page, int size);
     Page<QuestionResponse> listByMatrix(Long matrixId, int page, int size);

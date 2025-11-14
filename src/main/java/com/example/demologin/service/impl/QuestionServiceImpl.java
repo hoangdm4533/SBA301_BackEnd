@@ -20,6 +20,8 @@ import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,13 +34,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class QuestionServiceImpl implements QuestionService {
+    private static final Logger log = LoggerFactory.getLogger(QuestionServiceImpl.class);
     private final QuestionRepository questionRepo;
     private final QuestionTypeRepository questionTypeRepo;
     private final QuestionMapper mapper;
@@ -213,53 +217,59 @@ public class QuestionServiceImpl implements QuestionService {
         String sysIns = buildSystemInstruction(req);
 
         GenerateContentConfig config = GenerateContentConfig.builder()
-                .temperature(0.2f)
+                .temperature(1.0f)
                 .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
                 .build();
 
         Content content = Content.fromParts(Part.fromText(buildUserPrompt(req)));
 
         String primaryModel = "gemini-2.5-flash";
-        String fallbackModel = "gemini-1.5-flash"; // hoặc model nhẹ hơn bạn muốn
-        int maxRetries = 5;
-        long baseDelayMs = 300; // delay cơ bản
+        String fallbackModel = "gemini-1.5-flash";
+
+        int maxRetries = 20;                 // tăng retry để chờ lâu hơn
+        long baseDelayMs = 300;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                GenerateContentResponse res = geminiConfig.generate(primaryModel, content, config);
+                GenerateContentResponse res =
+                        geminiConfig.generate(primaryModel, content, config);
+                log.info("Gemini config generated successfully: {}", res.text());
                 return res.text();
 
             } catch (ApiException e) {
-                // Chỉ retry nếu là lỗi 503
+
                 if (e.code() == 503 && attempt < maxRetries) {
                     long jitter = ThreadLocalRandom.current().nextLong(0, 300);
-                    long delay = baseDelayMs * (1L << (attempt - 1)) + jitter;
+                    long delay = baseDelayMs * (1L << Math.min(attempt - 1, 6)) + jitter;
+                    // giới hạn backoff max ~20s
 
-                    System.err.println("Gemini 503 (overload). Attempt " + attempt +
-                            "/" + maxRetries + ". Retry after " + delay + "ms");
+                    System.err.println(
+                            "Gemini 503. Attempt " + attempt + "/" + maxRetries +
+                                    ". Retry after " + delay + "ms"
+                    );
 
                     try {
                         Thread.sleep(delay);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                     }
+
                     continue;
                 }
 
-                // Không phải lỗi 503 → throw luôn
-                throw e;
+                throw e; // không phải 503 → fail
             }
         }
 
-        // Nếu retry primary model thất bại → thử fallback
+        // fallback model
         try {
             System.err.println("🔥 Switching to fallback model: " + fallbackModel);
-            GenerateContentResponse fallbackRes =
+            GenerateContentResponse res =
                     geminiConfig.generate(fallbackModel, content, config);
-            return fallbackRes.text();
+            return res.text();
 
-        } catch (Exception fallbackError) {
-            throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.", fallbackError);
+        } catch (Exception ex) {
+            throw new RuntimeException("AI quá tải. Vui lòng thử lại sau.", ex);
         }
     }
 

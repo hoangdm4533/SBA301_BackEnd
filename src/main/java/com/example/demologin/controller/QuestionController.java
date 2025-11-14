@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequiredArgsConstructor
@@ -96,7 +98,7 @@ public class QuestionController {
 
     @PostMapping("/generate")
     @ApiResponse(message = "Question generated successfully")
-    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) {
+    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) throws ExecutionException, InterruptedException, TimeoutException {
         String result = questionService.generateQuestion(request);
         return ResponseEntity.ok(new ResponseObject(
                 HttpStatus.OK.value(),
