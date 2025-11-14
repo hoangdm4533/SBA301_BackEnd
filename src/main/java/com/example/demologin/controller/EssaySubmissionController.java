@@ -87,7 +87,7 @@ public class EssaySubmissionController {
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<EssaySubmissionResponse>> getSubmission(@PathVariable Long submissionId) {
         try {
-            EssaySubmissionResponse response = submissionService.getMySubmission(submissionId);
+            EssaySubmissionResponse response = submissionService.getSubmissionById(submissionId);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
             log.error("Error retrieving submission", e);
