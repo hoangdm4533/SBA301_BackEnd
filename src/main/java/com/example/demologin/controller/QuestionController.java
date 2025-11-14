@@ -9,16 +9,19 @@ import com.example.demologin.dto.request.question.QuestionUpdateRequest;
 import com.example.demologin.dto.response.QuestionResponse;
 import com.example.demologin.dto.response.ResponseObject;
 import com.example.demologin.service.QuestionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 public class QuestionController {
 
     private final QuestionService questionService;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     @PageResponse
@@ -54,7 +58,7 @@ public class QuestionController {
         ));
     }
 
-    @PostMapping
+    @PostMapping()
     @ApiResponse(message = "Question created successfully")
     public ResponseEntity<ResponseObject> create(@Valid @RequestBody final QuestionCreateRequest req) {
         final QuestionResponse data = questionService.create(req);
@@ -92,22 +96,13 @@ public class QuestionController {
 
     @PostMapping("/generate")
     @ApiResponse(message = "Question generated successfully")
-    public CompletableFuture<ResponseEntity<ResponseObject>> generate(@RequestBody QuestionGenerate request) {
-        return questionService.generateQuestion(request) // phương thức async
-                .thenApply(result -> ResponseEntity.ok(
-                        new ResponseObject(
-                                HttpStatus.OK.value(),
-                                "Question generated successfully",
-                                result
-                        )
-                ))
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
-                        new ResponseObject(
-                                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                                "Hệ thống AI đang quá tải, vui lòng thử lại sau.",
-                                ex.getMessage()
-                        )
-                ));
+    public ResponseEntity<ResponseObject> generate(@RequestBody QuestionGenerate request) {
+        String result = questionService.generateQuestion(request);
+        return ResponseEntity.ok(new ResponseObject(
+                HttpStatus.OK.value(),
+                "Question generated successfully",
+                result
+        ));
     }
 
     @PostMapping("/ai")

@@ -10,37 +10,34 @@ import com.example.demologin.enums.QuestionStatus;
 import com.example.demologin.exception.exceptions.NotFoundException;
 import com.example.demologin.mapper.question.QuestionMapper;
 import com.example.demologin.repository.*;
+import com.example.demologin.service.CloudinaryService;
 import com.example.demologin.service.QuestionService;
 import com.google.genai.errors.ApiException;
+import com.google.genai.errors.ServerException;
 import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.rmi.ServerException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepo;
     private final QuestionTypeRepository questionTypeRepo;
@@ -48,6 +45,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final LevelRepository levelRepo;
     private final LessonRepository lessonRepo;
     private final GeminiConfig geminiConfig;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -85,6 +83,7 @@ public class QuestionServiceImpl implements QuestionService {
         q.setCreatedAt(LocalDateTime.now());
         q.setUpdatedAt(LocalDateTime.now());
 
+
         // Thêm options vào collection đang managed (KHÔNG gán list mới)
         if (req.getOptions() != null && !req.getOptions().isEmpty()) {
             List<Option> options = req.getOptions().stream()
@@ -112,6 +111,7 @@ public class QuestionServiceImpl implements QuestionService {
         if (req.getQuestionText() != null && !req.getQuestionText().isBlank()) {
             q.setQuestionText(req.getQuestionText().trim());
         }
+
         if (req.getLessonId() != null) {
             Lesson lesson = lessonRepo.findById(req.getLessonId())
                     .orElseThrow(() -> new IllegalArgumentException("Lesson not found: " + req.getLessonId()));
@@ -209,47 +209,58 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public CompletableFuture<String> generateQuestion(QuestionGenerate req) {
+    public String generateQuestion(QuestionGenerate req) {
         String sysIns = buildSystemInstruction(req);
+
         GenerateContentConfig config = GenerateContentConfig.builder()
                 .temperature(0.2f)
                 .systemInstruction(Content.fromParts(Part.fromText(sysIns)))
                 .build();
 
-        String userPrompt = buildUserPrompt(req);
-        Content content = Content.fromParts(Part.fromText(userPrompt));
+        Content content = Content.fromParts(Part.fromText(buildUserPrompt(req)));
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        String primaryModel = "gemini-2.5-flash";
+        String fallbackModel = "gemini-1.5-flash"; // hoặc model nhẹ hơn bạn muốn
+        int maxRetries = 5;
+        long baseDelayMs = 300; // delay cơ bản
 
-        return CompletableFuture.supplyAsync(() -> {
-                    int retryCount = 0;
-                    while (retryCount < 3) {
-                        try {
-                            GenerateContentResponse res = geminiConfig.generate(
-                                    "gemini-2.5-flash",
-                                    content,
-                                    config
-                            );
-                            return res.text();
-                        } catch (ApiException e) {
-                            if (e.getMessage().contains("503")) {
-                                retryCount++;
-                                log.info("Lần {} bị lỗi 503, đang retry...", retryCount);
-                                try {
-                                    // Exponential backoff strategy
-                                    TimeUnit.SECONDS.sleep((long) Math.pow(2, retryCount));
-                                } catch (InterruptedException ie) {
-                                    Thread.currentThread().interrupt();
-                                    throw new RuntimeException("Thread bị gián đoạn", ie);
-                                }
-                            } else {
-                                throw new RuntimeException("Unexpected error: " + e.getMessage(), e);
-                            }
-                        }
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                GenerateContentResponse res = geminiConfig.generate(primaryModel, content, config);
+                return res.text();
+
+            } catch (ApiException e) {
+                // Chỉ retry nếu là lỗi 503
+                if (e.code() == 503 && attempt < maxRetries) {
+                    long jitter = ThreadLocalRandom.current().nextLong(0, 300);
+                    long delay = baseDelayMs * (1L << (attempt - 1)) + jitter;
+
+                    System.err.println("Gemini 503 (overload). Attempt " + attempt +
+                            "/" + maxRetries + ". Retry after " + delay + "ms");
+
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
                     }
-                    throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.");
-                }, executor)
-                .whenComplete((result, ex) -> executor.shutdown());
+                    continue;
+                }
+
+                // Không phải lỗi 503 → throw luôn
+                throw e;
+            }
+        }
+
+        // Nếu retry primary model thất bại → thử fallback
+        try {
+            System.err.println("🔥 Switching to fallback model: " + fallbackModel);
+            GenerateContentResponse fallbackRes =
+                    geminiConfig.generate(fallbackModel, content, config);
+            return fallbackRes.text();
+
+        } catch (Exception fallbackError) {
+            throw new RuntimeException("Hệ thống AI đang quá tải. Vui lòng thử lại sau.", fallbackError);
+        }
     }
 
     private String buildSystemInstruction(QuestionGenerate req) {
@@ -454,5 +465,24 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question saved = questionRepo.save(question);
         return mapper.toResponse(saved);
+    }
+
+    private String extractPublicIdFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return null;
+        }
+        try {
+            // Cloudinary URL format: https://res.cloudinary.com/<cloud_name>/image/upload/v<version>/<folder>/<public_id>.<extension>
+            String[] parts = imageUrl.split("/");
+            if (parts.length >= 2) {
+                String fileWithExt = parts[parts.length - 1];
+                String folderAndFile = parts[parts.length - 2] + "/" + fileWithExt;
+                // Remove extension
+                return folderAndFile.substring(0, folderAndFile.lastIndexOf('.'));
+            }
+        } catch (Exception e) {
+            // Log and continue
+        }
+        return null;
     }
 }
