@@ -205,7 +205,7 @@ public class EssayQuestionController {
     }
 
     @GetMapping("/attachments/{attachmentId}/download")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT ')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('STUDENT')")
     public ResponseEntity<?> downloadAttachment(@PathVariable Long attachmentId) {
         try {
             EssayAttachmentResponse attachment = essayQuestionService.getAttachmentById(attachmentId);
