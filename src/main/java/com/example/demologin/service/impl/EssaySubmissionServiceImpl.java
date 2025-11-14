@@ -49,14 +49,6 @@ public class EssaySubmissionServiceImpl implements EssaySubmissionService {
             throw new SecurityException("Premium subscription required to start essay");
         }
 
-        // Check if already started
-        submissionRepo.findByUserUserIdAndEssayQuestionId(userId, request.getEssayQuestionId())
-            .ifPresent(existing -> {
-                if (existing.getStatus() == SubmissionStatus.ONGOING) {
-                    throw new IllegalStateException("You have already started this essay");
-                }
-            });
-
         User user = userRepo.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
