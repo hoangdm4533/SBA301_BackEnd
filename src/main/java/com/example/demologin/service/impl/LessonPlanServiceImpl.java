@@ -46,7 +46,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 //                .teacher(teacher)
                 .grade(grade)
                 .title(req.getTitle())
-                .content(null) // content sẽ được lưu trong MinIO
+                .content(req.getContent()) // content sẽ được lưu trong MinIO
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -152,10 +152,16 @@ public class LessonPlanServiceImpl implements LessonPlanService {
                 .orElseThrow(() -> new RuntimeException("LessonPlan not found with id: " + lessonPlanId));
 
         // 2. Cập nhật thông tin
-        lessonPlan.setGrade(gradeRepo.findById(req.getGradeId()).orElseThrow(() -> new RuntimeException("Khoông tìm thâấy grade")));
-        lessonPlan.setTitle(req.getTitle());
-        lessonPlan.setContent(req.getContent());
-        lessonPlan.setFilePath(req.getFilePath()); // có thể null
+        lessonPlan.setGrade(gradeRepo.findById(req.getGradeId()).orElseThrow(() -> new RuntimeException("Khoông tìm thấy khối")));
+        if(!lessonPlan.getTitle().equals(req.getTitle())) {
+            lessonPlan.setTitle(req.getTitle());
+        }
+        if(!lessonPlan.getFilePath().equals(req.getFilePath())) {
+            lessonPlan.setFilePath(req.getFilePath());
+        }
+        if(!lessonPlan.getContent().equals(req.getContent())) {
+            lessonPlan.setContent(req.getContent());
+        }
 
         // 3. Lưu lại
         LessonPlan response = lessonPlanRepo.save(lessonPlan);

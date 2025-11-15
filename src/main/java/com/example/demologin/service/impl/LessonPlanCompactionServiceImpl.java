@@ -37,12 +37,12 @@ public class LessonPlanCompactionServiceImpl implements LessonPlanCompactionServ
     @Transactional
     @Override
     public void compactLessonPlan(Long lessonPlanId) {
-        // 1️⃣ Lấy LessonPlan hiện tại
+        // Lấy LessonPlan hiện tại
         LessonPlan lessonPlan = lessonPlanRepo.findById(lessonPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("LessonPlan not found: " + lessonPlanId));
 
         try {
-            // 2️⃣ Lấy nội dung hiện tại trong DB
+            // Lấy nội dung hiện tại trong DB
             String baseContent = lessonPlan.getContent();
             if (baseContent == null) {
                 baseContent = "";
